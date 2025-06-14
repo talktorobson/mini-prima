@@ -4,82 +4,79 @@ import { Scale, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-blue-900 text-white py-16">
+    <footer className="bg-blue-900 text-white py-10 border-t border-blue-950">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-3 mb-6">
-              <Scale className="h-8 w-8 text-amber-400" />
-              <h3 className="text-2xl font-bold">D'Avila Reis Advogados</h3>
+            <div className="flex items-center space-x-3 mb-4">
+              <Scale className="h-7 w-7 text-blue-50" />
+              <h3 className="text-xl font-semibold">D'Avila Reis Advogados</h3>
             </div>
-            <p className="text-blue-200 leading-relaxed mb-6 max-w-md">
-              Mais de 20 anos oferecendo excelência em serviços jurídicos, 
-              com foco na satisfação do cliente e resultados excepcionais.
+            <p className="text-blue-100 leading-relaxed mb-4 max-w-md text-sm">
+              Seriedade, confidencialidade e precisão na prestação de serviços jurídicos desde 2003.
             </p>
-            <div className="flex space-x-4">
-              <div className="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-amber-500 transition-colors cursor-pointer">
-                <span className="text-sm font-bold">f</span>
+            <div className="flex space-x-2">
+              <div className="w-8 h-8 bg-blue-950 rounded flex items-center justify-center text-blue-100 text-xs font-bold cursor-default select-none">
+                f
               </div>
-              <div className="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-amber-500 transition-colors cursor-pointer">
-                <span className="text-sm font-bold">in</span>
+              <div className="w-8 h-8 bg-blue-950 rounded flex items-center justify-center text-blue-100 text-xs font-bold cursor-default select-none">
+                in
               </div>
-              <div className="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-amber-500 transition-colors cursor-pointer">
-                <span className="text-sm font-bold">@</span>
+              <div className="w-8 h-8 bg-blue-950 rounded flex items-center justify-center text-blue-100 text-xs font-bold cursor-default select-none">
+                @
               </div>
             </div>
           </div>
 
           {/* Areas de Atuação */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-amber-400">Áreas de Atuação</h4>
-            <ul className="space-y-3 text-blue-200">
-              <li><a href="#" className="hover:text-amber-400 transition-colors">Direito Empresarial</a></li>
-              <li><a href="#" className="hover:text-amber-400 transition-colors">Direito Trabalhista</a></li>
-              <li><a href="#" className="hover:text-amber-400 transition-colors">Direito Civil</a></li>
-              <li><a href="#" className="hover:text-amber-400 transition-colors">Direito Tributário</a></li>
-              <li><a href="#" className="hover:text-amber-400 transition-colors">Direito Imobiliário</a></li>
-              <li><a href="#" className="hover:text-amber-400 transition-colors">Direito Penal</a></li>
+            <h4 className="text-base font-semibold mb-3 text-blue-100">Áreas</h4>
+            <ul className="space-y-2 text-blue-100 text-xs">
+              <li><a href="#" className="hover:text-amber-500 transition-colors">Direito Empresarial</a></li>
+              <li><a href="#" className="hover:text-amber-500 transition-colors">Direito Trabalhista</a></li>
+              <li><a href="#" className="hover:text-amber-500 transition-colors">Direito Civil</a></li>
+              <li><a href="#" className="hover:text-amber-500 transition-colors">Direito Tributário</a></li>
+              <li><a href="#" className="hover:text-amber-500 transition-colors">Direito Imobiliário</a></li>
+              <li><a href="#" className="hover:text-amber-500 transition-colors">Direito Penal</a></li>
             </ul>
           </div>
 
           {/* Contato */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-amber-400">Contato</h4>
-            <div className="space-y-4 text-blue-200">
-              <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-amber-400 mt-0.5" />
+            <h4 className="text-base font-semibold mb-3 text-blue-100">Contato</h4>
+            <div className="space-y-3 text-blue-100 text-xs">
+              <div className="flex items-start space-x-2">
+                <MapPin className="h-4 w-4 text-blue-100 mt-0.5" />
                 <div>
                   <p>Av. Paulista, 1000 - Conj. 1201</p>
                   <p>Bela Vista, São Paulo - SP</p>
-                  <p>CEP: 01310-100</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-amber-400" />
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-blue-100" />
                 <p>(11) 3456-7890</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-amber-400" />
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-blue-100" />
                 <p>contato@davilareisadvogados.com.br</p>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="border-t border-blue-800 mt-12 pt-8">
+        <div className="border-t border-blue-950 mt-8 pt-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-blue-200 text-sm">
+            <p className="text-blue-100 text-xs">
               © 2024 D'Avila Reis Advogados. Todos os direitos reservados.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-blue-200 hover:text-amber-400 text-sm transition-colors">
+            <div className="flex space-x-4 mt-3 md:mt-0">
+              <a href="#" className="text-blue-100 hover:text-amber-500 text-xs transition-colors">
                 Política de Privacidade
               </a>
-              <a href="#" className="text-blue-200 hover:text-amber-400 text-sm transition-colors">
+              <a href="#" className="text-blue-100 hover:text-amber-500 text-xs transition-colors">
                 Termos de Uso
               </a>
-              <a href="#" className="text-blue-200 hover:text-amber-400 text-sm transition-colors">
+              <a href="#" className="text-blue-100 hover:text-amber-500 text-xs transition-colors">
                 Código de Ética
               </a>
             </div>

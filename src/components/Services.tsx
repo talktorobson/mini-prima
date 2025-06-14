@@ -8,69 +8,97 @@ const Services = () => {
     {
       icon: Building,
       title: "Direito Empresarial",
-      description: "Consultoria jurídica completa para empresas, incluindo contratos, fusões, aquisições e compliance corporativo.",
-      features: ["Constituição de empresas", "Contratos comerciais", "Fusões e aquisições", "Compliance"]
+      description: "Consultoria abrangente a empresas, contratos, fusões, aquisições e compliance corporativo.",
+      features: [
+        "Constituição de empresas",
+        "Contratos comerciais",
+        "Fusões e aquisições",
+        "Compliance"
+      ]
     },
     {
       icon: Users,
       title: "Direito Trabalhista",
-      description: "Assessoria em relações de trabalho, tanto para empregadores quanto empregados, incluindo processos trabalhistas.",
-      features: ["Consultoria preventiva", "Processos trabalhistas", "Negociações coletivas", "Auditorias trabalhistas"]
+      description: "Atuação em conflitos laborais, processos, negociações coletivas e auditorias.",
+      features: [
+        "Consultoria preventiva",
+        "Processos trabalhistas",
+        "Negociações coletivas",
+        "Auditorias trabalhistas"
+      ]
     },
     {
       icon: FileText,
       title: "Direito Civil",
-      description: "Soluções em direito civil, incluindo contratos, responsabilidade civil e questões patrimoniais.",
-      features: ["Contratos diversos", "Responsabilidade civil", "Direito das obrigações", "Questões patrimoniais"]
+      description: "Abrangência em contratos, responsabilidade civil e obrigações patrimoniais.",
+      features: [
+        "Contratos diversos",
+        "Responsabilidade civil",
+        "Direito das obrigações",
+        "Questões patrimoniais"
+      ]
     },
     {
       icon: Briefcase,
       title: "Direito Tributário",
-      description: "Planejamento tributário e defesa em processos fiscais para otimização da carga tributária.",
-      features: ["Planejamento tributário", "Processos administrativos", "Recuperação de créditos", "Consultoria fiscal"]
+      description: "Planejamento tributário e defesa em contencioso fiscal.",
+      features: [
+        "Planejamento tributário",
+        "Processos administrativos",
+        "Recuperação de créditos",
+        "Consultoria fiscal"
+      ]
     },
     {
       icon: Home,
       title: "Direito Imobiliário",
-      description: "Assessoria completa em transações imobiliárias, incorporações e questões condominiais.",
-      features: ["Compra e venda", "Incorporações", "Direito condominial", "Locações"]
+      description: "Consultoria e assessoria em transações e litígios imobiliários.",
+      features: [
+        "Compra e venda",
+        "Incorporações",
+        "Direito condominial",
+        "Locações"
+      ]
     },
     {
       icon: Gavel,
       title: "Direito Penal",
-      description: "Defesa criminal em todas as instâncias, com foco na proteção dos direitos fundamentais.",
-      features: ["Defesa criminal", "Crimes empresariais", "Recursos", "Habeas corpus"]
+      description: "Defesa técnica em processos criminais e crimes empresariais.",
+      features: [
+        "Defesa criminal",
+        "Crimes empresariais",
+        "Recursos",
+        "Habeas corpus"
+      ]
     }
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-16 bg-white border-t border-gray-200">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-blue-900 mb-6">
-            Nossas Áreas de Atuação
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-semibold text-blue-900 mb-3">
+            Áreas de Atuação
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Oferecemos expertise especializada em diversas áreas do direito, 
-            sempre com foco na excelência e nos resultados que nossos clientes merecem.
+          <p className="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">
+            Especialização em diferentes ramos do Direito para empresas e pessoas físicas.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
-            <Card key={index} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <service.icon className="h-8 w-8 text-amber-600" />
+            <Card key={index} className="border-gray-200 rounded-sm shadow-none hover:shadow-none transition-none">
+              <CardHeader className="text-center pb-3">
+                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center mx-auto mb-3">
+                  <service.icon className="h-7 w-7 text-blue-900" />
                 </div>
-                <CardTitle className="text-xl text-blue-900">{service.title}</CardTitle>
+                <CardTitle className="text-lg text-blue-900">{service.title}</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
-                <ul className="space-y-2">
+                <p className="text-gray-700 mb-4 text-sm leading-relaxed">{service.description}</p>
+                <ul className="space-y-1">
                   {service.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center text-sm text-gray-500">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-3"></div>
+                    <li key={featureIndex} className="flex items-center text-xs text-gray-600">
+                      <div className="w-1.5 h-1.5 bg-blue-900 rounded mr-2"></div>
                       {feature}
                     </li>
                   ))}
@@ -80,11 +108,11 @@ const Services = () => {
           ))}
         </div>
 
-        <div className="text-center mt-16">
-          <p className="text-lg text-gray-600 mb-8">
-            Não encontrou a área que procura? Entre em contato conosco para uma consulta personalizada.
+        <div className="text-center mt-12">
+          <p className="text-base text-gray-700 mb-5">
+            Para outras áreas do direito, envie sua demanda para análise técnica.
           </p>
-          <button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-4 rounded-lg font-semibold transition-colors duration-300">
+          <button className="bg-blue-900 hover:bg-blue-950 text-white px-8 py-3 rounded border-0 font-medium transition-colors duration-200">
             Solicitar Consulta
           </button>
         </div>
