@@ -238,6 +238,7 @@ export type Database = {
           status: Database["public"]["Enums"]["client_status"]
           total_contract_value: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           address?: string | null
@@ -266,6 +267,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status"]
           total_contract_value?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           address?: string | null
@@ -294,6 +296,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status"]
           total_contract_value?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

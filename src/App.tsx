@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
@@ -14,42 +15,49 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Helper function to check if authentication is still valid
-const isAuthenticationValid = () => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  const authExpiration = localStorage.getItem('authExpiration');
-  
-  if (!isAuthenticated || !authExpiration) {
-    return false;
-  }
-  
-  const currentTime = Date.now();
-  const expirationTime = parseInt(authExpiration);
-  
-  // If session has expired, clear the authentication
-  if (currentTime > expirationTime) {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('authExpiration');
-    localStorage.removeItem('clientName');
-    localStorage.removeItem('clientCompany');
-    console.log('Session expired. User logged out.');
-    return false;
-  }
-  
-  return true;
-};
-
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isValid = isAuthenticationValid();
-  return isValid ? <>{children}</> : <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+    </div>;
+  }
+  
+  return user ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 // Public Route Component (redirect to portal if already logged in)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const isValid = isAuthenticationValid();
-  return !isValid ? <>{children}</> : <Navigate to="/portal" replace />;
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+    </div>;
+  }
+  
+  return !user ? <>{children}</> : <Navigate to="/portal" replace />;
 };
+
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
+    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+    
+    {/* Protected Portal Routes */}
+    <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
+    <Route path="/portal/cases" element={<ProtectedRoute><PortalCases /></ProtectedRoute>} />
+    <Route path="/portal/documents" element={<ProtectedRoute><PortalDocuments /></ProtectedRoute>} />
+    <Route path="/portal/messages" element={<ProtectedRoute><PortalMessages /></ProtectedRoute>} />
+    <Route path="/portal/financial" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
+    <Route path="/portal/notifications" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
+    
+    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -57,21 +65,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          
-          {/* Protected Portal Routes */}
-          <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
-          <Route path="/portal/cases" element={<ProtectedRoute><PortalCases /></ProtectedRoute>} />
-          <Route path="/portal/documents" element={<ProtectedRoute><PortalDocuments /></ProtectedRoute>} />
-          <Route path="/portal/messages" element={<ProtectedRoute><PortalMessages /></ProtectedRoute>} />
-          <Route path="/portal/financial" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
-          <Route path="/portal/notifications" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,16 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, MessagesSquare, User, Bell, ArrowLeft, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Portal = () => {
   const navigate = useNavigate();
-  const clientName = localStorage.getItem('clientName') || 'Cliente';
-  const clientCompany = localStorage.getItem('clientCompany') || '';
+  const { user, signOut } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [clientData, setClientData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // Update time every minute
   useEffect(() => {
@@ -20,21 +22,55 @@ const Portal = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('authExpiration');
-    localStorage.removeItem('clientName');
-    localStorage.removeItem('clientCompany');
-    navigate('/login');
+  // Fetch client data
+  useEffect(() => {
+    const fetchClientData = async () => {
+      if (!user) return;
+
+      try {
+        const { data: clientInfo, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching client data:', error);
+        } else {
+          setClientData(clientInfo);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClientData();
+  }, [user]);
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
-  // Mock data for dashboard stats
+  // Mock data for dashboard stats - you can replace with real data from Supabase
   const dashboardStats = {
     activeCases: 3,
     pendingDocuments: 2,
     unreadMessages: 4,
     upcomingDeadlines: 1
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  const clientName = clientData?.contact_person || user?.email || 'Cliente';
+  const clientCompany = clientData?.company_name || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -407,30 +443,30 @@ const Portal = () => {
                 <div className="p-2 bg-green-200 rounded-full">
                   <CheckCircle className="h-6 w-6 text-green-700" />
                 </div>
-                <h3 className="font-bold text-green-800 text-lg">Portal Totalmente Funcional</h3>
+                <h3 className="font-bold text-green-800 text-lg">Portal com Autenticação Supabase</h3>
               </div>
               
-              <p className="text-green-700 mb-4 font-medium">Sistema de autenticação e funcionalidades implementadas:</p>
+              <p className="text-green-700 mb-4 font-medium">Sistema de autenticação Supabase implementado com sucesso:</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3">
                     <span>🔐</span>
-                    <span><strong>JWT Auth:</strong> Sistema robusto e seguro</span>
+                    <span><strong>Supabase Auth:</strong> Sistema robusto e seguro</span>
                   </div>
                   <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3">
                     <span>🛡️</span>
-                    <span><strong>Middleware:</strong> Proteção de rotas funcionando</span>
+                    <span><strong>RLS:</strong> Políticas de segurança implementadas</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3">
                     <span>⚛️</span>
-                    <span><strong>React Hooks:</strong> Estado de auth compartilhado</span>
+                    <span><strong>React Context:</strong> Estado de auth compartilhado</span>
                   </div>
                   <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3">
-                    <span>🔗</span>
-                    <span><strong>Auto-login:</strong> Parâmetros URL funcionais</span>
+                    <span>👤</span>
+                    <span><strong>Registro automático:</strong> Criação de cliente no signup</span>
                   </div>
                 </div>
               </div>
