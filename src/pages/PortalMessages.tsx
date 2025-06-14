@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,91 +7,84 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessagesSquare, User, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { messagesService, clientService } from '@/services/database';
+import { useAuth } from '@/contexts/AuthContext';
+
 interface Message {
-  id: number;
-  sender: string;
-  role: string;
-  message: string;
-  time: string;
-  isFromTeam: boolean;
-  timestamp: number;
+  id: string;
+  content: string;
+  created_at: string;
+  sender_type: 'client' | 'staff';
+  sender_id: string;
+  recipient_id: string;
 }
+
 const PortalMessages = () => {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const clientName = localStorage.getItem('clientName') || 'Cliente';
+  const queryClient = useQueryClient();
 
-  // Initialize messages from localStorage or use default
-  useEffect(() => {
-    const savedMessages = localStorage.getItem('chatMessages');
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    } else {
-      const initialMessages: Message[] = [{
-        id: 1,
-        sender: "Dr. Maria Silva",
-        role: "Advogada Responsável",
-        message: "Olá! Recebi os documentos que você enviou. Vou revisar e te retorno em breve com o parecer.",
-        time: "14:30",
-        isFromTeam: true,
-        timestamp: Date.now() - 3600000
-      }, {
-        id: 2,
-        sender: clientName,
-        role: "Cliente",
-        message: "Perfeito! Preciso saber se há algum prazo específico para o processo.",
-        time: "14:35",
-        isFromTeam: false,
-        timestamp: Date.now() - 3300000
-      }, {
-        id: 3,
-        sender: "Dr. Carlos Santos",
-        role: "Advogado Associado",
-        message: "O prazo para entrada do recurso é de 15 dias úteis. Já estamos preparando toda a documentação necessária.",
-        time: "15:20",
-        isFromTeam: true,
-        timestamp: Date.now() - 600000
-      }, {
-        id: 4,
-        sender: clientName,
-        role: "Cliente",
-        message: "Entendi. Vocês precisam de mais algum documento de minha parte?",
-        time: "15:25",
-        isFromTeam: false,
-        timestamp: Date.now() - 300000
-      }];
-      setMessages(initialMessages);
-      localStorage.setItem('chatMessages', JSON.stringify(initialMessages));
-    }
-  }, [clientName]);
+  // Get current client data
+  const { data: client } = useQuery({
+    queryKey: ['current-client'],
+    queryFn: clientService.getCurrentClient,
+    enabled: !!user
+  });
 
-  // Save messages to localStorage whenever messages change
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
+  // Get messages
+  const { data: messages = [], isLoading } = useQuery({
+    queryKey: ['messages', client?.id],
+    queryFn: () => messagesService.getMessages(client?.id || ''),
+    enabled: !!client?.id
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: (content: string) => 
+      messagesService.sendMessage(
+        content,
+        'default-thread', // You might want to implement thread management
+        client?.id || '',
+        'staff-id' // You'll need to determine the recipient
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      setNewMessage('');
+      toast({
+        title: "Mensagem enviada",
+        description: "Sua mensagem foi enviada com sucesso."
+      });
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar mensagem. Tente novamente.",
+        variant: "destructive"
+      });
     }
-  }, [messages]);
+  });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth"
-    });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  const formatTime = (timestamp: number) => {
+
+  const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
+
   const handleSendMessage = () => {
     if (!newMessage.trim()) {
       toast({
@@ -100,64 +94,27 @@ const PortalMessages = () => {
       });
       return;
     }
-    const timestamp = Date.now();
-    const newMsg: Message = {
-      id: messages.length + 1,
-      sender: clientName,
-      role: "Cliente",
-      message: newMessage.trim(),
-      time: formatTime(timestamp),
-      isFromTeam: false,
-      timestamp
-    };
-    setMessages(prev => [...prev, newMsg]);
-    setNewMessage('');
 
-    // Simulate team response after a delay
-    setTimeout(() => {
-      simulateTeamResponse(newMsg.message);
-    }, 2000 + Math.random() * 3000); // Random delay between 2-5 seconds
+    sendMessageMutation.mutate(newMessage.trim());
+  };
 
-    toast({
-      title: "Mensagem enviada",
-      description: "Sua mensagem foi enviada com sucesso."
-    });
-    console.log('Sending message:', newMsg.message);
-  };
-  const simulateTeamResponse = (userMessage: string) => {
-    const teamMembers = [{
-      name: "Dr. Maria Silva",
-      role: "Advogada Responsável"
-    }, {
-      name: "Dr. Carlos Santos",
-      role: "Advogado Associado"
-    }, {
-      name: "Ana Paula",
-      role: "Assistente Jurídica"
-    }];
-    const responses = ["Obrigado pela mensagem! Vou verificar e te retorno em breve.", "Recebi sua solicitação. Já estou analisando os detalhes.", "Perfeito! Vou encaminhar para a equipe responsável.", "Entendi sua preocupação. Vamos resolver isso rapidamente.", "Muito bem! Vou preparar os documentos necessários.", "Obrigado pelo esclarecimento. Isso nos ajuda muito no processo."];
-    const randomTeamMember = teamMembers[Math.floor(Math.random() * teamMembers.length)];
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    const timestamp = Date.now();
-    const teamResponse: Message = {
-      id: Date.now(),
-      // Use timestamp as unique ID
-      sender: randomTeamMember.name,
-      role: randomTeamMember.role,
-      message: randomResponse,
-      time: formatTime(timestamp),
-      isFromTeam: true,
-      timestamp
-    };
-    setMessages(prev => [...prev, teamResponse]);
-  };
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
-  return <div className="min-h-screen bg-gray-50">
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -195,29 +152,46 @@ const PortalMessages = () => {
           </CardHeader>
           
           <CardContent className="flex-1 flex flex-col p-4 overflow-hidden">
-            {/* Messages Area */}
             <div className="flex-1 mb-4 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="space-y-3 p-3">
-                  {messages.map(msg => <div key={msg.id} className={`flex ${msg.isFromTeam ? 'justify-start' : 'justify-end'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${msg.isFromTeam ? 'bg-white border border-gray-200 shadow-sm' : 'bg-blue-600 text-white'}`}>
+                  {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender_type === 'staff' ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        msg.sender_type === 'staff' 
+                          ? 'bg-white border border-gray-200 shadow-sm' 
+                          : 'bg-blue-600 text-white'
+                      }`}>
                         <div className="flex items-center space-x-2 mb-1">
                           <User className="h-3 w-3" />
-                          <span className="text-xs font-medium">{msg.sender}</span>
-                          <span className="text-xs opacity-70">{msg.time}</span>
+                          <span className="text-xs font-medium">
+                            {msg.sender_type === 'client' ? (client?.contact_person || 'Você') : 'Equipe Jurídica'}
+                          </span>
+                          <span className="text-xs opacity-70">{formatTime(msg.created_at)}</span>
                         </div>
-                        <p className="text-sm">{msg.message}</p>
+                        <p className="text-sm">{msg.content}</p>
                       </div>
-                    </div>)}
+                    </div>
+                  ))}
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
             </div>
             
-            {/* Message Input */}
             <div className="flex space-x-2 flex-shrink-0 border-t pt-4">
-              <Input placeholder="Digite sua mensagem..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={handleKeyPress} disabled={false} className="flex-1 bg-slate-200" />
-              <Button onClick={handleSendMessage} className="bg-teal-600 hover:bg-teal-700 text-white" disabled={!newMessage.trim()}>
+              <Input 
+                placeholder="Digite sua mensagem..." 
+                value={newMessage} 
+                onChange={(e) => setNewMessage(e.target.value)} 
+                onKeyPress={handleKeyPress} 
+                disabled={sendMessageMutation.isPending}
+                className="flex-1" 
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                className="bg-teal-600 hover:bg-teal-700 text-white" 
+                disabled={!newMessage.trim() || sendMessageMutation.isPending}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
@@ -230,12 +204,12 @@ const PortalMessages = () => {
               <div className="flex items-center space-x-3">
                 <MessagesSquare className="h-5 w-5 text-teal-600" />
                 <div>
-                  <h3 className="font-semibold text-teal-900">Chat Funcional</h3>
+                  <h3 className="font-semibold text-teal-900">Sistema de Mensagens Conectado</h3>
                   <div className="text-teal-700 text-sm mt-1 space-y-1">
-                    <p>• Envio de mensagens em tempo real</p>
-                    <p>• Respostas automáticas da equipe jurídica</p>
-                    <p>• Histórico salvo automaticamente no navegador</p>
-                    <p>• Scroll automático para novas mensagens</p>
+                    <p>• Mensagens salvas no banco de dados Supabase</p>
+                    <p>• Integração com autenticação de usuário</p>
+                    <p>• Comunicação em tempo real com a equipe jurídica</p>
+                    <p>• Histórico completo de conversas</p>
                   </div>
                 </div>
               </div>
@@ -243,6 +217,8 @@ const PortalMessages = () => {
           </Card>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default PortalMessages;
