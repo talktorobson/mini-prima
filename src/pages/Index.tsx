@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Users, Phone } from 'lucide-react';
 import Hero from '@/components/Hero';
 import RiskSection from '@/components/RiskSection';
 import Services from '@/components/Services';
@@ -13,22 +14,27 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-navy-900">
-      {/* Navigation Header with Login Button */}
-      <header className="absolute top-0 left-0 right-0 z-50 p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="text-white font-bold text-xl">
-            Escritório Jurídico
-          </div>
-          <Button 
-            onClick={() => navigate('/login')}
-            variant="outline" 
-            className="bg-white/10 border-white/20 text-white hover:bg-white hover:text-navy-900"
-          >
-            Portal do Cliente
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      {/* Floating Portal Access Button */}
+      <div className="fixed top-6 right-6 z-50">
+        <Button 
+          onClick={() => navigate('/login')}
+          className="bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold px-6 py-3 rounded-full shadow-2xl border-2 border-white/20 backdrop-blur-sm flex items-center gap-2 transform hover:scale-105 transition-all duration-200"
+        >
+          <Users className="h-5 w-5" />
+          Portal do Cliente
+        </Button>
+      </div>
+
+      {/* Quick Contact Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button 
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-full shadow-2xl flex items-center gap-2"
+        >
+          <Phone className="h-5 w-5" />
+          WhatsApp
+        </Button>
+      </div>
 
       <Hero />
       <RiskSection />
