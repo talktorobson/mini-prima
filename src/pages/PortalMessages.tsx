@@ -174,7 +174,7 @@ const PortalMessages = () => {
               <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white">
                 Chat
               </Button>
-              <Button size="sm" variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50">
+              <Button size="sm" variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50 text-base">
                 Notificações
               </Button>
             </div>
