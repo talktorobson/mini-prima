@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -206,8 +205,8 @@ const PortalMessages = () => {
       </header>
 
       <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <Card className="h-[500px] flex flex-col">
-          <CardHeader className="pb-3">
+        <Card className="h-[600px] flex flex-col">
+          <CardHeader className="pb-3 flex-shrink-0">
             <CardTitle className="flex items-center space-x-2 text-lg">
               <MessagesSquare className="h-5 w-5" />
               <span>Chat com Equipe Jurídica</span>
@@ -217,32 +216,34 @@ const PortalMessages = () => {
             </CardTitle>
           </CardHeader>
           
-          <CardContent className="flex-1 flex flex-col pt-0">
+          <CardContent className="flex-1 flex flex-col p-4 overflow-hidden">
             {/* Messages Area */}
-            <ScrollArea className="flex-1 mb-3 p-3 bg-gray-50 rounded-lg">
-              <div className="space-y-3">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.isFromTeam ? 'justify-start' : 'justify-end'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                      msg.isFromTeam 
-                        ? 'bg-white border border-gray-200' 
-                        : 'bg-blue-600 text-white'
-                    }`}>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <User className="h-3 w-3" />
-                        <span className="text-xs font-medium">{msg.sender}</span>
-                        <span className="text-xs opacity-70">{msg.time}</span>
+            <div className="flex-1 mb-4 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="space-y-3 p-3">
+                  {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.isFromTeam ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        msg.isFromTeam 
+                          ? 'bg-white border border-gray-200 shadow-sm' 
+                          : 'bg-blue-600 text-white'
+                      }`}>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <User className="h-3 w-3" />
+                          <span className="text-xs font-medium">{msg.sender}</span>
+                          <span className="text-xs opacity-70">{msg.time}</span>
+                        </div>
+                        <p className="text-sm">{msg.message}</p>
                       </div>
-                      <p className="text-sm">{msg.message}</p>
                     </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+            </div>
             
             {/* Message Input */}
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 flex-shrink-0 border-t pt-4">
               <Input
                 placeholder="Digite sua mensagem..."
                 value={newMessage}
