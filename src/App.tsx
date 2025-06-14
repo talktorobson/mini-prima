@@ -14,16 +14,41 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Helper function to check if authentication is still valid
+const isAuthenticationValid = () => {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const authExpiration = localStorage.getItem('authExpiration');
+  
+  if (!isAuthenticated || !authExpiration) {
+    return false;
+  }
+  
+  const currentTime = Date.now();
+  const expirationTime = parseInt(authExpiration);
+  
+  // If session has expired, clear the authentication
+  if (currentTime > expirationTime) {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('authExpiration');
+    localStorage.removeItem('clientName');
+    localStorage.removeItem('clientCompany');
+    console.log('Session expired. User logged out.');
+    return false;
+  }
+  
+  return true;
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  const isValid = isAuthenticationValid();
+  return isValid ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 // Public Route Component (redirect to portal if already logged in)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/portal" replace />;
+  const isValid = isAuthenticationValid();
+  return !isValid ? <>{children}</> : <Navigate to="/portal" replace />;
 };
 
 const App = () => (
