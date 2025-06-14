@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const PortalCases = () => {
@@ -41,31 +41,38 @@ const PortalCases = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => navigate('/portal')}>
-                ← Voltar ao Portal
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/portal')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Voltar ao Portal</span>
               </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Meus Casos</h1>
+              <div className="border-l border-gray-300 pl-4">
+                <h1 className="text-xl font-bold text-gray-900">Meus Casos</h1>
+              </div>
             </div>
             <div className="flex space-x-2">
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                + Filtros Funcionais
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                Filtros
               </Button>
-              <Button size="sm" variant="outline" className="border-blue-500 text-blue-600">
-                📊 Dados Reais
+              <Button size="sm" variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
+                Dados
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-6">
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-4">
           {cases.map((case_) => (
-            <Card key={case_.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <Card key={case_.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle>{case_.title}</CardTitle>
+                    <CardTitle className="text-lg">{case_.title}</CardTitle>
                     <CardDescription>Última atualização: {case_.lastUpdate}</CardDescription>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -86,8 +93,8 @@ const PortalCases = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="pt-0">
+                <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
                       <span>Progresso</span>
@@ -107,7 +114,10 @@ const PortalCases = () => {
                       <p>• Acompanhamento em tempo real</p>
                       <p>• Histórico completo disponível</p>
                     </div>
-                    <Button variant="outline" className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center space-x-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                    >
                       <span>Ver Detalhes</span>
                       <ArrowRight className="h-4 w-4" />
                     </Button>

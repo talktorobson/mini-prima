@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileText, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const PortalDocuments = () => {
@@ -49,32 +49,39 @@ const PortalDocuments = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => navigate('/portal')}>
-                ← Voltar ao Portal
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/portal')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Voltar ao Portal</span>
               </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Documentos</h1>
+              <div className="border-l border-gray-300 pl-4">
+                <h1 className="text-xl font-bold text-gray-900">Documentos</h1>
+              </div>
             </div>
             <div className="flex space-x-2">
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                📥 Download Real
+              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                Download
               </Button>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-                🔒 Acesso Seguro
+              <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
+                Acesso Seguro
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-4">
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-3">
           {documents.map((doc) => (
-            <Card key={doc.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
+            <Card key={doc.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FileText className="h-6 w-6 text-blue-600" />
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <FileText className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">{doc.name}</h3>
@@ -86,8 +93,8 @@ const PortalDocuments = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  <div className="flex items-center space-x-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       doc.status === 'Assinado' || doc.status === 'Finalizado' || doc.status === 'Aprovado' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-yellow-100 text-yellow-800'
@@ -96,10 +103,10 @@ const PortalDocuments = () => {
                     </span>
                     
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-50">
                         Visualizar
                       </Button>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
                         Download
                       </Button>
                     </div>
@@ -110,22 +117,18 @@ const PortalDocuments = () => {
           ))}
         </div>
         
-        <div className="mt-8">
+        <div className="mt-6">
           <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <FileText className="h-6 w-6 text-blue-600" />
+                <FileText className="h-5 w-5 text-blue-600" />
                 <div>
                   <h3 className="font-semibold text-blue-900">Informações sobre Documentos</h3>
-                  <p className="text-blue-700 text-sm mt-1">
-                    • Todos os documentos são armazenados com segurança e criptografia
-                  </p>
-                  <p className="text-blue-700 text-sm">
-                    • Downloads são registrados para auditoria e controle
-                  </p>
-                  <p className="text-blue-700 text-sm">
-                    • Visualização online disponível para todos os tipos de arquivo
-                  </p>
+                  <div className="text-blue-700 text-sm mt-1 space-y-1">
+                    <p>• Todos os documentos são armazenados com segurança e criptografia</p>
+                    <p>• Downloads são registrados para auditoria e controle</p>
+                    <p>• Visualização online disponível para todos os tipos de arquivo</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
