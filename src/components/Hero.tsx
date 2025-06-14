@@ -1,14 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Scale, Phone, Mail, ArrowRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
 const Hero = () => {
   const navigate = useNavigate();
-
-  return (
-    <section className="relative min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white">
+  return <section className="relative min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white">
       {/* Header */}
       <header className="container mx-auto px-6 pt-8 flex justify-between items-center mb-8">
         <div className="flex items-center space-x-3">
@@ -28,7 +24,7 @@ const Hero = () => {
           </div>
           <div className="flex items-center space-x-2 text-blue-100">
             <Mail className="h-4 w-4 text-amber-400" />
-            <span className="text-sm font-medium">financeiro@davilareisadvogados.com.br</span>
+            
           </div>
         </div>
       </header>
@@ -50,21 +46,13 @@ const Hero = () => {
           
           {/* CTA Buttons - Portal Access Prominent */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-            <Button 
-              onClick={() => navigate('/login')}
-              size="lg"
-              className="bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold px-10 py-4 text-lg rounded-lg shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3"
-            >
+            <Button onClick={() => navigate('/login')} size="lg" className="bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold px-10 py-4 text-lg rounded-lg shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3">
               <Users className="h-5 w-5" />
               Acessar Portal do Cliente
               <ArrowRight className="h-5 w-5" />
             </Button>
             
-            <Button 
-              variant="outline"
-              size="lg"
-              className="border-2 border-white text-white font-semibold px-10 py-4 text-lg rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200"
-            >
+            <Button variant="outline" size="lg" className="border-2 border-white text-white font-semibold px-10 py-4 text-lg rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200">
               Consultoria Gratuita
             </Button>
           </div>
@@ -86,8 +74,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
