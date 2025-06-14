@@ -1,0 +1,97 @@
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate login - replace with actual Supabase auth
+    setTimeout(() => {
+      if (email && password) {
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('clientName', 'João Silva');
+        localStorage.setItem('clientCompany', 'Empresa Teste Ltda');
+        window.location.href = '/portal';
+      } else {
+        toast({
+          title: "Erro no login",
+          description: "Por favor, preencha todos os campos.",
+          variant: "destructive"
+        });
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            Portal do Cliente
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Faça login para acessar seu portal
+          </p>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Acesso ao Portal</CardTitle>
+            <CardDescription>
+              Digite suas credenciais para continuar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Entrando...' : 'Entrar'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
