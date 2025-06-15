@@ -66,11 +66,14 @@ export type Database = {
           case_title: string
           client_id: string
           client_satisfaction: number | null
+          counterparty_name: string | null
           court_agency: string | null
+          court_process_number: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           due_date: string | null
+          end_date: string | null
           expected_close_date: string | null
           fixed_fee: number | null
           hourly_rate: number | null
@@ -100,11 +103,14 @@ export type Database = {
           case_title: string
           client_id: string
           client_satisfaction?: number | null
+          counterparty_name?: string | null
           court_agency?: string | null
+          court_process_number?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           due_date?: string | null
+          end_date?: string | null
           expected_close_date?: string | null
           fixed_fee?: number | null
           hourly_rate?: number | null
@@ -134,11 +140,14 @@ export type Database = {
           case_title?: string
           client_id?: string
           client_satisfaction?: number | null
+          counterparty_name?: string | null
           court_agency?: string | null
+          court_process_number?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           due_date?: string | null
+          end_date?: string | null
           expected_close_date?: string | null
           fixed_fee?: number | null
           hourly_rate?: number | null
@@ -361,19 +370,24 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           digital_signature: string | null
+          document_category: string | null
           document_name: string
           document_type: string
           expiry_date: string | null
+          file_path: string | null
           file_size: number | null
           file_url: string | null
           id: string
+          is_visible_to_client: boolean | null
           last_modified: string | null
           notes: string | null
+          original_filename: string | null
           signature_required: boolean | null
           status: Database["public"]["Enums"]["document_status"]
           tags: Json | null
           updated_at: string | null
           upload_date: string | null
+          uploaded_by: string | null
           version: number | null
         }
         Insert: {
@@ -384,19 +398,24 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           digital_signature?: string | null
+          document_category?: string | null
           document_name: string
           document_type: string
           expiry_date?: string | null
+          file_path?: string | null
           file_size?: number | null
           file_url?: string | null
           id?: string
+          is_visible_to_client?: boolean | null
           last_modified?: string | null
           notes?: string | null
+          original_filename?: string | null
           signature_required?: boolean | null
           status?: Database["public"]["Enums"]["document_status"]
           tags?: Json | null
           updated_at?: string | null
           upload_date?: string | null
+          uploaded_by?: string | null
           version?: number | null
         }
         Update: {
@@ -407,19 +426,24 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           digital_signature?: string | null
+          document_category?: string | null
           document_name?: string
           document_type?: string
           expiry_date?: string | null
+          file_path?: string | null
           file_size?: number | null
           file_url?: string | null
           id?: string
+          is_visible_to_client?: boolean | null
           last_modified?: string | null
           notes?: string | null
+          original_filename?: string | null
           signature_required?: boolean | null
           status?: Database["public"]["Enums"]["document_status"]
           tags?: Json | null
           updated_at?: string | null
           upload_date?: string | null
+          uploaded_by?: string | null
           version?: number | null
         }
         Relationships: []
@@ -439,6 +463,7 @@ export type Database = {
           id: string
           invoice_number: string | null
           notes: string | null
+          paid_date: string | null
           payment_date: string | null
           payment_link: string | null
           payment_method: string | null
@@ -464,6 +489,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           notes?: string | null
+          paid_date?: string | null
           payment_date?: string | null
           payment_link?: string | null
           payment_method?: string | null
@@ -489,6 +515,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           notes?: string | null
+          paid_date?: string | null
           payment_date?: string | null
           payment_link?: string | null
           payment_method?: string | null

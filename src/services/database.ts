@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Messages service
@@ -79,7 +78,10 @@ export const casesService = {
 
     const { data, error } = await supabase
       .from('cases')
-      .select('*')
+      .select(`
+        *,
+        documents(count)
+      `)
       .eq('client_id', client.id)
       .order('created_at', { ascending: false });
     
@@ -90,8 +92,24 @@ export const casesService = {
   async getCaseById(caseId: string) {
     const { data, error } = await supabase
       .from('cases')
-      .select('*')
+      .select(`
+        *,
+        documents(*),
+        case_updates(*)
+      `)
       .eq('id', caseId)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateCase(caseId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('cases')
+      .update(updates)
+      .eq('id', caseId)
+      .select()
       .single();
     
     if (error) throw error;
@@ -111,6 +129,48 @@ export const documentsService = {
       .eq('client_id', client.id)
       .order('upload_date', { ascending: false });
     
+    if (error) throw error;
+    return data;
+  },
+
+  async getCaseDocuments(caseId: string) {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('case_id', caseId)
+      .eq('is_visible_to_client', true)
+      .order('upload_date', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async uploadDocument(file: File, caseId: string, metadata: any) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+
+    // Upload file to storage
+    const fileName = `${user.id}/${caseId}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('case-documents')
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    // Create document record
+    const { data, error } = await supabase
+      .from('documents')
+      .insert({
+        document_name: file.name,
+        original_filename: file.name,
+        file_path: fileName,
+        file_size: file.size,
+        case_id: caseId,
+        ...metadata
+      })
+      .select()
+      .single();
+
     if (error) throw error;
     return data;
   }

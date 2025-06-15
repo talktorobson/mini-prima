@@ -1,39 +1,133 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, ArrowRight, Upload, FileText, User, Scale } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { casesService } from '@/services/database';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const PortalCases = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingCaseId, setUploadingCaseId] = useState<string | null>(null);
 
-  const cases = [
-    {
-      id: 1,
-      title: "Processo Trabalhista #2024-001",
-      status: "Em Andamento",
-      priority: "Alta",
-      progress: 75,
-      lastUpdate: "15/06/2024"
-    },
-    {
-      id: 2,
-      title: "Revisão Contratual #2024-002",
-      status: "Pendente Documentos",
-      priority: "Média",
-      progress: 40,
-      lastUpdate: "12/06/2024"
-    },
-    {
-      id: 3,
-      title: "Consultoria Fiscal #2024-003",
-      status: "Concluído",
-      priority: "Baixa",
-      progress: 100,
-      lastUpdate: "10/06/2024"
+  // Fetch cases from database
+  const { data: cases = [], isLoading, error } = useQuery({
+    queryKey: ['client-cases'],
+    queryFn: casesService.getCases
+  });
+
+  const handleFileUpload = async (caseId: string) => {
+    if (!selectedFile) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione um arquivo primeiro.",
+        variant: "destructive"
+      });
+      return;
     }
-  ];
+
+    setUploadingCaseId(caseId);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Upload file to storage
+      const fileName = `${user.id}/${caseId}/${Date.now()}-${selectedFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('case-documents')
+        .upload(fileName, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      // Create document record
+      const { error: insertError } = await supabase
+        .from('documents')
+        .insert({
+          document_name: selectedFile.name,
+          original_filename: selectedFile.name,
+          file_path: fileName,
+          document_type: 'Case Document',
+          document_category: 'Case Files',
+          file_size: selectedFile.size,
+          case_id: caseId,
+          status: 'Active',
+          is_visible_to_client: true
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Sucesso",
+        description: "Documento enviado com sucesso!"
+      });
+
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar documento. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingCaseId(null);
+    }
+  };
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return 'N/A';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'open': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
+      case 'closed': return 'bg-green-100 text-green-800';
+      case 'on_hold': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-orange-100 text-orange-800';
+      case 'low': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar casos</h2>
+          <p className="text-gray-600">Tente novamente mais tarde.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,7 +152,7 @@ const PortalCases = () => {
                 Filtros
               </Button>
               <Button size="sm" variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
-                Dados
+                Exportar
               </Button>
             </div>
           </div>
@@ -66,67 +160,149 @@ const PortalCases = () => {
       </header>
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-4">
-          {cases.map((case_) => (
-            <Card key={case_.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{case_.title}</CardTitle>
-                    <CardDescription>Última atualização: {case_.lastUpdate}</CardDescription>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      case_.status === 'Em Andamento' ? 'bg-blue-100 text-blue-800' :
-                      case_.status === 'Pendente Documentos' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {case_.status}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      case_.priority === 'Alta' ? 'bg-red-100 text-red-800' :
-                      case_.priority === 'Média' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {case_.priority}
-                    </span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Progresso</span>
-                      <span>{case_.progress}%</span>
+        {cases.length === 0 ? (
+          <div className="text-center py-12">
+            <Scale className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum caso encontrado</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Você não possui casos associados no momento.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {cases.map((case_) => (
+              <Card key={case_.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{case_.case_title || `Caso ${case_.case_number}`}</CardTitle>
+                      <CardDescription className="mt-1">
+                        <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                          <span>Número: {case_.case_number}</span>
+                          {case_.court_process_number && (
+                            <span>• Processo: {case_.court_process_number}</span>
+                          )}
+                          <span>• Criado: {new Date(case_.created_at).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      </CardDescription>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${case_.progress}%` }}
-                      ></div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(case_.status)}`}>
+                        {case_.status === 'Open' ? 'Aberto' : 
+                         case_.status === 'In_Progress' ? 'Em Andamento' :
+                         case_.status === 'Closed' ? 'Fechado' : 
+                         case_.status === 'On_Hold' ? 'Pausado' : case_.status}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(case_.priority)}`}>
+                        {case_.priority === 'High' ? 'Alta' :
+                         case_.priority === 'Medium' ? 'Média' :
+                         case_.priority === 'Low' ? 'Baixa' : case_.priority}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-600">
-                      <p>• Documentos anexados e revisados</p>
-                      <p>• Acompanhamento em tempo real</p>
-                      <p>• Histórico completo disponível</p>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Case Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">Detalhes do Caso</h4>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <p><span className="font-medium">Serviço:</span> {case_.service_type || 'N/A'}</p>
+                        <p><span className="font-medium">Responsável:</span> {case_.assigned_lawyer || 'N/A'}</p>
+                        {case_.counterparty_name && (
+                          <p><span className="font-medium">Parte Contrária:</span> {case_.counterparty_name}</p>
+                        )}
+                        {case_.court_agency && (
+                          <p><span className="font-medium">Tribunal:</span> {case_.court_agency}</p>
+                        )}
+                      </div>
                     </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">Informações Financeiras</h4>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        {case_.total_value && (
+                          <p><span className="font-medium">Valor Total:</span> {formatCurrency(Number(case_.total_value))}</p>
+                        )}
+                        {case_.fixed_fee && (
+                          <p><span className="font-medium">Taxa Fixa:</span> {formatCurrency(Number(case_.fixed_fee))}</p>
+                        )}
+                        {case_.hourly_rate && (
+                          <p><span className="font-medium">Valor/Hora:</span> {formatCurrency(Number(case_.hourly_rate))}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  {case_.progress_percentage !== null && (
+                    <div>
+                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Progresso</span>
+                        <span>{case_.progress_percentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${case_.progress_percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="flex space-x-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                            <Upload className="h-4 w-4" />
+                            <span>Enviar Documento</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Enviar Documento - {case_.case_title}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="file">Selecionar Arquivo</Label>
+                              <Input
+                                id="file"
+                                type="file"
+                                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                onClick={() => handleFileUpload(case_.id)}
+                                disabled={!selectedFile || uploadingCaseId === case_.id}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                {uploadingCaseId === case_.id ? 'Enviando...' : 'Enviar'}
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    
                     <Button 
                       variant="outline" 
+                      size="sm"
                       className="flex items-center space-x-2 border-blue-300 text-blue-600 hover:bg-blue-50"
                     >
                       <span>Ver Detalhes</span>
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
