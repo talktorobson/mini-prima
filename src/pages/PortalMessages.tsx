@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagesService, clientService } from '@/services/database';
 import { useAuth } from '@/contexts/AuthContext';
 import PortalNotificationList from "@/components/PortalNotificationList";
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -145,8 +146,8 @@ const PortalMessages = () => {
     queryKey: ["portal-notifications", client?.id],
     queryFn: async () => {
       if (!client?.id) return [];
-      // Load from Supabase
-      const { data, error } = await window.supabase
+      // Load from Supabase (now use supabase from import, not window.supabase)
+      const { data, error } = await supabase
         .from("portal_notifications")
         .select("*")
         .eq("client_id", client.id)
