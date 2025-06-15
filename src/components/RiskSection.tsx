@@ -33,24 +33,24 @@ const RiskSection = () => {
             <AlertTriangle className="h-4 w-4" />
             Alerta Importante
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold portal-text-primary mb-6">
             99% dos Empresários Não Sabem:
           </h2>
-          <p className="text-2xl text-amber-300 font-semibold max-w-3xl mx-auto">
+          <p className="text-2xl portal-text-accent font-semibold max-w-3xl mx-auto">
             Processos Trabalhistas Podem Atingir Seu Patrimônio Pessoal
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {stats.map((stat, index) => (
-            <Card key={index} className="text-center border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300 bg-slate-800/50 backdrop-blur-sm rounded-2xl overflow-hidden">
+            <Card key={index} className="portal-card text-center shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/30">
                   <stat.icon className="h-8 w-8 text-amber-400" />
                 </div>
-                <div className="text-5xl font-bold text-amber-400 mb-4">{stat.number}</div>
-                <h3 className="text-xl font-bold text-white mb-3">{stat.label}</h3>
-                <p className="text-slate-300 leading-relaxed">{stat.description}</p>
+                <div className="text-5xl font-bold portal-text-accent mb-4">{stat.number}</div>
+                <h3 className="text-xl font-bold portal-text-primary mb-3">{stat.label}</h3>
+                <p className="portal-text-secondary leading-relaxed">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
