@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,12 +18,15 @@ import { useQuery } from '@tanstack/react-query';
 import { useClientData } from '@/hooks/useClientData';
 import { financialService } from '@/services/database';
 
+type FilterType = 'all' | 'pending' | 'paid' | 'overdue';
+
 const PortalFinancial = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: client } = useClientData();
   
   const [activeTab, setActiveTab] = useState('pending');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   
   const { data: financialRecords = [], isLoading } = useQuery({
     queryKey: ['financial-records'],
@@ -40,6 +42,33 @@ const PortalFinancial = () => {
 
   const totalPending = pendingRecords.reduce((sum, record) => sum + (record.amount || 0), 0);
   const totalPaid = paidRecords.reduce((sum, record) => sum + (record.amount || 0), 0);
+
+  // Filter records based on active filter
+  const getFilteredRecords = () => {
+    switch (activeFilter) {
+      case 'pending':
+        return pendingRecords;
+      case 'paid':
+        return paidRecords;
+      case 'overdue':
+        return overdueRecords;
+      default:
+        return financialRecords;
+    }
+  };
+
+  const handleCardClick = (filterType: FilterType) => {
+    setActiveFilter(filterType);
+    
+    // Set appropriate tab based on filter
+    if (filterType === 'paid') {
+      setActiveTab('paid');
+    } else if (filterType === 'pending' || filterType === 'overdue') {
+      setActiveTab('pending');
+    } else {
+      setActiveTab('all');
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -76,6 +105,8 @@ const PortalFinancial = () => {
     );
   }
 
+  const filteredRecords = getFilteredRecords();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       {/* Header */}
@@ -107,7 +138,12 @@ const PortalFinancial = () => {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card 
+            className={`bg-slate-800/50 border-slate-700 backdrop-blur-sm cursor-pointer transition-all hover:bg-slate-700/50 ${
+              activeFilter === 'pending' ? 'ring-2 ring-orange-400' : ''
+            }`}
+            onClick={() => handleCardClick('pending')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -121,7 +157,12 @@ const PortalFinancial = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card 
+            className={`bg-slate-800/50 border-slate-700 backdrop-blur-sm cursor-pointer transition-all hover:bg-slate-700/50 ${
+              activeFilter === 'paid' ? 'ring-2 ring-green-400' : ''
+            }`}
+            onClick={() => handleCardClick('paid')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -135,7 +176,12 @@ const PortalFinancial = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card 
+            className={`bg-slate-800/50 border-slate-700 backdrop-blur-sm cursor-pointer transition-all hover:bg-slate-700/50 ${
+              activeFilter === 'overdue' ? 'ring-2 ring-red-400' : ''
+            }`}
+            onClick={() => handleCardClick('overdue')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -147,7 +193,12 @@ const PortalFinancial = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card 
+            className={`bg-slate-800/50 border-slate-700 backdrop-blur-sm cursor-pointer transition-all hover:bg-slate-700/50 ${
+              activeFilter === 'all' ? 'ring-2 ring-blue-400' : ''
+            }`}
+            onClick={() => handleCardClick('all')}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -160,12 +211,37 @@ const PortalFinancial = () => {
           </Card>
         </div>
 
+        {/* Active Filter Indicator */}
+        {activeFilter !== 'all' && (
+          <div className="mb-4 flex items-center space-x-2">
+            <span className="text-sm text-slate-400">Filtro ativo:</span>
+            <Badge variant="outline" className="text-white border-orange-400">
+              {activeFilter === 'pending' && 'Pendentes'}
+              {activeFilter === 'paid' && 'Pagos'}
+              {activeFilter === 'overdue' && 'Em Atraso'}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCardClick('all')}
+              className="text-orange-300 hover:text-orange-200"
+            >
+              Limpar filtro
+            </Button>
+          </div>
+        )}
+
         {/* Financial Records */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-xl text-white flex items-center space-x-2">
               <FileText className="h-5 w-5 text-orange-400" />
               <span>Registros Financeiros</span>
+              {filteredRecords.length !== financialRecords.length && (
+                <span className="text-sm text-slate-400">
+                  ({filteredRecords.length} de {financialRecords.length})
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -183,8 +259,8 @@ const PortalFinancial = () => {
               </TabsList>
 
               <TabsContent value="pending" className="space-y-4">
-                {pendingRecords.length > 0 ? (
-                  pendingRecords.map((record) => (
+                {(activeFilter === 'all' ? pendingRecords : activeFilter === 'pending' || activeFilter === 'overdue' ? filteredRecords : []).length > 0 ? (
+                  (activeFilter === 'all' ? pendingRecords : activeFilter === 'pending' || activeFilter === 'overdue' ? filteredRecords : []).map((record) => (
                     <div key={record.id} className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
@@ -247,8 +323,8 @@ const PortalFinancial = () => {
               </TabsContent>
 
               <TabsContent value="paid" className="space-y-4">
-                {paidRecords.length > 0 ? (
-                  paidRecords.map((record) => (
+                {(activeFilter === 'all' ? paidRecords : activeFilter === 'paid' ? filteredRecords : []).length > 0 ? (
+                  (activeFilter === 'all' ? paidRecords : activeFilter === 'paid' ? filteredRecords : []).map((record) => (
                     <div key={record.id} className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
@@ -302,8 +378,8 @@ const PortalFinancial = () => {
               </TabsContent>
 
               <TabsContent value="all" className="space-y-4">
-                {financialRecords.length > 0 ? (
-                  financialRecords.map((record) => (
+                {filteredRecords.length > 0 ? (
+                  filteredRecords.map((record) => (
                     <div key={record.id} className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
