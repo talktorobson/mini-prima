@@ -79,11 +79,19 @@ const AdminPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children })
   return !(user && adminUser) ? <>{children}</> : <Navigate to="/admin" replace />;
 };
 
+// Unified login route that needs both auth contexts
+const UnifiedLogin: React.FC = () => (
+  <AuthProvider>
+    <AdminAuthProvider>
+      <Login />
+    </AdminAuthProvider>
+  </AuthProvider>
+);
+
 const ClientRoutes: React.FC = () => (
   <AuthProvider>
     <Routes>
       <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
-      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       
       {/* Protected Portal Routes */}
       <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
@@ -114,6 +122,9 @@ const AdminRoutes: React.FC = () => (
 
 const AppRoutes: React.FC = () => (
   <Routes>
+    {/* Unified login route with both auth contexts */}
+    <Route path="/login" element={<UnifiedLogin />} />
+    
     {/* Client Routes */}
     <Route path="/*" element={<ClientRoutes />} />
     
