@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Upload, Scale } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, ArrowRight, Upload, Scale, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { casesService } from '@/services/database';
@@ -15,6 +15,7 @@ const PortalCases = () => {
   const [selectedCaseForUpload, setSelectedCaseForUpload] = useState<{ id: string; title: string } | null>(null);
   const [selectedCaseForDetails, setSelectedCaseForDetails] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch cases from database with proper error handling
   const { data: cases = [], isLoading, error, refetch } = useQuery({
@@ -25,6 +26,36 @@ const PortalCases = () => {
   });
 
   console.log('Cases query state:', { cases, isLoading, error });
+
+  // Filter cases based on search query
+  const filteredCases = useMemo(() => {
+    if (!searchQuery.trim()) return cases;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    return cases.filter((case_: any) => {
+      // Search in counterparty name
+      if (case_.counterparty_name?.toLowerCase().includes(query)) return true;
+      
+      // Search in case number/ID
+      if (case_.case_number?.toLowerCase().includes(query)) return true;
+      if (case_.id?.toLowerCase().includes(query)) return true;
+      
+      // Search in opposing party (same as counterparty)
+      if (case_.opposing_party?.toLowerCase().includes(query)) return true;
+      
+      // Search in risk level
+      if (case_.risk_level?.toLowerCase().includes(query)) return true;
+      
+      // Search in case risk value (convert to string and search)
+      if (case_.case_risk_value?.toString().includes(query)) return true;
+      
+      // Search in case title
+      if (case_.case_title?.toLowerCase().includes(query)) return true;
+      
+      return false;
+    });
+  }, [cases, searchQuery]);
 
   const handleUploadClick = (caseId: string, caseTitle: string) => {
     setSelectedCaseForUpload({ id: caseId, title: caseTitle });
@@ -167,17 +198,50 @@ const PortalCases = () => {
       </header>
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {cases.length === 0 ? (
+        {/* Search Section */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Buscar por parte contrária, número do caso, risco ou valor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full"
+            />
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-sm text-gray-600">
+              Mostrando {filteredCases.length} de {cases.length} casos
+            </p>
+          )}
+        </div>
+
+        {filteredCases.length === 0 ? (
           <div className="text-center py-12">
             <Scale className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum caso encontrado</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              {searchQuery ? 'Nenhum caso encontrado para esta busca' : 'Nenhum caso encontrado'}
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
-              Você não possui casos associados no momento.
+              {searchQuery 
+                ? 'Tente usar termos diferentes ou limpe a busca.' 
+                : 'Você não possui casos associados no momento.'
+              }
             </p>
+            {searchQuery && (
+              <Button 
+                variant="outline" 
+                onClick={() => setSearchQuery('')}
+                className="mt-4"
+              >
+                Limpar busca
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid gap-6">
-            {cases.map((case_) => (
+            {filteredCases.map((case_) => (
               <Card key={case_.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
