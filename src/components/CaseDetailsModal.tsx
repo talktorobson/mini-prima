@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -93,9 +92,9 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-bold">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-3">
+        <DialogHeader className="pb-1">
+          <DialogTitle className="text-lg font-bold">
             {case_.case_title || `Caso ${case_.case_number}`}
           </DialogTitle>
           <div className="flex items-center space-x-2 mt-1">
@@ -108,52 +107,52 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
           </div>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Progress Section */}
           {case_.progress_percentage !== null && (
             <div className="space-y-1">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs">
                 <span className="font-medium">Progresso do Caso</span>
                 <span>{case_.progress_percentage}%</span>
               </div>
-              <Progress value={case_.progress_percentage} className="h-2" />
+              <Progress value={case_.progress_percentage} className="h-1.5" />
             </div>
           )}
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Basic Information */}
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Left Column - Basic Information - Takes 2/3 width */}
+            <div className="lg:col-span-2 space-y-3">
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold flex items-center">
+                  <FileText className="h-3.5 w-3.5 mr-1.5" />
                   Informações Básicas
                 </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                     <span className="font-medium text-gray-600">Número do Caso:</span>
                     <span className="text-gray-900 font-medium">{case_.case_number}</span>
                   </div>
-                  <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                  <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                     <span className="font-medium text-gray-600">Serviço:</span>
                     <span className="text-gray-900">{case_.service_type || 'N/A'}</span>
                   </div>
                   {case_.court_process_number && (
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Processo:</span>
                       <span className="text-gray-900">{case_.court_process_number}</span>
                     </div>
                   )}
                   {case_.court_agency && (
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Tribunal:</span>
                       <span className="text-gray-900">{case_.court_agency}</span>
                     </div>
                   )}
                   {case_.case_risk_value && (
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Valor da Causa (pleiteado):</span>
-                      <span className="text-base font-semibold text-green-600">
+                      <span className="text-sm font-semibold text-green-600">
                         {formatCurrency(Number(case_.case_risk_value))}
                       </span>
                     </div>
@@ -161,23 +160,23 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                   
                   {/* Responsáveis section */}
                   <div className="pt-1 border-t border-gray-200">
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Seu Advogado:</span>
                       <span className="text-gray-900">{case_.assigned_lawyer || 'N/A'}</span>
                     </div>
                     {case_.counterparty_name && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 mt-1">
+                      <div className="bg-red-50 border border-red-200 rounded-md p-1.5 mt-1">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Building className="h-4 w-4 text-red-600" />
-                            <span className="font-semibold text-red-800">Parte Contrária:</span>
+                          <div className="flex items-center space-x-1.5">
+                            <Building className="h-3.5 w-3.5 text-red-600" />
+                            <span className="font-semibold text-red-800 text-xs">Parte Contrária:</span>
                           </div>
-                          <span className="text-red-900 font-medium">{case_.counterparty_name}</span>
+                          <span className="text-red-900 font-medium text-xs">{case_.counterparty_name}</span>
                         </div>
                       </div>
                     )}
                     {case_.opposing_party && (
-                      <div className="flex justify-between items-center py-1 border-b border-gray-100 mt-1">
+                      <div className="flex justify-between items-center py-0.5 border-b border-gray-100 mt-1">
                         <span className="font-medium text-gray-600">Advogado da parte:</span>
                         <span className="text-gray-900">{case_.opposing_party}</span>
                       </div>
@@ -186,18 +185,18 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
 
                   {/* Metadata section */}
                   <div className="pt-1 border-t border-gray-200">
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Criado em:</span>
                       <span className="text-gray-900">{new Date(case_.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-0.5 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Última atualização:</span>
                       <span className="text-gray-900">{new Date(case_.updated_at).toLocaleDateString('pt-BR')}</span>
                     </div>
                     {case_.risk_level && (
-                      <div className="flex justify-between items-center py-1">
+                      <div className="flex justify-between items-center py-0.5">
                         <span className="font-medium text-gray-600">Nível de Risco:</span>
-                        <Badge variant={case_.risk_level === 'High' ? 'destructive' : case_.risk_level === 'Medium' ? 'secondary' : 'outline'}>
+                        <Badge variant={case_.risk_level === 'High' ? 'destructive' : case_.risk_level === 'Medium' ? 'secondary' : 'outline'} className="text-xs">
                           {getRiskDisplayName(case_.risk_level)}
                         </Badge>
                       </div>
@@ -208,28 +207,30 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
 
               {/* Description */}
               {case_.description && (
-                <div className="space-y-2">
-                  <h3 className="text-base font-semibold">Descrição</h3>
-                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold">Descrição</h3>
+                  <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded-md">
                     {case_.description}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Right Column - Timeline */}
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
+            {/* Right Column - Timeline - Takes 1/3 width */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold flex items-center">
+                <Clock className="h-3.5 w-3.5 mr-1.5" />
                 Linha do Tempo do Caso
               </h3>
-              <CaseTimeline caseId={case_.id} />
+              <div className="max-h-96 overflow-y-auto">
+                <CaseTimeline caseId={case_.id} />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 pt-3 border-t">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex justify-end space-x-2 pt-2 border-t">
+          <Button variant="outline" onClick={onClose} size="sm">
             Fechar
           </Button>
         </div>
