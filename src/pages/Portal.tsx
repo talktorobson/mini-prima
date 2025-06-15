@@ -10,7 +10,9 @@ import {
   Bell,
   ArrowRight,
   LogOut,
-  User
+  User,
+  Eye,
+  Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +21,7 @@ import { useDocuments } from '@/hooks/useDocuments';
 
 const Portal = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const { data: clientData, isLoading: clientLoading } = useClientData();
   const { data: documents = [], isLoading: documentsLoading } = useDocuments();
 
@@ -32,7 +34,7 @@ const Portal = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       navigate('/login');
     } catch (error) {
       console.error('Error during logout:', error);
