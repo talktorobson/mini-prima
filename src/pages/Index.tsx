@@ -14,7 +14,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       {/* Floating Portal Access Button */}
       <div className="fixed top-6 right-6 z-50">
         <Button 
