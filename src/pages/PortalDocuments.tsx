@@ -206,31 +206,33 @@ const PortalDocuments = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0 gap-4 sm:gap-0">
+            <div className="flex items-center space-x-4 w-full sm:w-auto">
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/portal')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 p-2 sm:p-3"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Voltar ao Portal</span>
+                <span className="hidden sm:inline">Voltar ao Portal</span>
+                <span className="sm:hidden">Voltar</span>
               </Button>
               <div className="border-l border-gray-300 pl-4">
-                <h1 className="text-xl font-bold text-gray-900">Documentos</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900">Documentos</h1>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
               <Button 
                 size="sm" 
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm"
                 onClick={handleBulkDownload}
                 disabled={filteredDocuments.length === 0}
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download em Lote ({filteredDocuments.length})
+                <Download className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Download em Lote ({filteredDocuments.length})</span>
+                <span className="sm:hidden">Download ({filteredDocuments.length})</span>
               </Button>
-              <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
+              <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm">
                 Acesso Seguro
               </Button>
             </div>
@@ -238,7 +240,7 @@ const PortalDocuments = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <DocumentSearch onSearch={handleSearch} />
         
         {filteredDocuments.length === 0 ? (
@@ -261,24 +263,26 @@ const PortalDocuments = () => {
           <div className="grid gap-3">
             {filteredDocuments.map((doc) => (
               <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-50 rounded-lg">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <div className="flex items-start sm:items-center space-x-3">
+                      <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
                         <FileText className="h-5 w-5 text-blue-600" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{doc.document_name}</h3>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base break-words">{doc.document_name}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs sm:text-sm text-gray-600 mt-1 space-y-1 sm:space-y-0">
                           <span>{doc.document_type}</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>{formatFileSize(doc.file_size || 0)}</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>{formatDate(doc.upload_date)}</span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
                         getStatusFromDocument(doc) === 'Finalizado' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-yellow-100 text-yellow-800'
@@ -290,20 +294,21 @@ const PortalDocuments = () => {
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                          className="border-blue-500 text-blue-600 hover:bg-blue-50 flex-1 sm:flex-none text-xs sm:text-sm"
                           onClick={() => handlePreview(doc)}
                           disabled={isLoadingPreview}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          {isLoadingPreview && selectedDocument?.id === doc.id ? 'Carregando...' : 'Visualizar'}
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          {isLoadingPreview && selectedDocument?.id === doc.id ? 'Carregando...' : 'Ver'}
                         </Button>
                         <Button 
                           size="sm" 
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none text-xs sm:text-sm"
                           onClick={() => handleDownload(doc)}
                         >
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
+                          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <span className="hidden sm:inline">Download</span>
+                          <span className="sm:hidden">Baixar</span>
                         </Button>
                       </div>
                     </div>
