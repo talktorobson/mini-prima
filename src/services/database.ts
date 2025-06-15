@@ -98,12 +98,11 @@ export const casesService = {
       }
 
       console.log('Fetching cases for client:', client.id);
+      
+      // Try a simpler query first to test the basic connection
       const { data, error } = await supabase
         .from('cases')
-        .select(`
-          *,
-          documents(count)
-        `)
+        .select('*')
         .eq('client_id', client.id)
         .order('created_at', { ascending: false });
       

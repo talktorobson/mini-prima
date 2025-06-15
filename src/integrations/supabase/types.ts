@@ -169,7 +169,22 @@ export type Database = {
           total_value?: number | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_cases_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "fk_cases_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_activity_logs: {
         Row: {
@@ -446,7 +461,29 @@ export type Database = {
           uploaded_by?: string | null
           version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_documents_case_id"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_documents_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "fk_documents_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       financial_records: {
         Row: {
