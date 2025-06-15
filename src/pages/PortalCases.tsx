@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,17 +108,24 @@ const PortalCases = () => {
   };
 
   const handleExport = () => {
-    // Create data for Excel export
+    // Create data for Excel export with all requested columns
     const excelData = filteredCases.map((case_: any) => ({
-      'Título do Caso': case_.case_title || 'N/A',
       'Número do Caso': case_.case_number || 'N/A',
-      'Parte Contrária': case_.counterparty_name || 'N/A',
+      'Título do Caso': case_.case_title || 'N/A',
+      'Tipo de Serviço': case_.service_type || 'N/A',
+      'Descrição': case_.description || 'N/A',
       'Status': getStatusDisplayName(case_.status),
       'Prioridade': getPriorityDisplayName(case_.priority),
-      'Risco': getRiskDisplayName(case_.risk_level),
-      'Valor da Causa': case_.case_risk_value ? formatCurrency(Number(case_.case_risk_value)) : 'N/A',
-      'Tribunal': case_.court_agency || 'N/A',
-      'Data de Criação': new Date(case_.created_at).toLocaleDateString('pt-BR')
+      'Advogado Responsável': case_.assigned_lawyer || 'N/A',
+      'Data de Início': case_.start_date ? new Date(case_.start_date).toLocaleDateString('pt-BR') : 'N/A',
+      'Tribunal/Órgão': case_.court_agency || 'N/A',
+      'Número do Caso Externo': case_.case_number_external || 'N/A',
+      'Parte Contrária': case_.opposing_party || case_.counterparty_name || 'N/A',
+      'Nível de Risco': getRiskDisplayName(case_.risk_level),
+      'Última Atualização': case_.updated_at ? new Date(case_.updated_at).toLocaleDateString('pt-BR') : 'N/A',
+      'Nome da Contraparte': case_.counterparty_name || 'N/A',
+      'Número do Processo Judicial': case_.court_process_number || 'N/A',
+      'Valor do Risco da Causa': case_.case_risk_value ? formatCurrency(Number(case_.case_risk_value)) : 'N/A'
     }));
 
     // Create workbook and worksheet
@@ -126,15 +134,22 @@ const PortalCases = () => {
 
     // Set column widths for better readability
     const colWidths = [
-      { wch: 30 }, // Título do Caso
       { wch: 15 }, // Número do Caso
-      { wch: 25 }, // Parte Contrária
+      { wch: 30 }, // Título do Caso
+      { wch: 20 }, // Tipo de Serviço
+      { wch: 40 }, // Descrição
       { wch: 15 }, // Status
-      { wch: 10 }, // Prioridade
-      { wch: 10 }, // Risco
-      { wch: 15 }, // Valor da Causa
-      { wch: 20 }, // Tribunal
-      { wch: 12 }  // Data de Criação
+      { wch: 12 }, // Prioridade
+      { wch: 25 }, // Advogado Responsável
+      { wch: 12 }, // Data de Início
+      { wch: 25 }, // Tribunal/Órgão
+      { wch: 20 }, // Número do Caso Externo
+      { wch: 25 }, // Parte Contrária
+      { wch: 12 }, // Nível de Risco
+      { wch: 15 }, // Última Atualização
+      { wch: 25 }, // Nome da Contraparte
+      { wch: 25 }, // Número do Processo Judicial
+      { wch: 18 }  // Valor do Risco da Causa
     ];
     ws['!cols'] = colWidths;
 
@@ -142,7 +157,7 @@ const PortalCases = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Casos');
 
     // Generate and download Excel file
-    const fileName = `casos-${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `casos-completo-${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
