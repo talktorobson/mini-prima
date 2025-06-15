@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, FileText, Scale, DollarSign, MessagesSquare, Info, ExternalLink } from "lucide-react";
@@ -96,36 +95,74 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
       description: `Navegando para ${getTypeLabel(notif.type).toLowerCase()}...`,
     });
 
-    // Try to route to action_url if set, else build a route from metadata/type
+    // First priority: Use action_url if it exists
     if (notif.action_url) {
       console.log('Navigating to action_url:', notif.action_url);
       navigate(notif.action_url);
       return;
     }
     
-    // fallback by type/metadata
-    if (notif.type === "case_update" && notif.metadata?.case_id) {
-      const url = `/portal/cases?open=${notif.metadata.case_id}`;
-      console.log('Navigating to case:', url);
-      navigate(url);
-    } else if (notif.type === "document" && notif.metadata?.document_id) {
-      const url = `/portal/documents?open=${notif.metadata.document_id}`;
-      console.log('Navigating to document:', url);
-      navigate(url);
-    } else if (
-      notif.type === "payment" &&
-      notif.metadata?.financial_id
-    ) {
-      const url = `/portal/financial?open=${notif.metadata.financial_id}`;
-      console.log('Navigating to financial:', url);
-      navigate(url);
-    } else {
-      console.log('No navigation target found for notification:', notif);
-      toast({
-        title: "Navegação não disponível",
-        description: "Esta notificação não possui uma página específica para abrir.",
-        variant: "destructive"
-      });
+    // Second priority: Build route from type and metadata
+    switch (notif.type) {
+      case 'case_update':
+        if (notif.metadata?.case_id) {
+          const url = `/portal/cases?open=${notif.metadata.case_id}`;
+          console.log('Navigating to case:', url);
+          navigate(url);
+          return;
+        }
+        // Fallback to cases page
+        console.log('No case_id found, navigating to cases page');
+        navigate('/portal/cases');
+        return;
+
+      case 'document':
+        if (notif.metadata?.document_id) {
+          const url = `/portal/documents?open=${notif.metadata.document_id}`;
+          console.log('Navigating to document:', url);
+          navigate(url);
+          return;
+        }
+        // Fallback to documents page
+        console.log('No document_id found, navigating to documents page');
+        navigate('/portal/documents');
+        return;
+
+      case 'payment':
+        if (notif.metadata?.financial_id) {
+          const url = `/portal/financial?open=${notif.metadata.financial_id}`;
+          console.log('Navigating to financial record:', url);
+          navigate(url);
+          return;
+        }
+        // Fallback to financial page for payment notifications
+        console.log('No financial_id found, navigating to financial page');
+        navigate('/portal/financial');
+        return;
+
+      case 'message':
+        console.log('Navigating to messages page');
+        navigate('/portal/messages');
+        return;
+
+      case 'info':
+        // For info notifications, try to navigate based on metadata or fallback to portal
+        if (notif.metadata?.case_number) {
+          console.log('Info notification about case, navigating to cases');
+          navigate('/portal/cases');
+          return;
+        }
+        console.log('General info notification, staying on current page');
+        toast({
+          title: "Informação visualizada",
+          description: "Esta é uma notificação informativa.",
+        });
+        return;
+
+      default:
+        console.log('Unknown notification type, navigating to portal');
+        navigate('/portal');
+        return;
     }
   };
 
@@ -165,9 +202,7 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
                         <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                           {getTypeLabel(notif.type)}
                         </span>
-                        {(notif.action_url || notif.metadata?.case_id || notif.metadata?.document_id || notif.metadata?.financial_id) && (
-                          <ExternalLink className="h-3 w-3 text-gray-400" />
-                        )}
+                        <ExternalLink className="h-3 w-3 text-gray-400" />
                       </div>
                       <h4 className="font-semibold text-gray-800 mb-1">
                         {notif.title}
@@ -216,15 +251,13 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
                           </div>
                         )}
                         
-                        {/* Show navigation target */}
-                        {(notif.action_url || notif.metadata?.case_id || notif.metadata?.document_id || notif.metadata?.financial_id) && (
-                          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                            <span className="text-xs font-semibold text-gray-600">Ação:</span>
-                            <span className="text-xs text-blue-600 font-medium">
-                              Clique para abrir →
-                            </span>
-                          </div>
-                        )}
+                        {/* Show navigation hint */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <span className="text-xs font-semibold text-gray-600">Ação:</span>
+                          <span className="text-xs text-blue-600 font-medium">
+                            Clique para abrir →
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
