@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -303,7 +304,13 @@ const Portal = () => {
                 <User className="h-3 w-3" />
                 <span className="text-xs">{client?.contact_person}</span>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center space-x-1 border-slate-600 text-blue-200 hover:bg-slate-700 h-8 px-3">
+              {/* Improved "Sair" Button Contrast */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center space-x-1 border-blue-400 text-blue-700 bg-white hover:bg-blue-50 focus:bg-blue-100 font-medium h-8 px-3 shadow-none"
+              >
                 <LogOut className="h-3 w-3" />
                 <span className="text-xs">Sair</span>
               </Button>
