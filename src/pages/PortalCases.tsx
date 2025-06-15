@@ -18,7 +18,7 @@ const PortalCases = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingCaseId, setUploadingCaseId] = useState<string | null>(null);
 
-  // Fetch cases from database
+  // Fetch cases from database with proper error handling
   const { data: cases = [], isLoading, error, refetch } = useQuery({
     queryKey: ['client-cases'],
     queryFn: casesService.getCases,
