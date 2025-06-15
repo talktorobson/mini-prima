@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -129,28 +130,28 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                   Informações Básicas
                 </h3>
                 <div className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="font-medium text-gray-600">Número do Caso:</span>
-                    <span className="text-gray-900">{case_.case_number}</span>
+                    <span className="text-gray-900 font-medium">{case_.case_number}</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="font-medium text-gray-600">Serviço:</span>
                     <span className="text-gray-900">{case_.service_type || 'N/A'}</span>
                   </div>
                   {case_.court_process_number && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Processo:</span>
                       <span className="text-gray-900">{case_.court_process_number}</span>
                     </div>
                   )}
                   {case_.court_agency && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Tribunal:</span>
                       <span className="text-gray-900">{case_.court_agency}</span>
                     </div>
                   )}
                   {case_.case_risk_value && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Valor da Causa (pleiteado):</span>
                       <span className="text-lg font-semibold text-green-600">
                         {formatCurrency(Number(case_.case_risk_value))}
@@ -160,21 +161,23 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                   
                   {/* Responsáveis section */}
                   <div className="pt-2 border-t border-gray-200">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Advogado:</span>
                       <span className="text-gray-900">{case_.assigned_lawyer || 'N/A'}</span>
                     </div>
                     {case_.counterparty_name && (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
-                        <div className="flex items-center space-x-2">
-                          <Building className="h-4 w-4 text-red-600" />
-                          <span className="font-semibold text-red-800">Parte Contrária:</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Building className="h-4 w-4 text-red-600" />
+                            <span className="font-semibold text-red-800">Parte Contrária:</span>
+                          </div>
                           <span className="text-red-900 font-medium">{case_.counterparty_name}</span>
                         </div>
                       </div>
                     )}
                     {case_.opposing_party && (
-                      <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100 mt-2">
                         <span className="font-medium text-gray-600">Advogado da parte:</span>
                         <span className="text-gray-900">{case_.opposing_party}</span>
                       </div>
@@ -183,16 +186,16 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
 
                   {/* Metadata section */}
                   <div className="pt-2 border-t border-gray-200">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Criado em:</span>
                       <span className="text-gray-900">{new Date(case_.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Última atualização:</span>
                       <span className="text-gray-900">{new Date(case_.updated_at).toLocaleDateString('pt-BR')}</span>
                     </div>
                     {case_.risk_level && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="flex justify-between items-center py-2">
                         <span className="font-medium text-gray-600">Nível de Risco:</span>
                         <Badge variant={case_.risk_level === 'High' ? 'destructive' : case_.risk_level === 'Medium' ? 'secondary' : 'outline'}>
                           {getRiskDisplayName(case_.risk_level)}
