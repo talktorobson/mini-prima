@@ -169,9 +169,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                         <div className="flex items-center space-x-2">
                           <Building className="h-4 w-4 text-red-600" />
                           <span className="font-semibold text-red-800">Parte Contrária:</span>
-                        </div>
-                        <div className="mt-1 text-red-900 font-medium">
-                          {case_.counterparty_name}
+                          <span className="text-red-900 font-medium">{case_.counterparty_name}</span>
                         </div>
                       </div>
                     )}
