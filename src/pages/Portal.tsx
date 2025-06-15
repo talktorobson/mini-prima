@@ -137,9 +137,9 @@ const Portal = () => {
     }
   };
 
-  const handleDownloadDocument = async (document: any) => {
+  const handleDownloadDocument = async (doc: any) => {
     try {
-      if (!document.file_path) {
+      if (!doc.file_path) {
         toast({
           title: "Erro",
           description: "Caminho do arquivo não encontrado.",
@@ -148,12 +148,12 @@ const Portal = () => {
         return;
       }
 
-      console.log('Downloading document:', document.document_name, 'Path:', document.file_path);
+      console.log('Downloading document:', doc.document_name, 'Path:', doc.file_path);
       
       // Get signed URL for download
       const { data, error } = await supabase.storage
         .from('case-documents')
-        .createSignedUrl(document.file_path, 3600); // 1 hour expiry
+        .createSignedUrl(doc.file_path, 3600); // 1 hour expiry
 
       if (error) {
         console.error('Error creating signed URL for download:', error);
@@ -176,7 +176,7 @@ const Portal = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = document.original_filename || document.document_name;
+        link.download = doc.original_filename || doc.document_name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
