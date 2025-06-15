@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessagesSquare, User, ArrowLeft, Send, Bell } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagesService, clientService } from '@/services/database';
@@ -21,10 +22,15 @@ interface Message {
 
 const PortalMessages = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
-  const [isChatActive, setIsChatActive] = useState(true);
+  
+  // Check if we should show notifications by default
+  const showNotifications = location.state?.showNotifications;
+  const [isChatActive, setIsChatActive] = useState(!showNotifications);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 

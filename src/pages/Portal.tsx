@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -253,16 +252,16 @@ const Portal = () => {
 
   const handleNotificationsClick = () => {
     console.log('Viewing all notifications');
-    navigate('/portal/messages');
+    navigate('/portal/messages', { state: { showNotifications: true } });
   };
 
   const handleNotificationClick = (notificationId: string) => {
     console.log('Viewing notification:', notificationId);
-    // Mark as read and navigate to messages
+    // Mark as read and navigate to messages with notifications view
     if (notificationId) {
       notificationsService.markAsRead(notificationId).catch(console.error);
     }
-    navigate('/portal/messages');
+    navigate('/portal/messages', { state: { showNotifications: true } });
   };
 
   if (clientLoading) {
