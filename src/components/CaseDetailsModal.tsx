@@ -162,7 +162,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                   {/* Responsáveis section */}
                   <div className="pt-2 border-t border-gray-200">
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="font-medium text-gray-600">Advogado:</span>
+                      <span className="font-medium text-gray-600">Seu Advogado:</span>
                       <span className="text-gray-900">{case_.assigned_lawyer || 'N/A'}</span>
                     </div>
                     {case_.counterparty_name && (
