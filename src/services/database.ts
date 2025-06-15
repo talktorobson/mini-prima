@@ -15,6 +15,8 @@ export const messagesService = {
   },
 
   async sendMessage(content: string, threadId: string, senderId: string, recipientType: 'staff' | 'client' = 'staff') {
+    // Generate a proper UUID for thread_id - using a default thread UUID
+    const defaultThreadId = '550e8400-e29b-41d4-a716-446655440000';
     // Generate a temporary staff ID for now - in a real implementation, 
     // you'd want to determine which specific staff member to send to
     const tempStaffId = '00000000-0000-0000-0000-000000000000';
@@ -23,7 +25,7 @@ export const messagesService = {
       .from('portal_messages')
       .insert({
         content,
-        thread_id: threadId,
+        thread_id: defaultThreadId,
         sender_id: senderId,
         sender_type: 'client',
         recipient_id: tempStaffId,

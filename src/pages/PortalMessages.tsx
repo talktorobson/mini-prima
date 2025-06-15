@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,7 +47,7 @@ const PortalMessages = () => {
     mutationFn: (content: string) => 
       messagesService.sendMessage(
         content,
-        'default-thread',
+        '550e8400-e29b-41d4-a716-446655440000', // Use proper UUID format
         client?.id || ''
       ),
     onSuccess: () => {
@@ -165,7 +166,10 @@ const PortalMessages = () => {
                           <span className="text-xs font-medium">
                             {msg.sender_type === 'client' ? (client?.contact_person || 'Você') : 'Equipe Jurídica'}
                           </span>
-                          <span className="text-xs opacity-70">{formatTime(msg.created_at)}</span>
+                          <span className="text-xs opacity-70">{new Date(msg.created_at).toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}</span>
                         </div>
                         <p className="text-sm">{msg.content}</p>
                       </div>
@@ -181,12 +185,35 @@ const PortalMessages = () => {
                 placeholder="Digite sua mensagem..." 
                 value={newMessage} 
                 onChange={(e) => setNewMessage(e.target.value)} 
-                onKeyPress={handleKeyPress} 
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!newMessage.trim()) {
+                      toast({
+                        title: "Mensagem vazia",
+                        description: "Por favor, digite uma mensagem antes de enviar.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    sendMessageMutation.mutate(newMessage.trim());
+                  }
+                }} 
                 disabled={sendMessageMutation.isPending}
                 className="flex-1" 
               />
               <Button 
-                onClick={handleSendMessage} 
+                onClick={() => {
+                  if (!newMessage.trim()) {
+                    toast({
+                      title: "Mensagem vazia",
+                      description: "Por favor, digite uma mensagem antes de enviar.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  sendMessageMutation.mutate(newMessage.trim());
+                }} 
                 className="bg-teal-600 hover:bg-teal-700 text-white" 
                 disabled={!newMessage.trim() || sendMessageMutation.isPending}
               >
