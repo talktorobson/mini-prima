@@ -23,7 +23,7 @@ import { useClientData } from '@/hooks/useClientData';
 import { casesService, documentsService, financialService, notificationsService } from '@/services/database';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import DocumentPreviewModal from '@/components/DocumentPreviewModal';
+import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
 
 const Portal = () => {
   const navigate = useNavigate();
@@ -31,8 +31,8 @@ const Portal = () => {
   const { data: client, isLoading: clientLoading } = useClientData();
   const { toast } = useToast();
   
-  // Preview modal state
-  const [previewModal, setPreviewModal] = useState({
+  // Preview sheet state
+  const [previewSheet, setPreviewSheet] = useState({
     isOpen: false,
     document: null,
     previewUrl: ''
@@ -120,8 +120,8 @@ const Portal = () => {
       }
 
       if (data?.signedUrl) {
-        // Open in modal instead of new tab
-        setPreviewModal({
+        // Open in sheet instead of modal
+        setPreviewSheet({
           isOpen: true,
           document: document,
           previewUrl: data.signedUrl
@@ -197,17 +197,17 @@ const Portal = () => {
     }
   };
 
-  const closePreviewModal = () => {
-    setPreviewModal({
+  const closePreviewSheet = () => {
+    setPreviewSheet({
       isOpen: false,
       document: null,
       previewUrl: ''
     });
   };
 
-  const handleDownloadFromModal = () => {
-    if (previewModal.document) {
-      handleDownloadDocument(previewModal.document);
+  const handleDownloadFromSheet = () => {
+    if (previewSheet.document) {
+      handleDownloadDocument(previewSheet.document);
     }
   };
 
@@ -583,13 +583,13 @@ const Portal = () => {
         </div>
       </main>
 
-      {/* Document Preview Modal */}
-      <DocumentPreviewModal
-        isOpen={previewModal.isOpen}
-        onClose={closePreviewModal}
-        document={previewModal.document}
-        previewUrl={previewModal.previewUrl}
-        onDownload={handleDownloadFromModal}
+      {/* Document Preview Sheet */}
+      <DocumentPreviewSheet
+        isOpen={previewSheet.isOpen}
+        onClose={closePreviewSheet}
+        document={previewSheet.document}
+        previewUrl={previewSheet.previewUrl}
+        onDownload={handleDownloadFromSheet}
       />
     </div>
   );

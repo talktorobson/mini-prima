@@ -1,0 +1,169 @@
+
+import React from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Download, ExternalLink, FileText, Image, File } from 'lucide-react';
+
+interface DocumentPreviewSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  document: any;
+  previewUrl: string;
+  onDownload: () => void;
+}
+
+const DocumentPreviewSheet = ({ isOpen, onClose, document, previewUrl, onDownload }: DocumentPreviewSheetProps) => {
+  const getFileExtension = (filename: string) => {
+    return filename.toLowerCase().split('.').pop() || '';
+  };
+
+  const getFileType = () => {
+    const filename = document?.document_name || document?.original_filename || '';
+    const extension = getFileExtension(filename);
+    
+    if (['pdf'].includes(extension)) return 'pdf';
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) return 'image';
+    if (['txt', 'md'].includes(extension)) return 'text';
+    return 'other';
+  };
+
+  const handleOpenInNewTab = () => {
+    window.open(previewUrl, '_blank');
+  };
+
+  const fileType = getFileType();
+  const filename = document?.document_name || document?.original_filename || 'Documento';
+
+  const renderPreviewContent = () => {
+    switch (fileType) {
+      case 'image':
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+            <img
+              src={previewUrl}
+              alt={filename}
+              className="max-w-full max-h-full object-contain rounded"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden flex-col items-center justify-center space-y-4 text-gray-600">
+              <Image className="h-16 w-16 text-gray-400" />
+              <p>Não foi possível carregar a imagem</p>
+            </div>
+          </div>
+        );
+
+      case 'pdf':
+        return (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg space-y-6">
+            <FileText className="h-20 w-20 text-red-500" />
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-semibold text-gray-800">Documento PDF</h3>
+              <p className="text-gray-600 max-w-sm">
+                Visualize este documento PDF abrindo em uma nova aba ou fazendo o download.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                onClick={handleOpenInNewTab}
+                className="bg-red-500 hover:bg-red-600 text-white flex items-center space-x-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Abrir PDF</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onDownload}
+                className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'text':
+        return (
+          <div className="w-full h-full bg-white rounded-lg border">
+            <iframe
+              src={previewUrl}
+              className="w-full h-full rounded-lg"
+              title={`Preview of ${filename}`}
+              style={{ border: 'none' }}
+            />
+          </div>
+        );
+
+      default:
+        return (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg space-y-6">
+            <File className="h-20 w-20 text-blue-500" />
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-semibold text-gray-800">Visualização não disponível</h3>
+              <p className="text-gray-600 max-w-sm">
+                Este tipo de arquivo não pode ser visualizado diretamente. Faça o download para acessar o conteúdo.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                onClick={handleOpenInNewTab}
+                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center space-x-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Abrir em Nova Aba</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onDownload}
+                className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </Button>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-2xl bg-white">
+        <SheetHeader className="space-y-4">
+          <SheetTitle className="text-lg font-semibold text-gray-900 pr-8">
+            {filename}
+          </SheetTitle>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenInNewTab}
+              className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white flex items-center space-x-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>Nova Aba</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onDownload}
+              className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white flex items-center space-x-2"
+            >
+              <Download className="h-4 w-4" />
+              <span>Download</span>
+            </Button>
+          </div>
+        </SheetHeader>
+        
+        <div className="mt-6 h-[calc(100vh-140px)]">
+          {renderPreviewContent()}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default DocumentPreviewSheet;
