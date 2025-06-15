@@ -222,25 +222,6 @@ const PortalMessages = () => {
             </div>
           </CardContent>
         </Card>
-
-        <div className="mt-6">
-          <Card className="bg-teal-50 border-teal-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <MessagesSquare className="h-5 w-5 text-teal-600" />
-                <div>
-                  <h3 className="font-semibold text-teal-900">Sistema de Mensagens Conectado</h3>
-                  <div className="text-teal-700 text-sm mt-1 space-y-1">
-                    <p>• Mensagens salvas no banco de dados Supabase</p>
-                    <p>• Integração com autenticação de usuário</p>
-                    <p>• Comunicação em tempo real com a equipe jurídica</p>
-                    <p>• Histórico completo de conversas</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </main>
     </div>
   );
