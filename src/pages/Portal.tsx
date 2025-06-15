@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,11 +21,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientData } from '@/hooks/useClientData';
 import { casesService, documentsService, financialService, notificationsService } from '@/services/database';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Portal = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { data: client, isLoading: clientLoading } = useClientData();
+  const { toast } = useToast();
 
   // Get dashboard data
   const { data: cases = [] } = useQuery({
@@ -79,6 +81,101 @@ const Portal = () => {
 
   const handleDocumentClick = (documentId: string) => {
     navigate('/portal/documents', { state: { selectedDocumentId: documentId } });
+  };
+
+  const handlePreviewDocument = async (document: any) => {
+    try {
+      if (!document.file_path) {
+        toast({
+          title: "Erro",
+          description: "Caminho do arquivo não encontrado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Previewing document:', document.document_name, 'Path:', document.file_path);
+      
+      // Get signed URL for preview
+      const { data, error } = await supabase.storage
+        .from('case-documents')
+        .createSignedUrl(document.file_path, 3600); // 1 hour expiry
+
+      if (error) {
+        console.error('Error creating signed URL:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível gerar o link de visualização.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data?.signedUrl) {
+        // Open in new tab for preview
+        window.open(data.signedUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error previewing document:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao visualizar documento.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadDocument = async (document: any) => {
+    try {
+      if (!document.file_path) {
+        toast({
+          title: "Erro",
+          description: "Caminho do arquivo não encontrado.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Downloading document:', document.document_name, 'Path:', document.file_path);
+      
+      // Get signed URL for download
+      const { data, error } = await supabase.storage
+        .from('case-documents')
+        .createSignedUrl(document.file_path, 3600); // 1 hour expiry
+
+      if (error) {
+        console.error('Error creating signed URL for download:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível gerar o link de download.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data?.signedUrl) {
+        // Create a temporary link and trigger download
+        const link = document.createElement('a');
+        link.href = data.signedUrl;
+        link.download = document.original_filename || document.document_name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Sucesso",
+          description: "Download iniciado com sucesso!"
+        });
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer download do documento.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handlePendenciasClick = () => {
@@ -286,8 +383,9 @@ const Portal = () => {
                           className="h-6 w-6 p-0 text-green-400 hover:bg-green-400/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('View document:', doc.id);
+                            handlePreviewDocument(doc);
                           }}
+                          title="Visualizar documento"
                         >
                           <Eye className="h-3 w-3" />
                         </Button>
@@ -297,8 +395,9 @@ const Portal = () => {
                           className="h-6 w-6 p-0 text-green-400 hover:bg-green-400/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('Download document:', doc.id);
+                            handleDownloadDocument(doc);
                           }}
+                          title="Baixar documento"
                         >
                           <Download className="h-3 w-3" />
                         </Button>
