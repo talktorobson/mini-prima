@@ -121,7 +121,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-navy-950 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background decorative elements */}
       <div 
         className="absolute inset-0 opacity-10"
