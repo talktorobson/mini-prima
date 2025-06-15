@@ -1,5 +1,6 @@
+
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Bell, FileText, Scale, DollarSign, MessagesSquare, Info, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,11 @@ interface Notification {
   metadata?: Record<string, any>;
   created_at: string;
   is_read?: boolean;
+}
+
+interface PortalNotificationListProps {
+  notifications: Notification[];
+  onMessageNotificationClick?: () => void; // New prop to handle message notification clicks
 }
 
 function getColorByType(type: string) {
@@ -80,10 +86,12 @@ function timeAgo(dateStr: string) {
   return then.toLocaleDateString("pt-BR");
 }
 
-const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
+const PortalNotificationList: React.FC<PortalNotificationListProps> = ({
   notifications,
+  onMessageNotificationClick,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const handleClick = (notif: Notification) => {
@@ -94,6 +102,19 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
       title: "Abrindo notificação",
       description: `Navegando para ${getTypeLabel(notif.type).toLowerCase()}...`,
     });
+
+    // Special handling for message notifications when already on messages page
+    if (notif.type === 'message' && location.pathname === '/portal/messages') {
+      console.log('Message notification clicked while on messages page - switching to chat');
+      if (onMessageNotificationClick) {
+        onMessageNotificationClick();
+        toast({
+          title: "Chat ativado",
+          description: "Mudando para o modo de chat.",
+        });
+        return;
+      }
+    }
 
     // First priority: Use action_url if it exists
     if (notif.action_url) {
@@ -255,7 +276,10 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                           <span className="text-xs font-semibold text-gray-600">Ação:</span>
                           <span className="text-xs text-blue-600 font-medium">
-                            Clique para abrir →
+                            {notif.type === 'message' && location.pathname === '/portal/messages' 
+                              ? 'Clique para ir ao chat →' 
+                              : 'Clique para abrir →'
+                            }
                           </span>
                         </div>
                       </div>

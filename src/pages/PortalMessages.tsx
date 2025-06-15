@@ -141,6 +141,12 @@ const PortalMessages = () => {
     }, 2000);
   };
 
+  // New function to handle message notification clicks
+  const handleMessageNotificationClick = () => {
+    console.log('Message notification clicked - switching to chat mode');
+    setIsChatActive(true);
+  };
+
   // Fetch notifications for this client
   const { data: notifications = [], isLoading: loadingNotifications } = useQuery({
     queryKey: ["portal-notifications", client?.id],
@@ -297,7 +303,10 @@ const PortalMessages = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
               ) : (
-                <PortalNotificationList notifications={notifications} />
+                <PortalNotificationList 
+                  notifications={notifications} 
+                  onMessageNotificationClick={handleMessageNotificationClick}
+                />
               )}
             </CardContent>
           </Card>
