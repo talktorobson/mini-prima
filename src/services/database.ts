@@ -15,8 +15,10 @@ export const messagesService = {
   },
 
   async sendMessage(content: string, threadId: string, senderId: string, recipientType: 'staff' | 'client' = 'staff') {
-    // For now, we'll create a message without specifying a specific recipient
-    // In a real implementation, you'd want to determine which staff member to send to
+    // Generate a temporary staff ID for now - in a real implementation, 
+    // you'd want to determine which specific staff member to send to
+    const tempStaffId = '00000000-0000-0000-0000-000000000000';
+    
     const { data, error } = await supabase
       .from('portal_messages')
       .insert({
@@ -24,8 +26,8 @@ export const messagesService = {
         thread_id: threadId,
         sender_id: senderId,
         sender_type: 'client',
+        recipient_id: tempStaffId,
         recipient_type: recipientType
-        // Note: We're not setting recipient_id since we don't have a specific staff member
       })
       .select()
       .single();
