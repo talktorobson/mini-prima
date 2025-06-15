@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, ArrowLeft, Download, Eye, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useDocuments } from '@/hooks/useDocuments';
+import { useAllDocuments } from '@/hooks/useCaseDocuments';
 import DocumentSearch from '@/components/DocumentSearch';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
-import GeneralDocumentUpload from '@/components/GeneralDocumentUpload';
+import DocumentUploadManager from '@/components/DocumentUploadManager';
 import { getDocumentPreviewUrl, downloadDocument } from '@/services/documentPreview';
 import { getDocumentTypeDisplayLabel } from '@/lib/documentUtils';
 import { useToast } from '@/hooks/useToast';
@@ -20,7 +20,7 @@ interface SearchFilters {
 
 const PortalDocuments = () => {
   const navigate = useNavigate();
-  const { data: documents = [], isLoading, error, refetch } = useDocuments();
+  const { data: documents = [], isLoading, error, refetch } = useAllDocuments();
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -242,18 +242,8 @@ const PortalDocuments = () => {
                 onClick={() => setIsUploadOpen(true)}
               >
                 <Upload className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Enviar Documentos</span>
-                <span className="sm:hidden">Enviar</span>
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm w-full sm:w-auto"
-                onClick={handleBulkDownload}
-                disabled={filteredDocuments.length === 0}
-              >
-                <Download className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Download em Lote ({filteredDocuments.length})</span>
-                <span className="sm:hidden">Download ({filteredDocuments.length})</span>
+                <span className="hidden sm:inline">Gerenciar Documentos</span>
+                <span className="sm:hidden">Gerenciar</span>
               </Button>
             </div>
           </div>
@@ -261,27 +251,27 @@ const PortalDocuments = () => {
       </header>
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-        <DocumentSearch onSearch={handleSearch} />
+        <DocumentSearch onSearch={setSearchFilters} />
         
-        {filteredDocuments.length === 0 ? (
+        {documents.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {searchFilters.query || searchFilters.type || searchFilters.status || searchFilters.dateRange 
-                  ? 'Nenhum documento encontrado' 
-                  : 'Nenhum documento disponível'}
+                Nenhum documento disponível
               </h3>
-              <p className="text-gray-600">
-                {searchFilters.query || searchFilters.type || searchFilters.status || searchFilters.dateRange 
-                  ? 'Tente ajustar os filtros de busca para encontrar documentos.' 
-                  : 'Seus documentos aparecerão aqui quando estiverem disponíveis.'}
+              <p className="text-gray-600 mb-4">
+                Seus documentos aparecerão aqui quando estiverem disponíveis.
               </p>
+              <Button onClick={() => setIsUploadOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" />
+                Adicionar Documentos
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-3">
-            {filteredDocuments.map((doc) => (
+            {documents.map((doc) => (
               <Card key={doc.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
@@ -294,20 +284,28 @@ const PortalDocuments = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs text-gray-600 mt-1 space-y-1 sm:space-y-0">
                           <span>{getDocumentTypeDisplayLabel(doc.document_type)}</span>
                           <span className="hidden sm:inline">•</span>
-                          <span>{formatFileSize(doc.file_size || 0)}</span>
+                          <span>{doc.file_size ? `${Math.round(doc.file_size / 1024)} KB` : 'N/A'}</span>
                           <span className="hidden sm:inline">•</span>
-                          <span>{formatDate(doc.upload_date)}</span>
+                          <span>{new Date(doc.upload_date).toLocaleDateString('pt-BR')}</span>
+                          {doc.case && (
+                            <>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="font-medium text-blue-600">
+                                {doc.case.case_title || doc.case.counterparty_name}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
                     
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
-                        getStatusFromDocument(doc) === 'Finalizado' 
+                        doc.status === 'Approved' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {getStatusFromDocument(doc)}
+                        {doc.status === 'Approved' ? 'Aprovado' : 'Em Análise'}
                       </span>
                       
                       <div className="flex space-x-2">
@@ -352,7 +350,7 @@ const PortalDocuments = () => {
         onDownload={() => selectedDocument && handleDownload(selectedDocument)}
       />
 
-      <GeneralDocumentUpload
+      <DocumentUploadManager
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUploadComplete={handleUploadComplete}
