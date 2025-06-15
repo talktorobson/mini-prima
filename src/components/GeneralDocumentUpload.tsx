@@ -168,7 +168,8 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
 
       toast({
         title: "Sucesso",
-        description: `${selectedFiles.length} documento(s) enviado(s) com sucesso!`
+        description: `${selectedFiles.length} documento(s) enviado(s) com sucesso!`,
+        variant: "success"
       });
 
       setSelectedFiles([]);
@@ -259,7 +260,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
                           <SelectValue placeholder="Caso ou Geral" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="" className="text-xs">
+                          <SelectItem value="general" className="text-xs">
                             Documento Geral
                           </SelectItem>
                           {cases.map((case_) => (
