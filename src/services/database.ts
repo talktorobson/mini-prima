@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Initialize storage bucket - simplified version that doesn't try to create buckets
@@ -21,6 +20,97 @@ export const initializeStorage = async () => {
     }
   } catch (error) {
     console.error('Error initializing storage:', error);
+  }
+};
+
+// Add a debug function to check notification types
+export const debugService = {
+  async checkNotificationTypes() {
+    try {
+      // Get the enum values for notification_type
+      const { data, error } = await supabase
+        .rpc('get_enum_values', { enum_name: 'notification_type' })
+        .single();
+      
+      if (error) {
+        console.error('Error getting enum values:', error);
+        // Fallback: try to get existing notification types from the table
+        const { data: existingNotifications, error: notifError } = await supabase
+          .from('portal_notifications')
+          .select('notification_type')
+          .limit(10);
+        
+        if (notifError) {
+          console.error('Error getting existing notifications:', notifError);
+          return null;
+        }
+        
+        const uniqueTypes = [...new Set(existingNotifications?.map(n => n.notification_type) || [])];
+        console.log('Existing notification types found:', uniqueTypes);
+        return uniqueTypes;
+      }
+      
+      console.log('Available notification types:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in checkNotificationTypes:', error);
+      return null;
+    }
+  },
+
+  async insertSampleNotifications(clientId: string) {
+    try {
+      console.log('Inserting sample notifications for client:', clientId);
+      
+      // Use basic notification types that should exist
+      const sampleNotifications = [
+        {
+          client_id: clientId,
+          title: 'Novo documento disponível',
+          message: 'Um novo documento foi adicionado ao seu caso #12345.',
+          notification_type: 'document_upload', // Try this type
+          is_read: false
+        },
+        {
+          client_id: clientId,
+          title: 'Atualização do caso',
+          message: 'Seu processo teve uma atualização de status para "Em Andamento".',
+          notification_type: 'case_update', // This should exist
+          is_read: false
+        },
+        {
+          client_id: clientId,
+          title: 'Lembrete importante',
+          message: 'Prazo para envio de documentos é amanhã.',
+          notification_type: 'reminder', // Try this type
+          is_read: true,
+          read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // Read yesterday
+        },
+        {
+          client_id: clientId,
+          title: 'Nova mensagem',
+          message: 'Você recebeu uma nova mensagem da equipe jurídica.',
+          notification_type: 'message', // Try this type
+          is_read: false
+        }
+      ];
+
+      const { data, error } = await supabase
+        .from('portal_notifications')
+        .insert(sampleNotifications)
+        .select();
+
+      if (error) {
+        console.error('Error inserting sample notifications:', error);
+        throw error;
+      }
+
+      console.log('Sample notifications inserted successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in insertSampleNotifications:', error);
+      throw error;
+    }
   }
 };
 
