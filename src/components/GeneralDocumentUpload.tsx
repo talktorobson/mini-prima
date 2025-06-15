@@ -52,13 +52,6 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
     enabled: isOpen,
   });
 
-  // Helper function to get display label for document type
-  function getDocumentTypeDisplayLabel(docType: string) {
-    if (docType === 'General Document') return 'Documento Escritório';
-    if (docType === 'Case Document') return 'Documento Processo';
-    return docType; // Return original type for other cases
-  }
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -284,7 +277,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="general" className="text-xs">
-                              {getDocumentTypeDisplayLabel('General Document')}
+                              Documento Geral
                             </SelectItem>
                             <SelectItem value="administrative" className="text-xs">
                               Financeiro D'avila Reis Advogados

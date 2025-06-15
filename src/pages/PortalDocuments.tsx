@@ -1,13 +1,14 @@
-
 import React, { useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileText, ArrowLeft, Download, Eye, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useDocuments } from '@/hooks/useDocuments';
-import { useDocumentActions } from '@/hooks/useDocumentActions';
-import { useToast } from '@/hooks/useToast';
-import DocumentsHeader from '@/components/DocumentsHeader';
 import DocumentSearch from '@/components/DocumentSearch';
-import DocumentsList from '@/components/DocumentsList';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
 import GeneralDocumentUpload from '@/components/GeneralDocumentUpload';
+import { getDocumentPreviewUrl, downloadDocument } from '@/services/documentPreview';
+import { useToast } from '@/hooks/useToast';
 
 interface SearchFilters {
   query: string;
@@ -17,9 +18,14 @@ interface SearchFilters {
 }
 
 const PortalDocuments = () => {
+  const navigate = useNavigate();
   const { data: documents = [], isLoading, error, refetch } = useDocuments();
-  const { toast } = useToast();
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const { toast } = useToast();
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     query: '',
     type: '',
@@ -27,23 +33,13 @@ const PortalDocuments = () => {
     dateRange: ''
   });
 
-  const {
-    selectedDocument,
-    previewUrl,
-    isPreviewOpen,
-    isLoadingPreview,
-    handlePreview,
-    handleDownload,
-    closePreview
-  } = useDocumentActions();
-
   // Mock documents for demo since the database might not have data
   const mockDocuments = [
     {
       id: 1,
       document_name: "Contrato de Prestação de Serviços.pdf",
       document_type: "Contrato",
-      file_size: 2458112,
+      file_size: 2458112, // 2.4 MB
       upload_date: "2024-06-15T12:00:00Z",
       status: "Final",
       original_filename: "Contrato de Prestação de Serviços.pdf"
@@ -52,7 +48,7 @@ const PortalDocuments = () => {
       id: 2,
       document_name: "Procuração Judicial.pdf",
       document_type: "Procuração",
-      file_size: 1887436,
+      file_size: 1887436, // 1.8 MB
       upload_date: "2024-06-12T10:30:00Z",
       status: "Draft",
       original_filename: "Procuração Judicial.pdf"
@@ -61,7 +57,7 @@ const PortalDocuments = () => {
       id: 3,
       document_name: "Relatório Parecer Técnico.pdf",
       document_type: "Relatório",
-      file_size: 3355443,
+      file_size: 3355443, // 3.2 MB
       upload_date: "2024-06-10T14:15:00Z",
       status: "Final",
       original_filename: "Relatório Parecer Técnico.pdf"
@@ -70,7 +66,7 @@ const PortalDocuments = () => {
       id: 4,
       document_name: "Documentos Identificação.zip",
       document_type: "Identificação",
-      file_size: 5368709,
+      file_size: 5368709, // 5.1 MB
       upload_date: "2024-06-08T09:45:00Z",
       status: "Final",
       original_filename: "Documentos Identificação.zip"
@@ -80,7 +76,7 @@ const PortalDocuments = () => {
   // Use real documents if available, otherwise use mock data
   const allDocuments = documents.length > 0 ? documents : mockDocuments;
 
-  // Helper functions
+  // Helper functions defined before they are used
   function getStatusFromDocument(doc: any) {
     if (doc.status === 'Final') return 'Finalizado';
     if (doc.status === 'Draft') return 'Pendente Assinatura';
@@ -106,6 +102,13 @@ const PortalDocuments = () => {
     }
   }
 
+  // Helper function to get display label for document type
+  function getDocumentTypeDisplayLabel(docType: string) {
+    if (docType === 'General Document') return 'Documento Escritório';
+    if (docType === 'Case Document') return 'Documento Processo';
+    return docType; // Return original type for other cases
+  }
+
   // Filter documents based on search criteria
   const filteredDocuments = useMemo(() => {
     return allDocuments.filter(doc => {
@@ -124,6 +127,55 @@ const PortalDocuments = () => {
     });
   }, [allDocuments, searchFilters]);
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const handlePreview = async (document: any) => {
+    console.log('Previewing document:', document.document_name);
+    setSelectedDocument(document);
+    setIsLoadingPreview(true);
+    setIsPreviewOpen(true);
+    
+    try {
+      const url = await getDocumentPreviewUrl(document);
+      setPreviewUrl(url);
+      console.log('Preview URL generated:', url);
+    } catch (error) {
+      console.error('Error generating preview URL:', error);
+      toast({
+        title: 'Erro na visualização',
+        description: 'Não foi possível gerar a visualização do documento.',
+        variant: 'destructive'
+      });
+      setPreviewUrl('');
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  const handleDownload = async (document: any) => {
+    console.log('Starting download for:', document.document_name);
+    try {
+      await downloadDocument(document);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: 'Erro no download',
+        description: 'Não foi possível baixar o documento. Tente novamente.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
   };
@@ -139,12 +191,12 @@ const PortalDocuments = () => {
     filteredDocuments.forEach((doc, index) => {
       setTimeout(() => {
         handleDownload(doc);
-      }, index * 1000);
+      }, index * 1000); // Delay each download by 1 second
     });
   };
 
   const handleUploadComplete = () => {
-    refetch();
+    refetch(); // Refresh the documents list
   };
 
   if (isLoading) {
@@ -164,28 +216,136 @@ const PortalDocuments = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DocumentsHeader
-        filteredDocumentsCount={filteredDocuments.length}
-        onUploadClick={() => setIsUploadOpen(true)}
-        onBulkDownload={handleBulkDownload}
-      />
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0 gap-4 sm:gap-0">
+            <div className="flex items-center space-x-4 w-full sm:w-auto">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/portal')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 p-2 sm:p-3"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Voltar ao Portal</span>
+                <span className="sm:hidden">Voltar</span>
+              </Button>
+              <div className="border-l border-gray-300 pl-4">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900">Documentos</h1>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm w-full sm:w-auto"
+                onClick={() => setIsUploadOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Enviar Documentos</span>
+                <span className="sm:hidden">Enviar</span>
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm w-full sm:w-auto"
+                onClick={handleBulkDownload}
+                disabled={filteredDocuments.length === 0}
+              >
+                <Download className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Download em Lote ({filteredDocuments.length})</span>
+                <span className="sm:hidden">Download ({filteredDocuments.length})</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <DocumentSearch onSearch={handleSearch} />
         
-        <DocumentsList
-          documents={filteredDocuments}
-          searchFilters={searchFilters}
-          onPreview={handlePreview}
-          onDownload={handleDownload}
-          isLoadingPreview={isLoadingPreview}
-          selectedDocumentId={selectedDocument?.id}
-        />
+        {filteredDocuments.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchFilters.query || searchFilters.type || searchFilters.status || searchFilters.dateRange 
+                  ? 'Nenhum documento encontrado' 
+                  : 'Nenhum documento disponível'}
+              </h3>
+              <p className="text-gray-600">
+                {searchFilters.query || searchFilters.type || searchFilters.status || searchFilters.dateRange 
+                  ? 'Tente ajustar os filtros de busca para encontrar documentos.' 
+                  : 'Seus documentos aparecerão aqui quando estiverem disponíveis.'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {filteredDocuments.map((doc) => (
+              <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <div className="flex items-start sm:items-center space-x-3">
+                      <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium text-gray-900 text-xs sm:text-sm break-words leading-tight">{doc.document_name}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs text-gray-600 mt-1 space-y-1 sm:space-y-0">
+                          <span>{getDocumentTypeDisplayLabel(doc.document_type)}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span>{formatFileSize(doc.file_size || 0)}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span>{formatDate(doc.upload_date)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
+                        getStatusFromDocument(doc) === 'Finalizado' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {getStatusFromDocument(doc)}
+                      </span>
+                      
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-blue-500 text-blue-600 hover:bg-blue-50 flex-1 sm:flex-none text-xs"
+                          onClick={() => handlePreview(doc)}
+                          disabled={isLoadingPreview}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          {isLoadingPreview && selectedDocument?.id === doc.id ? 'Carregando...' : 'Ver'}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none text-xs"
+                          onClick={() => handleDownload(doc)}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          <span className="hidden sm:inline">Download</span>
+                          <span className="sm:hidden">Baixar</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
 
       <DocumentPreviewSheet
         isOpen={isPreviewOpen}
-        onClose={closePreview}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setSelectedDocument(null);
+          setPreviewUrl('');
+        }}
         document={selectedDocument}
         previewUrl={previewUrl}
         onDownload={() => selectedDocument && handleDownload(selectedDocument)}
