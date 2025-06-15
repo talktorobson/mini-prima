@@ -114,10 +114,17 @@ const PortalMessages = () => {
 
   const handleNotificationsClick = () => {
     setIsChatActive(false);
-    toast({
+    const toastResult = toast({
       title: "Notificações",
       description: "Visualizando notificações do sistema."
     });
+
+    // Auto-dismiss the toast after 2 seconds
+    setTimeout(() => {
+      if (toastResult && toastResult.dismiss) {
+        toastResult.dismiss();
+      }
+    }, 2000);
   };
 
   if (isLoading) {
