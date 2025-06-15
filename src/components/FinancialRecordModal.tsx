@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,9 +16,46 @@ import {
   Building
 } from 'lucide-react';
 
-// Import jsPDF and html2canvas with proper module resolution
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Dynamic imports for PDF generation to avoid build issues
+const generatePDF = async (elementId: string, fileName: string) => {
+  try {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: html2canvas } = await import('html2canvas');
+    
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    const canvas = await html2canvas(element, {
+      backgroundColor: '#1e293b',
+      scale: 2,
+      logging: false,
+      useCORS: true
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(fileName);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+  }
+};
 
 interface FinancialRecord {
   id: string;
@@ -74,42 +112,9 @@ const FinancialRecordModal: React.FC<FinancialRecordModalProps> = ({
 
   const exportToPDF = async () => {
     if (!record) return;
-
-    const element = document.getElementById('financial-record-content');
-    if (!element) return;
-
-    try {
-      const canvas = await html2canvas(element, {
-        backgroundColor: '#1e293b',
-        scale: 2,
-        logging: false,
-        useCORS: true
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const fileName = `registro_financeiro_${record.invoice_number || record.id}_${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(fileName);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    }
+    
+    const fileName = `registro_financeiro_${record.invoice_number || record.id}_${new Date().toISOString().split('T')[0]}.pdf`;
+    await generatePDF('financial-record-content', fileName);
   };
 
   if (!record) return null;
