@@ -1082,6 +1082,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_current_client_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      log_client_activity: {
+        Args: {
+          activity_type_param: string
+          description_param?: string
+          metadata_param?: Json
+        }
+        Returns: undefined
+      }
+      user_owns_case: {
+        Args: { case_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       access_action: "view" | "download" | "preview"
