@@ -108,8 +108,8 @@ const Portal = () => {
           </p>
         </div>
 
-        {/* 2x2 Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-200px)]">
+        {/* 2x2 Grid Layout - Fixed */}
+        <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[calc(100vh-200px)]">
           
           {/* Top Left: Cases */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
