@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,12 +23,20 @@ import { useClientData } from '@/hooks/useClientData';
 import { casesService, documentsService, financialService, notificationsService } from '@/services/database';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import DocumentPreviewModal from '@/components/DocumentPreviewModal';
 
 const Portal = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { data: client, isLoading: clientLoading } = useClientData();
   const { toast } = useToast();
+  
+  // Preview modal state
+  const [previewModal, setPreviewModal] = useState({
+    isOpen: false,
+    document: null,
+    previewUrl: ''
+  });
 
   // Get dashboard data
   const { data: cases = [] } = useQuery({
@@ -112,8 +120,12 @@ const Portal = () => {
       }
 
       if (data?.signedUrl) {
-        // Open in new tab for preview
-        window.open(data.signedUrl, '_blank');
+        // Open in modal instead of new tab
+        setPreviewModal({
+          isOpen: true,
+          document: document,
+          previewUrl: data.signedUrl
+        });
       }
     } catch (error) {
       console.error('Error previewing document:', error);
@@ -154,14 +166,21 @@ const Portal = () => {
       }
 
       if (data?.signedUrl) {
-        // Create a temporary link and trigger download
+        // Use fetch to download the file properly
+        const response = await fetch(data.signedUrl);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = data.signedUrl;
+        link.href = url;
         link.download = document.original_filename || document.document_name;
-        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
         
         toast({
           title: "Sucesso",
@@ -175,6 +194,20 @@ const Portal = () => {
         description: "Erro ao fazer download do documento.",
         variant: "destructive"
       });
+    }
+  };
+
+  const closePreviewModal = () => {
+    setPreviewModal({
+      isOpen: false,
+      document: null,
+      previewUrl: ''
+    });
+  };
+
+  const handleDownloadFromModal = () => {
+    if (previewModal.document) {
+      handleDownloadDocument(previewModal.document);
     }
   };
 
@@ -549,6 +582,15 @@ const Portal = () => {
           </Card>
         </div>
       </main>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={previewModal.isOpen}
+        onClose={closePreviewModal}
+        document={previewModal.document}
+        previewUrl={previewModal.previewUrl}
+        onDownload={handleDownloadFromModal}
+      />
     </div>
   );
 };
