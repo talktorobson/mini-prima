@@ -270,8 +270,8 @@ const PortalDocuments = () => {
                         <FileText className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base break-words">{doc.document_name}</h3>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs sm:text-sm text-gray-600 mt-1 space-y-1 sm:space-y-0">
+                        <h3 className="font-medium text-gray-900 text-xs sm:text-sm break-words leading-tight">{doc.document_name}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs text-gray-600 mt-1 space-y-1 sm:space-y-0">
                           <span>{doc.document_type}</span>
                           <span className="hidden sm:inline">•</span>
                           <span>{formatFileSize(doc.file_size || 0)}</span>
@@ -294,19 +294,19 @@ const PortalDocuments = () => {
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="border-blue-500 text-blue-600 hover:bg-blue-50 flex-1 sm:flex-none text-xs sm:text-sm"
+                          className="border-blue-500 text-blue-600 hover:bg-blue-50 flex-1 sm:flex-none text-xs"
                           onClick={() => handlePreview(doc)}
                           disabled={isLoadingPreview}
                         >
-                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <Eye className="h-3 w-3 mr-1" />
                           {isLoadingPreview && selectedDocument?.id === doc.id ? 'Carregando...' : 'Ver'}
                         </Button>
                         <Button 
                           size="sm" 
-                          className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none text-xs sm:text-sm"
+                          className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none text-xs"
                           onClick={() => handleDownload(doc)}
                         >
-                          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <Download className="h-3 w-3 mr-1" />
                           <span className="hidden sm:inline">Download</span>
                           <span className="sm:hidden">Baixar</span>
                         </Button>
