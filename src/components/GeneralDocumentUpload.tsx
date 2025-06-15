@@ -60,7 +60,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
     const newFiles: SelectedFile[] = Array.from(files).map(file => ({
       file,
       category: 'Outros',
-      caseId: '', // Empty means general document
+      caseId: 'general', // Default to general instead of empty string
       id: `${Date.now()}-${Math.random()}`
     }));
 
@@ -113,12 +113,12 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
       console.log('Client found:', client.id);
 
       const uploadPromises = selectedFiles.map(async ({ file, category, caseId }) => {
-        console.log(`Uploading file: ${file.name}, category: ${category}, case: ${caseId || 'General'}`);
+        console.log(`Uploading file: ${file.name}, category: ${category}, case: ${caseId === 'general' ? 'General' : caseId}`);
         
         // Create a safe file path
         const timestamp = Date.now();
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const fileName = caseId 
+        const fileName = (caseId !== 'general' && caseId !== 'administrative') 
           ? `${user.id}/${caseId}/${timestamp}-${safeName}`
           : `${user.id}/general/${timestamp}-${safeName}`;
         
@@ -146,10 +146,10 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
             document_name: file.name,
             original_filename: file.name,
             file_path: fileName,
-            document_type: caseId ? 'Case Document' : 'General Document',
+            document_type: (caseId !== 'general' && caseId !== 'administrative') ? 'Case Document' : 'General Document',
             document_category: category,
             file_size: file.size,
-            case_id: caseId || null,
+            case_id: (caseId !== 'general' && caseId !== 'administrative') ? caseId : null,
             client_id: client.id,
             status: 'Draft',
             is_visible_to_client: true
@@ -275,7 +275,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
                             <SelectValue placeholder="Selecionar caso" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="" className="text-xs">
+                            <SelectItem value="general" className="text-xs">
                               Documento Geral
                             </SelectItem>
                             <SelectItem value="administrative" className="text-xs">
