@@ -14,12 +14,12 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+    <div className="min-h-screen">
       {/* Floating Portal Access Button */}
       <div className="fixed top-6 right-6 z-50">
         <Button 
           onClick={() => navigate('/login')}
-          className="portal-button-primary px-6 py-3 rounded-full shadow-2xl border-2 border-white/20 backdrop-blur-sm flex items-center gap-2 transform hover:scale-105 transition-all duration-200"
+          className="bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold px-6 py-3 rounded-full shadow-2xl border-2 border-white/20 backdrop-blur-sm flex items-center gap-2 transform hover:scale-105 transition-all duration-200"
         >
           <Users className="h-5 w-5" />
           Portal do Cliente
