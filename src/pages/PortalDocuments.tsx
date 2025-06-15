@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -221,19 +220,16 @@ const PortalDocuments = () => {
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900">Documentos</h1>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+            <div className="w-full sm:w-auto">
               <Button 
                 size="sm" 
-                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm"
+                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm w-full sm:w-auto"
                 onClick={handleBulkDownload}
                 disabled={filteredDocuments.length === 0}
               >
                 <Download className="h-4 w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Download em Lote ({filteredDocuments.length})</span>
                 <span className="sm:hidden">Download ({filteredDocuments.length})</span>
-              </Button>
-              <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm">
-                Acesso Seguro
               </Button>
             </div>
           </div>
