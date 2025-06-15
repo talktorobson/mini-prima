@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -263,9 +262,12 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
                           <SelectItem value="general" className="text-xs">
                             Documento Geral
                           </SelectItem>
+                          <SelectItem value="administrative" className="text-xs">
+                            Financeiro D'avila Reis Advogados
+                          </SelectItem>
                           {cases.map((case_) => (
                             <SelectItem key={case_.id} value={case_.id} className="text-xs">
-                              {case_.case_title}
+                              {case_.counterparty_name || case_.case_title}
                             </SelectItem>
                           ))}
                         </SelectContent>
