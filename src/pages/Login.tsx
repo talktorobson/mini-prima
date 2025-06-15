@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, ArrowLeft, Shield } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowLeft, Shield, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { adminAuthService } from '@/services/adminAuth';
 import { logActivity } from '@/services/database';
 
 const Login = () => {
@@ -17,29 +19,31 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loginType, setLoginType] = useState<'auto' | 'client' | 'admin'>('auto');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user: clientUser } = useAuth();
+  const { user: adminUser, adminUser: adminData } = useAdminAuth();
 
   useEffect(() => {
-    // If user is already authenticated, redirect to portal
-    if (user) {
-      console.log('User already authenticated, redirecting to portal');
+    // If user is already authenticated as client, redirect to portal
+    if (clientUser && !adminData) {
+      console.log('Client user already authenticated, redirecting to portal');
       navigate('/portal');
     }
-  }, [user, navigate]);
+    // If user is already authenticated as admin, redirect to admin dashboard
+    if (adminUser && adminData) {
+      console.log('Admin user already authenticated, redirecting to dashboard');
+      navigate('/admin');
+    }
+  }, [clientUser, adminUser, adminData, navigate]);
 
   const cleanupAuthState = () => {
-    // Remove standard auth tokens
     localStorage.removeItem('supabase.auth.token');
-    
-    // Remove all Supabase auth keys from localStorage
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         localStorage.removeItem(key);
       }
     });
-    
-    // Remove from sessionStorage if in use
     Object.keys(sessionStorage || {}).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
         sessionStorage.removeItem(key);
@@ -47,71 +51,117 @@ const Login = () => {
     });
   };
 
+  const attemptClientLogin = async (email: string, password: string) => {
+    console.log('Attempting client login for:', email);
+    
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (signInError) {
+      throw signInError;
+    }
+
+    if (data.user) {
+      // Check if this user has admin privileges
+      const { data: adminCheck } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', data.user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (adminCheck) {
+        // User has admin privileges, sign them out and try admin login
+        await supabase.auth.signOut();
+        throw new Error('ADMIN_LOGIN_REQUIRED');
+      }
+
+      console.log('Client login successful for:', data.user.email);
+      setTimeout(() => {
+        logActivity('auth', 'Client login successful', {
+          user_email: data.user.email,
+          session_id: data.session?.access_token?.slice(-8),
+          timestamp: new Date().toISOString()
+        });
+      }, 1000);
+
+      return { success: true, redirectTo: '/portal' };
+    }
+
+    throw new Error('Falha na autenticação.');
+  };
+
+  const attemptAdminLogin = async (email: string, password: string) => {
+    console.log('Attempting admin login for:', email);
+    
+    const { data, error: signInError } = await adminAuthService.signIn(email, password);
+
+    if (signInError) {
+      throw signInError;
+    }
+
+    if (data) {
+      console.log('Admin login successful for:', email);
+      return { success: true, redirectTo: '/admin' };
+    }
+
+    throw new Error('Falha na autenticação administrativa.');
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    console.log('Attempting sign in for:', email);
-
     try {
-      // Clean up existing state
       cleanupAuthState();
       
-      // Attempt global sign out first to ensure clean state
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
         console.log('Sign out during cleanup failed (expected):', err);
-        // Continue even if this fails
       }
 
-      // Sign in with email/password
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      let result;
 
-      if (signInError) {
-        console.error('Sign in error:', signInError);
-        setError(signInError.message);
-        
-        // Log failed sign in attempt
-        setTimeout(() => {
-          logActivity('auth', 'Sign in failed', {
-            email: email.trim(),
-            error: signInError.message,
-            timestamp: new Date().toISOString()
-          });
-        }, 500);
-        return;
+      if (loginType === 'client') {
+        result = await attemptClientLogin(email, password);
+      } else if (loginType === 'admin') {
+        result = await attemptAdminLogin(email, password);
+      } else {
+        // Auto-detect mode: try client first, then admin
+        try {
+          result = await attemptClientLogin(email, password);
+        } catch (clientError: any) {
+          if (clientError.message === 'ADMIN_LOGIN_REQUIRED') {
+            // User has admin privileges, try admin login
+            result = await attemptAdminLogin(email, password);
+          } else {
+            // Client login failed, try admin login
+            try {
+              result = await attemptAdminLogin(email, password);
+            } catch (adminError: any) {
+              // Both failed, show the original client error
+              throw clientError;
+            }
+          }
+        }
       }
 
-      if (data.user) {
-        console.log('Sign in successful for:', data.user.email);
-        
-        // Log successful sign in
-        setTimeout(() => {
-          logActivity('auth', 'Sign in successful', {
-            user_email: data.user.email,
-            session_id: data.session?.access_token?.slice(-8),
-            timestamp: new Date().toISOString()
-          });
-        }, 1000);
-
-        // Force page reload to ensure clean state
-        window.location.href = '/portal';
+      if (result.success) {
+        window.location.href = result.redirectTo;
       }
 
     } catch (error: any) {
-      console.error('Unexpected sign in error:', error);
-      setError('Erro inesperado. Tente novamente.');
+      console.error('Sign in error:', error);
+      setError(error.message || 'Erro inesperado. Tente novamente.');
       
-      // Log unexpected error
       setTimeout(() => {
-        logActivity('auth', 'Sign in error', {
+        logActivity('auth', 'Sign in failed', {
           email: email.trim(),
-          error: error.message || 'Unknown error',
+          error: error.message,
           timestamp: new Date().toISOString()
         });
       }, 500);
@@ -119,6 +169,41 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const getLoginTypeDisplay = () => {
+    switch (loginType) {
+      case 'admin':
+        return {
+          title: 'Acesso Administrativo',
+          description: 'Área restrita para administradores e equipe',
+          icon: Users,
+          gradient: 'from-red-800 to-red-600',
+          buttonGradient: 'from-red-700 to-red-900 hover:from-red-800 hover:to-red-950',
+          accentColor: 'red'
+        };
+      case 'client':
+        return {
+          title: 'Portal do Cliente',
+          description: 'Acesse sua conta para visualizar seus processos e documentos',
+          icon: Shield,
+          gradient: 'from-navy-800 to-navy-600',
+          buttonGradient: 'from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950',
+          accentColor: 'navy'
+        };
+      default:
+        return {
+          title: 'Fazer Login',
+          description: 'Entre com suas credenciais para acessar o sistema',
+          icon: Shield,
+          gradient: 'from-navy-800 to-navy-600',
+          buttonGradient: 'from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950',
+          accentColor: 'navy'
+        };
+    }
+  };
+
+  const displayConfig = getLoginTypeDisplay();
+  const IconComponent = displayConfig.icon;
 
   return (
     <div className="min-h-screen bg-navy-950 flex items-center justify-center p-4 relative overflow-hidden">
@@ -141,15 +226,46 @@ const Login = () => {
 
       <Card className="w-full max-w-md shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
         <CardHeader className="space-y-4 text-center pb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center mb-2">
-            <Shield className="h-8 w-8 text-amber-400" />
+          <div className={`mx-auto w-16 h-16 bg-gradient-to-br ${loginType === 'admin' ? 'from-red-600 to-red-800' : 'from-navy-600 to-navy-800'} rounded-full flex items-center justify-center mb-2`}>
+            <IconComponent className={`h-8 w-8 ${loginType === 'admin' ? 'text-white' : 'text-amber-400'}`} />
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-navy-800 to-navy-600 bg-clip-text text-transparent">
-            Portal do Cliente
+          <CardTitle className={`text-3xl font-bold bg-gradient-to-r ${displayConfig.gradient} bg-clip-text text-transparent`}>
+            {displayConfig.title}
           </CardTitle>
           <CardDescription className="text-navy-600 text-base">
-            Acesse sua conta para visualizar seus processos e documentos
+            {displayConfig.description}
           </CardDescription>
+          
+          {/* Login type selector */}
+          <div className="flex justify-center space-x-2 mt-4">
+            <Button
+              type="button"
+              variant={loginType === 'auto' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLoginType('auto')}
+              className="text-xs"
+            >
+              Auto
+            </Button>
+            <Button
+              type="button"
+              variant={loginType === 'client' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLoginType('client')}
+              className="text-xs"
+            >
+              Cliente
+            </Button>
+            <Button
+              type="button"
+              variant={loginType === 'admin' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLoginType('admin')}
+              className="text-xs"
+            >
+              Admin
+            </Button>
+          </div>
         </CardHeader>
         
         <CardContent className="pb-8">
@@ -159,13 +275,13 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="seu@email.com"
+                placeholder={loginType === 'admin' ? 'admin@exemplo.com' : 'seu@email.com'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
                 autoComplete="email"
-                className="h-12 border-navy-200 focus:border-navy-500 focus:ring-navy-500 transition-colors"
+                className={`h-12 border-navy-200 ${loginType === 'admin' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-navy-500 focus:ring-navy-500'} transition-colors`}
               />
             </div>
             
@@ -181,7 +297,7 @@ const Login = () => {
                   required
                   disabled={loading}
                   autoComplete="current-password"
-                  className="h-12 pr-12 border-navy-200 focus:border-navy-500 focus:ring-navy-500 transition-colors"
+                  className={`h-12 pr-12 border-navy-200 ${loginType === 'admin' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-navy-500 focus:ring-navy-500'} transition-colors`}
                 />
                 <Button
                   type="button"
@@ -208,7 +324,7 @@ const Login = () => {
 
             <Button 
               type="submit" 
-              className="w-full h-12 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-amber-400 font-medium text-base shadow-lg hover:shadow-xl transition-all duration-200" 
+              className={`w-full h-12 bg-gradient-to-r ${displayConfig.buttonGradient} ${loginType === 'admin' ? 'text-white' : 'text-amber-400'} font-medium text-base shadow-lg hover:shadow-xl transition-all duration-200`}
               disabled={loading}
             >
               {loading ? (
@@ -222,20 +338,34 @@ const Login = () => {
             </Button>
           </form>
           
-          <div className="mt-8 p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg border border-amber-200">
-            <p className="text-center text-sm text-navy-600 mb-2 font-medium">
-              Credenciais de teste:
-            </p>
-            <p className="font-mono bg-white px-3 py-2 rounded border text-center text-navy-700 font-medium">
-              teste@exemplo.com
-            </p>
-          </div>
+          {loginType !== 'admin' && (
+            <div className="mt-8 p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg border border-amber-200">
+              <p className="text-center text-sm text-navy-600 mb-2 font-medium">
+                Credenciais de teste:
+              </p>
+              <p className="font-mono bg-white px-3 py-2 rounded border text-center text-navy-700 font-medium">
+                teste@exemplo.com
+              </p>
+            </div>
+          )}
+          
+          {loginType === 'admin' && (
+            <div className="mt-8 p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-lg border border-red-200">
+              <div className="flex items-center gap-2 text-red-700 mb-2">
+                <Shield className="h-4 w-4" />
+                <span className="text-sm font-medium">Área Restrita</span>
+              </div>
+              <p className="text-xs text-red-600">
+                Apenas usuários autorizados podem acessar o painel administrativo.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
       {/* Additional decorative elements */}
-      <div className="absolute top-20 right-20 w-32 h-32 bg-amber-400/10 rounded-full blur-xl"></div>
-      <div className="absolute bottom-20 left-20 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
+      <div className={`absolute top-20 right-20 w-32 h-32 ${loginType === 'admin' ? 'bg-red-400/10' : 'bg-amber-400/10'} rounded-full blur-xl`}></div>
+      <div className={`absolute bottom-20 left-20 w-24 h-24 ${loginType === 'admin' ? 'bg-red-500/20' : 'bg-amber-500/20'} rounded-full blur-2xl`}></div>
     </div>
   );
 };

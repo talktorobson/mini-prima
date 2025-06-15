@@ -14,7 +14,6 @@ import PortalCases from "./pages/PortalCases";
 import PortalDocuments from "./pages/PortalDocuments";
 import PortalMessages from "./pages/PortalMessages";
 import PortalFinancial from "./pages/PortalFinancial";
-import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -47,7 +46,7 @@ const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }
   
-  return user && adminUser ? <>{children}</> : <Navigate to="/admin/login" replace />;
+  return user && adminUser ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 // Public Route Component (redirect to portal if already logged in)
@@ -100,7 +99,8 @@ const ClientRoutes: React.FC = () => (
 const AdminRoutes: React.FC = () => (
   <AdminAuthProvider>
     <Routes>
-      <Route path="/admin/login" element={<AdminPublicRoute><AdminLogin /></AdminPublicRoute>} />
+      {/* Redirect admin login attempts to unified login page */}
+      <Route path="/admin/login" element={<Navigate to="/login" replace />} />
       <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
       <Route path="/admin/clients" element={<AdminProtectedRoute><div>Admin Clients - Coming Soon</div></AdminProtectedRoute>} />
       <Route path="/admin/cases" element={<AdminProtectedRoute><div>Admin Cases - Coming Soon</div></AdminProtectedRoute>} />
