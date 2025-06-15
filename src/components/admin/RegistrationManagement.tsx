@@ -83,7 +83,7 @@ const RegistrationManagement = () => {
     try {
       await clientRegistrationService.updateRegistrationStatus(
         clientId, 
-        newStatus, 
+        newStatus as 'pending' | 'approved' | 'rejected' | 'under_review', 
         statusUpdateReason
       );
 

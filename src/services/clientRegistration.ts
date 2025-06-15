@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ClientRegistrationData {
@@ -50,7 +49,7 @@ export const clientRegistrationService = {
     }
   },
 
-  updateRegistrationStatus: async (clientId: string, status: string, reason?: string) => {
+  updateRegistrationStatus: async (clientId: string, status: 'pending' | 'approved' | 'rejected' | 'under_review', reason?: string) => {
     console.log('Updating registration status:', { clientId, status, reason });
     
     try {

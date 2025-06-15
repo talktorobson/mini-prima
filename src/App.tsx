@@ -1,14 +1,19 @@
+
 import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
+import PortalCases from "./pages/PortalCases";
+import PortalDocuments from "./pages/PortalDocuments";
+import PortalMessages from "./pages/PortalMessages";
+import PortalFinancial from "./pages/PortalFinancial";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
