@@ -112,10 +112,17 @@ const PortalMessages = () => {
 
   const handleChatClick = () => {
     setIsChatActive(true);
-    toast({
+    const toastResult = toast({
       title: "Chat ativo",
       description: "Você está no modo de chat."
     });
+
+    // Auto-dismiss the toast after 2 seconds
+    setTimeout(() => {
+      if (toastResult && toastResult.dismiss) {
+        toastResult.dismiss();
+      }
+    }, 2000);
   };
 
   const handleNotificationsClick = () => {
