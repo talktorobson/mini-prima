@@ -13,6 +13,7 @@ import Portal from "./pages/Portal";
 import PortalCases from "./pages/PortalCases";
 import PortalDocuments from "./pages/PortalDocuments";
 import PortalMessages from "./pages/PortalMessages";
+import PortalFinancial from "./pages/PortalFinancial";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,7 +58,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/portal/cases" element={<ProtectedRoute><PortalCases /></ProtectedRoute>} />
     <Route path="/portal/documents" element={<ProtectedRoute><PortalDocuments /></ProtectedRoute>} />
     <Route path="/portal/messages" element={<ProtectedRoute><PortalMessages /></ProtectedRoute>} />
-    <Route path="/portal/financial" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
+    <Route path="/portal/financial" element={<ProtectedRoute><PortalFinancial /></ProtectedRoute>} />
     <Route path="/portal/notifications" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
     
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

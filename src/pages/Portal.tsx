@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -213,17 +214,17 @@ const Portal = () => {
 
   const handlePendenciasClick = () => {
     console.log('Navigating to financial pending items');
-    // Could navigate to a financial page or show a modal
+    navigate('/portal/financial', { state: { activeTab: 'pending' } });
   };
 
   const handleTotalRegistrosClick = () => {
     console.log('Navigating to all financial records');
-    // Could navigate to a financial page
+    navigate('/portal/financial', { state: { activeTab: 'all' } });
   };
 
   const handleFinancialItemClick = (recordId: string) => {
     console.log('Viewing financial record:', recordId);
-    // Could show details modal or navigate to detail page
+    navigate('/portal/financial', { state: { selectedRecordId: recordId } });
   };
 
   const handleNotificationsClick = () => {
@@ -453,9 +454,14 @@ const Portal = () => {
                   <CreditCard className="h-5 w-5 text-orange-400" />
                   <span>Financeiro</span>
                 </div>
-                <div className="text-lg font-bold text-orange-400">
-                  R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => navigate('/portal/financial')}
+                  className="border-orange-400 text-orange-400 hover:bg-orange-400 hover:text-white text-xs h-7 px-3"
+                >
+                  Ver Detalhes
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
