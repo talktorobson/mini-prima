@@ -1,235 +1,283 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminPermissionGuard from '@/components/admin/AdminPermissionGuard';
+import PermissionManager from '@/components/admin/PermissionManager';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { 
   Users, 
-  Briefcase, 
+  Building, 
   FileText, 
   DollarSign, 
-  MessageSquare,
-  Settings,
-  LogOut,
+  MessageCircle, 
   Shield,
   BarChart3,
-  Activity
+  TrendingUp
 } from 'lucide-react';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
-const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const { adminUser, signOut, isAdmin } = useAdminAuth();
+const DashboardHome = () => {
+  const { adminUser } = useAdminAuth();
+  const { canAccess, permissions, isAdmin } = useAdminPermissions();
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
-  const stats = [
+  const accessCards = [
     {
-      title: "Total de Clientes",
-      value: "156",
+      title: 'Clientes',
+      description: 'Gestão de clientes e portal',
       icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100"
+      color: 'bg-blue-500',
+      hasAccess: canAccess.clients
     },
     {
-      title: "Casos Ativos",
-      value: "89",
-      icon: Briefcase,
-      color: "text-green-600",
-      bgColor: "bg-green-100"
+      title: 'Casos',
+      description: 'Gerenciamento de casos jurídicos',
+      icon: Building,
+      color: 'bg-green-500',
+      hasAccess: canAccess.cases
     },
     {
-      title: "Documentos",
-      value: "1,247",
+      title: 'Documentos',
+      description: 'Sistema de documentos',
       icon: FileText,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100"
+      color: 'bg-purple-500',
+      hasAccess: canAccess.documents
     },
     {
-      title: "Receita Mensal",
-      value: "R$ 245.750",
+      title: 'Financeiro',
+      description: 'Faturamento e pagamentos',
       icon: DollarSign,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100"
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: "Gerenciar Clientes",
-      description: "Visualizar e editar informações dos clientes",
-      icon: Users,
-      href: "/admin/clients",
-      color: "bg-blue-600 hover:bg-blue-700"
+      color: 'bg-yellow-500',
+      hasAccess: canAccess.billing
     },
     {
-      title: "Gerenciar Casos",
-      description: "Acompanhar progresso e status dos casos",
-      icon: Briefcase,
-      href: "/admin/cases",
-      color: "bg-green-600 hover:bg-green-700"
+      title: 'Mensagens',
+      description: 'Portal de mensagens',
+      icon: MessageCircle,
+      color: 'bg-indigo-500',
+      hasAccess: canAccess.messaging
     },
     {
-      title: "Documentos",
-      description: "Organizar e revisar documentos",
-      icon: FileText,
-      href: "/admin/documents",
-      color: "bg-purple-600 hover:bg-purple-700"
-    },
-    {
-      title: "Financeiro",
-      description: "Controlar faturas e pagamentos",
-      icon: DollarSign,
-      href: "/admin/financial",
-      color: "bg-yellow-600 hover:bg-yellow-700"
-    },
-    {
-      title: "Mensagens",
-      description: "Comunicação com clientes",
-      icon: MessageSquare,
-      href: "/admin/messages",
-      color: "bg-indigo-600 hover:bg-indigo-700"
-    },
-    {
-      title: "Configurações",
-      description: "Administrar sistema e usuários",
-      icon: Settings,
-      href: "/admin/settings",
-      color: "bg-gray-600 hover:bg-gray-700",
-      adminOnly: true
+      title: 'Configurações',
+      description: 'Configurações do sistema',
+      icon: Shield,
+      color: 'bg-red-500',
+      hasAccess: canAccess.settings
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-                <p className="text-sm text-gray-600">Bem-vindo ao sistema de gestão</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
-                {adminUser?.role === 'admin' ? 'Administrador' : 'Equipe'}
-              </Badge>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleSignOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
+        <p className="text-gray-600 mt-1">
+          Bem-vindo ao painel de administração. Gerencie o sistema e monitore as atividades.
+        </p>
       </div>
 
-      <div className="p-6 space-y-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                  </div>
-                  <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {/* User Info Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Informações do Usuário
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Tipo de Acesso:</p>
+              <Badge variant={isAdmin ? 'default' : 'secondary'} className="mt-1">
+                {isAdmin ? 'Administrador' : 'Equipe'}
+              </Badge>
+            </div>
+            <div>
+              <p className="font-medium">Permissões Ativas:</p>
+              <Badge variant="outline" className="mt-1">
+                {permissions.length} de 6 módulos
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quickActions
-              .filter(action => !action.adminOnly || isAdmin)
-              .map((action, index) => (
-              <Card key={index} className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center transition-colors`}>
-                      <action.icon className="h-5 w-5 text-white" />
+      {/* Access Overview */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Módulos Disponíveis</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {accessCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Card key={card.title} className={`${card.hasAccess ? '' : 'opacity-50'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-lg ${card.color} text-white`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{card.title}</h3>
+                      <p className="text-sm text-gray-600">{card.description}</p>
                     </div>
                     <div>
-                      <CardTitle className="text-lg group-hover:text-gray-900 transition-colors">
-                        {action.title}
-                      </CardTitle>
+                      <Badge variant={card.hasAccess ? 'default' : 'secondary'}>
+                        {card.hasAccess ? 'Ativo' : 'Restrito'}
+                      </Badge>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <CardDescription className="mb-4">
-                    {action.description}
-                  </CardDescription>
-                  <Button 
-                    onClick={() => navigate(action.href)}
-                    className={`w-full ${action.color} text-white`}
-                  >
-                    Acessar
-                  </Button>
                 </CardContent>
               </Card>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Quick Stats - Only for users with appropriate permissions */}
+      {(canAccess.clients || canAccess.cases || canAccess.billing) && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Estatísticas Rápidas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {canAccess.clients && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <Users className="h-8 w-8 text-blue-500" />
+                    <div>
+                      <p className="text-2xl font-bold">-</p>
+                      <p className="text-sm text-gray-600">Clientes Ativos</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {canAccess.cases && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <Building className="h-8 w-8 text-green-500" />
+                    <div>
+                      <p className="text-2xl font-bold">-</p>
+                      <p className="text-sm text-gray-600">Casos Ativos</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {canAccess.billing && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <DollarSign className="h-8 w-8 text-yellow-500" />
+                    <div>
+                      <p className="text-2xl font-bold">R$ -</p>
+                      <p className="text-sm text-gray-600">Receita Mensal</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
+      )}
+    </div>
+  );
+};
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Atividade Recente
-            </CardTitle>
-            <CardDescription>
-              Últimas ações no sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Novo cliente cadastrado</p>
-                  <p className="text-xs text-gray-600">Empresa XYZ Ltda - há 2 horas</p>
+const AdminDashboard = () => {
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar />
+      <main className="flex-1 overflow-auto">
+        <Routes>
+          <Route path="/" element={<DashboardHome />} />
+          
+          <Route 
+            path="/clients" 
+            element={
+              <AdminPermissionGuard requiredPermission="client_access">
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Gestão de Clientes</h1>
+                  <p>Funcionalidade em desenvolvimento...</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Documento aprovado</p>
-                  <p className="text-xs text-gray-600">Contrato de Prestação de Serviços - há 4 horas</p>
+              </AdminPermissionGuard>
+            } 
+          />
+          
+          <Route 
+            path="/cases" 
+            element={
+              <AdminPermissionGuard requiredPermission="cases_management">
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Gestão de Casos</h1>
+                  <p>Funcionalidade em desenvolvimento...</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Pagamento recebido</p>
-                  <p className="text-xs text-gray-600">Fatura #001234 - R$ 5.000,00 - há 6 horas</p>
+              </AdminPermissionGuard>
+            } 
+          />
+          
+          <Route 
+            path="/documents" 
+            element={
+              <AdminPermissionGuard requiredPermission="document_management">
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Gestão de Documentos</h1>
+                  <p>Funcionalidade em desenvolvimento...</p>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </AdminPermissionGuard>
+            } 
+          />
+          
+          <Route 
+            path="/financial" 
+            element={
+              <AdminPermissionGuard requiredPermission="billing">
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Gestão Financeira</h1>
+                  <p>Funcionalidade em desenvolvimento...</p>
+                </div>
+              </AdminPermissionGuard>
+            } 
+          />
+          
+          <Route 
+            path="/messages" 
+            element={
+              <AdminPermissionGuard requiredPermission="messaging">
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Gestão de Mensagens</h1>
+                  <p>Funcionalidade em desenvolvimento...</p>
+                </div>
+              </AdminPermissionGuard>
+            } 
+          />
+          
+          <Route 
+            path="/permissions" 
+            element={
+              <AdminPermissionGuard requiredPermission="system_setup">
+                <div className="p-6">
+                  <PermissionManager />
+                </div>
+              </AdminPermissionGuard>
+            } 
+          />
+          
+          <Route 
+            path="/settings" 
+            element={
+              <AdminPermissionGuard requiredPermission="system_setup">
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold mb-4">Configurações do Sistema</h1>
+                  <p>Funcionalidade em desenvolvimento...</p>
+                </div>
+              </AdminPermissionGuard>
+            } 
+          />
+        </Routes>
+      </main>
     </div>
   );
 };

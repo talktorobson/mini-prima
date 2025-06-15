@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -109,13 +108,7 @@ const AdminRoutes: React.FC = () => (
     <Routes>
       {/* Redirect admin login attempts to unified login page */}
       <Route path="/admin/login" element={<Navigate to="/login" replace />} />
-      <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-      <Route path="/admin/clients" element={<AdminProtectedRoute><div>Admin Clients - Coming Soon</div></AdminProtectedRoute>} />
-      <Route path="/admin/cases" element={<AdminProtectedRoute><div>Admin Cases - Coming Soon</div></AdminProtectedRoute>} />
-      <Route path="/admin/documents" element={<AdminProtectedRoute><div>Admin Documents - Coming Soon</div></AdminProtectedRoute>} />
-      <Route path="/admin/financial" element={<AdminProtectedRoute><div>Admin Financial - Coming Soon</div></AdminProtectedRoute>} />
-      <Route path="/admin/messages" element={<AdminProtectedRoute><div>Admin Messages - Coming Soon</div></AdminProtectedRoute>} />
-      <Route path="/admin/settings" element={<AdminProtectedRoute><div>Admin Settings - Coming Soon</div></AdminProtectedRoute>} />
+      <Route path="/admin/*" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
     </Routes>
   </AdminAuthProvider>
 );
