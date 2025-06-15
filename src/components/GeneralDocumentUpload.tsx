@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,7 +197,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Enviar Documentos</DialogTitle>
         </DialogHeader>
@@ -238,70 +239,77 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
               </Label>
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {selectedFiles.map((selectedFile) => (
-                  <div key={selectedFile.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {selectedFile.file.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatFileSize(selectedFile.file.size)}
-                      </p>
-                    </div>
-                    
-                    {/* Case Selection */}
-                    <div className="flex-shrink-0 w-40">
-                      <Select
-                        value={selectedFile.caseId}
-                        onValueChange={(value) => updateFileCaseId(selectedFile.id, value)}
+                  <div key={selectedFile.id} className="border rounded-lg p-3 space-y-3">
+                    {/* File Info Row */}
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {selectedFile.file.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatFileSize(selectedFile.file.size)}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(selectedFile.id)}
+                        className="h-8 w-8 p-0 flex-shrink-0"
                       >
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Caso ou Geral" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general" className="text-xs">
-                            Documento Geral
-                          </SelectItem>
-                          <SelectItem value="administrative" className="text-xs">
-                            Financeiro D'avila Reis Advogados
-                          </SelectItem>
-                          {cases.map((case_) => (
-                            <SelectItem key={case_.id} value={case_.id} className="text-xs">
-                              {case_.counterparty_name || case_.case_title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                     
-                    {/* Category Selection */}
-                    <div className="flex-shrink-0 w-32">
-                      <Select
-                        value={selectedFile.category}
-                        onValueChange={(value) => updateFileCategory(selectedFile.id, value)}
-                      >
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DOCUMENT_CATEGORIES.map((category) => (
-                            <SelectItem key={category} value={category} className="text-xs">
-                              {category}
+                    {/* Controls Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* Case Selection */}
+                      <div>
+                        <Label className="text-xs text-gray-600 mb-1 block">Caso</Label>
+                        <Select
+                          value={selectedFile.caseId}
+                          onValueChange={(value) => updateFileCaseId(selectedFile.id, value)}
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="Selecionar caso" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="" className="text-xs">
+                              Documento Geral
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            <SelectItem value="administrative" className="text-xs">
+                              Financeiro D'avila Reis Advogados
+                            </SelectItem>
+                            {cases.map((case_) => (
+                              <SelectItem key={case_.id} value={case_.id} className="text-xs">
+                                {case_.counterparty_name || case_.case_title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Category Selection */}
+                      <div>
+                        <Label className="text-xs text-gray-600 mb-1 block">Categoria</Label>
+                        <Select
+                          value={selectedFile.category}
+                          onValueChange={(value) => updateFileCategory(selectedFile.id, value)}
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DOCUMENT_CATEGORIES.map((category) => (
+                              <SelectItem key={category} value={category} className="text-xs">
+                                {category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(selectedFile.id)}
-                      className="h-8 w-8 p-0 flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
               </div>
@@ -309,14 +317,14 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
           )}
 
           {/* Upload Button */}
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button variant="outline" onClick={onClose} disabled={uploading}>
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={onClose} disabled={uploading} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button
               onClick={handleUpload}
               disabled={selectedFiles.length === 0 || uploading}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
             >
               {uploading ? 'Enviando...' : `Enviar ${selectedFiles.length} arquivo(s)`}
             </Button>
