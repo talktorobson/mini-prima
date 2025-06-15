@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const getDocumentPreviewUrl = async (document: any): Promise<string> => {
@@ -49,14 +48,14 @@ export const getDocumentPreviewUrl = async (document: any): Promise<string> => {
   }
 };
 
-export const downloadDocument = async (document: any) => {
+export const downloadDocument = async (doc: any) => {
   try {
-    console.log('Downloading document:', document.document_name);
+    console.log('Downloading document:', doc.document_name);
     
-    if (document.file_path) {
+    if (doc.file_path) {
       const { data, error } = await supabase.storage
         .from('case-documents')
-        .createSignedUrl(document.file_path, 60); // 1 minute for download
+        .createSignedUrl(doc.file_path, 60); // 1 minute for download
       
       if (error) {
         console.error('Error creating download URL:', error);
@@ -64,7 +63,7 @@ export const downloadDocument = async (document: any) => {
         console.log('Successfully created download URL');
         const link = document.createElement('a');
         link.href = data.signedUrl;
-        link.download = document.document_name || document.original_filename || 'document';
+        link.download = doc.document_name || doc.original_filename || 'document';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -76,13 +75,13 @@ export const downloadDocument = async (document: any) => {
     console.log('Simulating download for demo document');
     
     // Create a simple text file for demo download
-    const content = `Documento: ${document.document_name}\nTipo: ${document.document_type}\nData: ${new Date(document.upload_date).toLocaleDateString('pt-BR')}\n\nEste é um documento de demonstração do sistema.`;
+    const content = `Documento: ${doc.document_name}\nTipo: ${doc.document_type}\nData: ${new Date(doc.upload_date).toLocaleDateString('pt-BR')}\n\nEste é um documento de demonstração do sistema.`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = document.document_name || 'documento.txt';
+    link.download = doc.document_name || 'documento.txt';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -94,7 +93,7 @@ export const downloadDocument = async (document: any) => {
     const event = new CustomEvent('show-toast', {
       detail: {
         title: 'Download iniciado',
-        description: `${document.document_name} foi baixado com sucesso!`,
+        description: `${doc.document_name} foi baixado com sucesso!`,
         variant: 'success'
       }
     });
