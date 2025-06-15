@@ -93,12 +93,12 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl font-bold">
             {case_.case_title || `Caso ${case_.case_number}`}
           </DialogTitle>
-          <div className="flex items-center space-x-2 mt-2">
+          <div className="flex items-center space-x-2 mt-1">
             <Badge className={getStatusColor(case_.status)}>
               {getStatusDisplayName(case_.status)}
             </Badge>
@@ -108,65 +108,65 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Progress Section */}
           {case_.progress_percentage !== null && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="font-medium">Progresso do Caso</span>
                 <span>{case_.progress_percentage}%</span>
               </div>
-              <Progress value={case_.progress_percentage} className="h-3" />
+              <Progress value={case_.progress_percentage} className="h-2" />
             </div>
           )}
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Basic Information */}
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <h3 className="text-base font-semibold flex items-center">
+                  <FileText className="h-4 w-4 mr-2" />
                   Informações Básicas
                 </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center py-1 border-b border-gray-100">
                     <span className="font-medium text-gray-600">Número do Caso:</span>
                     <span className="text-gray-900 font-medium">{case_.case_number}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="flex justify-between items-center py-1 border-b border-gray-100">
                     <span className="font-medium text-gray-600">Serviço:</span>
                     <span className="text-gray-900">{case_.service_type || 'N/A'}</span>
                   </div>
                   {case_.court_process_number && (
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Processo:</span>
                       <span className="text-gray-900">{case_.court_process_number}</span>
                     </div>
                   )}
                   {case_.court_agency && (
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Tribunal:</span>
                       <span className="text-gray-900">{case_.court_agency}</span>
                     </div>
                   )}
                   {case_.case_risk_value && (
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Valor da Causa (pleiteado):</span>
-                      <span className="text-lg font-semibold text-green-600">
+                      <span className="text-base font-semibold text-green-600">
                         {formatCurrency(Number(case_.case_risk_value))}
                       </span>
                     </div>
                   )}
                   
                   {/* Responsáveis section */}
-                  <div className="pt-2 border-t border-gray-200">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="pt-1 border-t border-gray-200">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Seu Advogado:</span>
                       <span className="text-gray-900">{case_.assigned_lawyer || 'N/A'}</span>
                     </div>
                     {case_.counterparty_name && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 mt-1">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Building className="h-4 w-4 text-red-600" />
@@ -177,7 +177,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                       </div>
                     )}
                     {case_.opposing_party && (
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100 mt-2">
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100 mt-1">
                         <span className="font-medium text-gray-600">Advogado da parte:</span>
                         <span className="text-gray-900">{case_.opposing_party}</span>
                       </div>
@@ -185,17 +185,17 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                   </div>
 
                   {/* Metadata section */}
-                  <div className="pt-2 border-t border-gray-200">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="pt-1 border-t border-gray-200">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Criado em:</span>
                       <span className="text-gray-900">{new Date(case_.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="font-medium text-gray-600">Última atualização:</span>
                       <span className="text-gray-900">{new Date(case_.updated_at).toLocaleDateString('pt-BR')}</span>
                     </div>
                     {case_.risk_level && (
-                      <div className="flex justify-between items-center py-2">
+                      <div className="flex justify-between items-center py-1">
                         <span className="font-medium text-gray-600">Nível de Risco:</span>
                         <Badge variant={case_.risk_level === 'High' ? 'destructive' : case_.risk_level === 'Medium' ? 'secondary' : 'outline'}>
                           {getRiskDisplayName(case_.risk_level)}
@@ -208,9 +208,9 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
 
               {/* Description */}
               {case_.description && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Descrição</h3>
-                  <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-md">
+                <div className="space-y-2">
+                  <h3 className="text-base font-semibold">Descrição</h3>
+                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
                     {case_.description}
                   </p>
                 </div>
@@ -218,9 +218,9 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
             </div>
 
             {/* Right Column - Timeline */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
                 Linha do Tempo do Caso
               </h3>
               <CaseTimeline caseId={case_.id} />
@@ -228,7 +228,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 pt-4 border-t">
+        <div className="flex justify-end space-x-2 pt-3 border-t">
           <Button variant="outline" onClick={onClose}>
             Fechar
           </Button>
