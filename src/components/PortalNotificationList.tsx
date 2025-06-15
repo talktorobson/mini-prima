@@ -1,7 +1,9 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, FileText, Scale, DollarSign, MessagesSquare, Info } from "lucide-react";
+import { Bell, FileText, Scale, DollarSign, MessagesSquare, Info, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -18,17 +20,17 @@ interface Notification {
 function getColorByType(type: string) {
   switch (type) {
     case "document":
-      return "border-blue-200 bg-blue-50";
+      return "border-blue-200 bg-blue-50 hover:bg-blue-100";
     case "case_update":
-      return "border-green-200 bg-green-50";
+      return "border-green-200 bg-green-50 hover:bg-green-100";
     case "payment":
-      return "border-yellow-200 bg-yellow-50";
+      return "border-yellow-200 bg-yellow-50 hover:bg-yellow-100";
     case "info":
-      return "border-orange-200 bg-orange-50";
+      return "border-orange-200 bg-orange-50 hover:bg-orange-100";
     case "message":
-      return "border-purple-200 bg-purple-50";
+      return "border-purple-200 bg-purple-50 hover:bg-purple-100";
     default:
-      return "border-gray-200 bg-white";
+      return "border-gray-200 bg-white hover:bg-gray-50";
   }
 }
 
@@ -49,6 +51,23 @@ function getIconByType(type: string) {
   }
 }
 
+function getTypeLabel(type: string) {
+  switch (type) {
+    case "document":
+      return "Documento";
+    case "case_update":
+      return "Atualização de Processo";
+    case "payment":
+      return "Financeiro";
+    case "info":
+      return "Informação";
+    case "message":
+      return "Mensagem";
+    default:
+      return "Notificação";
+  }
+}
+
 // Helper for "time ago"
 function timeAgo(dateStr: string) {
   const now = new Date();
@@ -66,25 +85,48 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
   notifications,
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleClick = (notif: Notification) => {
+    console.log('Notification clicked:', notif);
+    
+    // Show toast feedback
+    toast({
+      title: "Abrindo notificação",
+      description: `Navegando para ${getTypeLabel(notif.type).toLowerCase()}...`,
+    });
+
     // Try to route to action_url if set, else build a route from metadata/type
     if (notif.action_url) {
+      console.log('Navigating to action_url:', notif.action_url);
       navigate(notif.action_url);
       return;
     }
+    
     // fallback by type/metadata
     if (notif.type === "case_update" && notif.metadata?.case_id) {
-      navigate(`/portal/cases?open=${notif.metadata.case_id}`);
+      const url = `/portal/cases?open=${notif.metadata.case_id}`;
+      console.log('Navigating to case:', url);
+      navigate(url);
     } else if (notif.type === "document" && notif.metadata?.document_id) {
-      navigate(`/portal/documents?open=${notif.metadata.document_id}`);
+      const url = `/portal/documents?open=${notif.metadata.document_id}`;
+      console.log('Navigating to document:', url);
+      navigate(url);
     } else if (
       notif.type === "payment" &&
       notif.metadata?.financial_id
     ) {
-      navigate(`/portal/financial?open=${notif.metadata.financial_id}`);
+      const url = `/portal/financial?open=${notif.metadata.financial_id}`;
+      console.log('Navigating to financial:', url);
+      navigate(url);
+    } else {
+      console.log('No navigation target found for notification:', notif);
+      toast({
+        title: "Navegação não disponível",
+        description: "Esta notificação não possui uma página específica para abrir.",
+        variant: "destructive"
+      });
     }
-    // else: do nothing
   };
 
   return (
@@ -94,60 +136,101 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
           <div className="text-center text-gray-500 mt-16 text-lg">Nenhuma notificação até o momento.</div>
         ) : (
           notifications.map((notif) => (
-            <button
+            <div
               key={notif.id}
-              className={`w-full text-left rounded-lg p-4 border transition cursor-pointer hover:shadow-md focus:outline-none block ${
+              className={`w-full rounded-lg p-4 border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 block relative ${
                 getColorByType(notif.type)
-              }`}
+              } ${!notif.is_read ? 'ring-2 ring-blue-200' : ''}`}
               onClick={() => handleClick(notif)}
               tabIndex={0}
+              role="button"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleClick(notif);
+                }
+              }}
             >
+              {/* Unread indicator */}
+              {!notif.is_read && (
+                <div className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full"></div>
+              )}
+              
               <div className="flex items-start space-x-4">
                 {getIconByType(notif.type)}
                 <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold text-gray-800">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                          {getTypeLabel(notif.type)}
+                        </span>
+                        {(notif.action_url || notif.metadata?.case_id || notif.metadata?.document_id || notif.metadata?.financial_id) && (
+                          <ExternalLink className="h-3 w-3 text-gray-400" />
+                        )}
+                      </div>
+                      <h4 className="font-semibold text-gray-800 mb-1">
                         {notif.title}
                       </h4>
-                      <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
+                      <p className="text-sm text-gray-600">{notif.message}</p>
                     </div>
-                    <span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap pl-2">
+                    <span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap pl-4">
                       {timeAgo(notif.created_at)}
                     </span>
                   </div>
                   
+                  {/* Enhanced metadata display */}
                   {notif.metadata && Object.keys(notif.metadata).length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-200/80 space-y-1">
-                      {notif.metadata.case_number && (
-                        <div className="text-xs text-gray-600 flex items-center">
-                          <span className="font-semibold w-24 flex-shrink-0">Processo:</span>
-                          <span className="px-2 py-0.5 rounded bg-green-100 text-green-800 font-mono">#{notif.metadata.case_number}</span>
-                        </div>
-                      )}
-                      {notif.metadata.document_name && (
-                        <div className="text-xs text-gray-600 flex items-center">
-                          <span className="font-semibold w-24 flex-shrink-0">Documento:</span>
-                          <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800">{notif.metadata.document_name}</span>
-                        </div>
-                      )}
-                      {notif.type === "payment" && notif.metadata.description && (
-                        <div className="text-xs text-gray-600 flex items-center">
-                          <span className="font-semibold w-24 flex-shrink-0">Referência:</span>
-                          <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">{notif.metadata.description}</span>
-                        </div>
-                      )}
-                       {notif.metadata.amount && (
-                        <div className="text-xs text-gray-600 flex items-center">
-                          <span className="font-semibold w-24 flex-shrink-0">Valor:</span>
-                          <span className="font-mono">R$ {notif.metadata.amount}</span>
-                        </div>
-                      )}
+                    <div className="mt-3 pt-3 border-t border-gray-200/80">
+                      <div className="grid grid-cols-1 gap-2">
+                        {notif.metadata.case_number && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">Processo:</span>
+                            <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800 font-mono">
+                              #{notif.metadata.case_number}
+                            </span>
+                          </div>
+                        )}
+                        {notif.metadata.document_name && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">Documento:</span>
+                            <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 max-w-48 truncate">
+                              {notif.metadata.document_name}
+                            </span>
+                          </div>
+                        )}
+                        {notif.type === "payment" && notif.metadata.description && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">Referência:</span>
+                            <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                              {notif.metadata.description}
+                            </span>
+                          </div>
+                        )}
+                        {notif.metadata.amount && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">Valor:</span>
+                            <span className="text-xs font-mono font-semibold text-gray-800">
+                              R$ {notif.metadata.amount}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Show navigation target */}
+                        {(notif.action_url || notif.metadata?.case_id || notif.metadata?.document_id || notif.metadata?.financial_id) && (
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span className="text-xs font-semibold text-gray-600">Ação:</span>
+                            <span className="text-xs text-blue-600 font-medium">
+                              Clique para abrir →
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-            </button>
+            </div>
           ))
         )}
       </div>
