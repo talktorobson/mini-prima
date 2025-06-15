@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -8,6 +7,7 @@ import AdminStaffCases from '@/pages/AdminStaffCases';
 import AdminStaffDocuments from '@/pages/AdminStaffDocuments';
 import AdminStaffMessages from '@/pages/AdminStaffMessages';
 import AdminStaffBilling from '@/pages/AdminStaffBilling';
+import RegistrationManagement from '@/components/admin/RegistrationManagement';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
@@ -53,6 +53,11 @@ const AdminDashboard = () => {
         {adminUser?.role === 'admin' && (
           <>
             <Route path="/permissions" element={<AdminStaffManagement />} />
+            <Route path="/registrations" element={
+              <div className="p-6">
+                <RegistrationManagement />
+              </div>
+            } />
             <Route path="/clients" element={<div className="p-6"><h1>Gestão de Clientes (Em desenvolvimento)</h1></div>} />
             <Route path="/cases" element={<div className="p-6"><h1>Gestão de Casos (Em desenvolvimento)</h1></div>} />
             <Route path="/documents" element={<div className="p-6"><h1>Gestão de Documentos (Em desenvolvimento)</h1></div>} />

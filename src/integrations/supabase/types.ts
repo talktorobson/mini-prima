@@ -270,6 +270,51 @@ export type Database = {
           },
         ]
       }
+      client_registration_history: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          client_id: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          status: Database["public"]["Enums"]["registration_status"]
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          client_id: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          status: Database["public"]["Enums"]["registration_status"]
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["registration_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_registration_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "client_registration_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -281,23 +326,35 @@ export type Database = {
           contact_person: string
           created_at: string | null
           created_by: string | null
+          data_processing_consent: boolean | null
           documents_folder_url: string | null
           email: string
+          estimated_case_value: number | null
           id: string
           industry: string | null
+          initial_consultation_date: string | null
           last_service_date: string | null
           linked_lead_id: string | null
+          marketing_consent: boolean | null
           notes: string | null
           payment_terms: string | null
           phone: string
           portal_access: boolean | null
           position: string | null
+          preferred_contact_method: string | null
           primary_lawyer: string | null
+          reference_source: string | null
           region: Database["public"]["Enums"]["region"] | null
+          registration_date: string | null
+          registration_notes: string | null
+          registration_status:
+            | Database["public"]["Enums"]["registration_status"]
+            | null
           services_contracted: Json | null
           status: Database["public"]["Enums"]["client_status"]
           total_contract_value: number | null
           updated_at: string | null
+          urgency_level: string | null
           user_id: string | null
         }
         Insert: {
@@ -310,23 +367,35 @@ export type Database = {
           contact_person: string
           created_at?: string | null
           created_by?: string | null
+          data_processing_consent?: boolean | null
           documents_folder_url?: string | null
           email: string
+          estimated_case_value?: number | null
           id?: string
           industry?: string | null
+          initial_consultation_date?: string | null
           last_service_date?: string | null
           linked_lead_id?: string | null
+          marketing_consent?: boolean | null
           notes?: string | null
           payment_terms?: string | null
           phone: string
           portal_access?: boolean | null
           position?: string | null
+          preferred_contact_method?: string | null
           primary_lawyer?: string | null
+          reference_source?: string | null
           region?: Database["public"]["Enums"]["region"] | null
+          registration_date?: string | null
+          registration_notes?: string | null
+          registration_status?:
+            | Database["public"]["Enums"]["registration_status"]
+            | null
           services_contracted?: Json | null
           status?: Database["public"]["Enums"]["client_status"]
           total_contract_value?: number | null
           updated_at?: string | null
+          urgency_level?: string | null
           user_id?: string | null
         }
         Update: {
@@ -339,23 +408,35 @@ export type Database = {
           contact_person?: string
           created_at?: string | null
           created_by?: string | null
+          data_processing_consent?: boolean | null
           documents_folder_url?: string | null
           email?: string
+          estimated_case_value?: number | null
           id?: string
           industry?: string | null
+          initial_consultation_date?: string | null
           last_service_date?: string | null
           linked_lead_id?: string | null
+          marketing_consent?: boolean | null
           notes?: string | null
           payment_terms?: string | null
           phone?: string
           portal_access?: boolean | null
           position?: string | null
+          preferred_contact_method?: string | null
           primary_lawyer?: string | null
+          reference_source?: string | null
           region?: Database["public"]["Enums"]["region"] | null
+          registration_date?: string | null
+          registration_notes?: string | null
+          registration_status?:
+            | Database["public"]["Enums"]["registration_status"]
+            | null
           services_contracted?: Json | null
           status?: Database["public"]["Enums"]["client_status"]
           total_contract_value?: number | null
           updated_at?: string | null
+          urgency_level?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -1308,6 +1389,7 @@ export type Database = {
         | "Região 3 (011 SP Sul)"
         | "Região 4 (011 SP Oeste)"
         | "Região 5 (013 Litoral)"
+      registration_status: "pending" | "approved" | "rejected" | "under_review"
       sender_type: "client" | "lawyer" | "staff"
       staff_status: "Active" | "Inactive" | "On Leave" | "Terminated"
       task_status: "To Do" | "In Progress" | "Waiting" | "Done" | "Cancelled"
@@ -1478,6 +1560,7 @@ export const Constants = {
         "Região 4 (011 SP Oeste)",
         "Região 5 (013 Litoral)",
       ],
+      registration_status: ["pending", "approved", "rejected", "under_review"],
       sender_type: ["client", "lawyer", "staff"],
       staff_status: ["Active", "Inactive", "On Leave", "Terminated"],
       task_status: ["To Do", "In Progress", "Waiting", "Done", "Cancelled"],

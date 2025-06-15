@@ -1,183 +1,232 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   LayoutDashboard, 
   Users, 
   FileText, 
-  DollarSign, 
-  MessageCircle, 
+  MessageSquare, 
+  CreditCard,
   Settings,
   Shield,
   Building,
-  LogOut
+  DollarSign,
+  UserPlus,
+  Briefcase,
+  Archive
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminPermissions } from '@/hooks/useAdminPermissions';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 
 const AdminSidebar = () => {
+  const { adminUser } = useAdminAuth();
   const location = useLocation();
-  const { adminUser, signOut } = useAdminAuth();
-  const { canAccess, isAdmin, loading } = useAdminPermissions();
 
-  if (loading) {
-    return (
-      <div className="w-64 bg-white border-r border-gray-200 h-screen p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded"></div>
-          <div className="space-y-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-10 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const adminMenuItems = [
-    {
-      path: '/admin',
-      label: 'Dashboard',
-      icon: LayoutDashboard,
-      show: true
-    },
-    {
-      path: '/admin/clients',
-      label: 'Clientes',
-      icon: Users,
-      show: canAccess.clients
-    },
-    {
-      path: '/admin/cases',
-      label: 'Casos',
-      icon: Building,
-      show: canAccess.cases
-    },
-    {
-      path: '/admin/documents',
-      label: 'Documentos',
-      icon: FileText,
-      show: canAccess.documents
-    },
-    {
-      path: '/admin/financial',
-      label: 'Financeiro',
-      icon: DollarSign,
-      show: canAccess.billing
-    },
-    {
-      path: '/admin/messages',
-      label: 'Mensagens',
-      icon: MessageCircle,
-      show: canAccess.messaging
-    },
-    {
-      path: '/admin/permissions',
-      label: 'Equipe',
-      icon: Shield,
-      show: isAdmin
-    },
-    {
-      path: '/admin/settings',
-      label: 'Configurações',
-      icon: Settings,
-      show: canAccess.settings
-    }
-  ];
-
-  const staffMenuItems = [
-    {
-      path: '/admin',
-      label: 'Dashboard',
-      icon: LayoutDashboard,
-      show: true
-    },
-    {
-      path: '/admin/staff/cases',
-      label: 'Casos',
-      icon: Building,
-      show: canAccess.cases
-    },
-    {
-      path: '/admin/staff/documents',
-      label: 'Documentos',
-      icon: FileText,
-      show: canAccess.documents
-    },
-    {
-      path: '/admin/staff/messages',
-      label: 'Mensagens',
-      icon: MessageCircle,
-      show: canAccess.messaging
-    },
-    {
-      path: '/admin/staff/billing',
-      label: 'Faturamento',
-      icon: DollarSign,
-      show: canAccess.billing
-    }
-  ];
-
-  const menuItems = isAdmin ? adminMenuItems : staffMenuItems;
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-red-600" />
-          <span className="font-bold text-gray-900">Admin Panel</span>
-        </div>
-        <div className="mt-2">
-          <p className="text-sm font-medium text-gray-900">
-            {isAdmin ? 'Administrador' : 'Equipe'}
-          </p>
-          <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
-            {isAdmin ? 'Admin' : 'Staff'}
-          </Badge>
-        </div>
+    <div className="w-64 bg-white shadow-lg h-screen fixed left-0 top-0 z-40">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-bold text-gray-900">
+          Admin Panel
+        </h2>
+        <p className="text-sm text-gray-600 mt-1">
+          {adminUser?.role === 'admin' ? 'Administrador' : 'Equipe'}
+        </p>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => {
-          if (!item.show) return null;
-          
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          
-          return (
-            <Link key={item.path} to={item.path}>
-              <Button
-                variant={isActive ? "default" : "ghost"}
-                className={`w-full justify-start ${
-                  isActive 
-                    ? 'bg-red-600 text-white hover:bg-red-700' 
+      <nav className="mt-6">
+        <div className="px-4 space-y-2">
+          {/* Dashboard */}
+          <Link
+            to="/admin"
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              isActive('/admin') 
+                ? 'bg-red-50 text-red-600' 
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
+
+          {/* Admin-only menu items */}
+          {adminUser?.role === 'admin' && (
+            <>
+              <div className="pt-4 pb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Administração
+                </p>
+              </div>
+
+              <Link
+                to="/admin/permissions"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/permissions') 
+                    ? 'bg-red-50 text-red-600' 
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                <Icon className="mr-2 h-4 w-4" />
-                {item.label}
-              </Button>
-            </Link>
-          );
-        })}
-      </nav>
+                <Shield className="h-4 w-4" />
+                Permissões
+              </Link>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
-        <Button
-          variant="ghost"
-          onClick={signOut}
-          className="w-full justify-start text-gray-700 hover:bg-gray-100"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair
-        </Button>
-      </div>
+              <Link
+                to="/admin/registrations"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/registrations') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <UserPlus className="h-4 w-4" />
+                Cadastros
+              </Link>
+
+              <Link
+                to="/admin/clients"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/clients') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Building className="h-4 w-4" />
+                Clientes
+              </Link>
+
+              <Link
+                to="/admin/cases"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/cases') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                Casos
+              </Link>
+
+              <Link
+                to="/admin/documents"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/documents') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Archive className="h-4 w-4" />
+                Documentos
+              </Link>
+
+              <Link
+                to="/admin/financial"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/financial') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="h-4 w-4" />
+                Financeiro
+              </Link>
+
+              <Link
+                to="/admin/messages"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/messages') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Mensagens
+              </Link>
+
+              <Link
+                to="/admin/settings"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/settings') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Settings className="h-4 w-4" />
+                Configurações
+              </Link>
+            </>
+          )}
+
+          {/* Staff-specific menu items */}
+          {adminUser?.role === 'staff' && (
+            <>
+              <div className="pt-4 pb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Área da Equipe
+                </p>
+              </div>
+
+              <Link
+                to="/admin/staff/cases"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/cases') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                Casos
+              </Link>
+
+              <Link
+                to="/admin/staff/documents"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/documents') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Documentos
+              </Link>
+
+              <Link
+                to="/admin/staff/messages"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/messages') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Mensagens
+              </Link>
+
+              <Link
+                to="/admin/staff/billing"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/billing') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <CreditCard className="h-4 w-4" />
+                Cobrança
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
     </div>
   );
 };
