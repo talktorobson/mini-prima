@@ -36,13 +36,13 @@ const Services = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-900 to-blue-800">
+    <section className="py-20 bg-navy-800">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Nossa Metodologia de Blindagem Empresarial
           </h2>
-          <p className="text-xl text-blue-100 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
             Estratégias preventivas e defensivas para proteger sua empresa e patrimônio pessoal
           </p>
         </div>
@@ -53,21 +53,21 @@ const Services = () => {
               key={index} 
               className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden ${
                 service.highlight 
-                  ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-blue-900' 
-                  : 'bg-blue-800/50 backdrop-blur-sm border border-blue-600/20'
+                  ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-navy-900' 
+                  : 'bg-navy-900/50 backdrop-blur-sm border border-navy-600/30'
               }`}
             >
               <CardHeader className="pb-4">
                 <div className="flex items-center mb-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${
-                    service.highlight ? 'bg-blue-900/20' : 'bg-amber-500/20'
+                    service.highlight ? 'bg-navy-900/20' : 'bg-amber-500/20'
                   }`}>
                     <service.icon className={`h-6 w-6 ${
-                      service.highlight ? 'text-blue-900' : 'text-amber-400'
+                      service.highlight ? 'text-navy-900' : 'text-amber-400'
                     }`} />
                   </div>
                   <CardTitle className={`text-2xl ${
-                    service.highlight ? 'text-blue-900' : 'text-white'
+                    service.highlight ? 'text-navy-900' : 'text-white'
                   }`}>
                     {service.title}
                   </CardTitle>
@@ -75,7 +75,7 @@ const Services = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <p className={`mb-6 leading-relaxed text-lg ${
-                  service.highlight ? 'text-blue-800' : 'text-blue-100'
+                  service.highlight ? 'text-navy-800' : 'text-gray-300'
                 }`}>
                   {service.description}
                 </p>
@@ -83,7 +83,7 @@ const Services = () => {
                 {service.highlight ? (
                   <Button
                     onClick={() => navigate('/login')}
-                    className="bg-blue-900 hover:bg-blue-950 text-white font-semibold px-6 py-3 rounded-lg flex items-center gap-2 w-full justify-center"
+                    className="bg-navy-900 hover:bg-navy-950 text-white font-semibold px-6 py-3 rounded-lg flex items-center gap-2 w-full justify-center"
                   >
                     Acessar Portal
                     <ArrowRight className="h-4 w-4" />
