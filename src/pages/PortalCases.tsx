@@ -2,21 +2,16 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, ArrowRight, Upload, FileText, User, Scale } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Upload, Scale } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { casesService } from '@/services/database';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import DocumentUpload from '@/components/DocumentUpload';
 
 const PortalCases = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadingCaseId, setUploadingCaseId] = useState<string | null>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedCaseForUpload, setSelectedCaseForUpload] = useState<{ id: string; title: string } | null>(null);
 
   // Fetch cases from database with proper error handling
   const { data: cases = [], isLoading, error, refetch } = useQuery({
@@ -28,63 +23,14 @@ const PortalCases = () => {
 
   console.log('Cases query state:', { cases, isLoading, error });
 
-  const handleFileUpload = async (caseId: string) => {
-    if (!selectedFile) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione um arquivo primeiro.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleUploadClick = (caseId: string, caseTitle: string) => {
+    setSelectedCaseForUpload({ id: caseId, title: caseTitle });
+    setUploadDialogOpen(true);
+  };
 
-    setUploadingCaseId(caseId);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      // Upload file to storage
-      const fileName = `${user.id}/${caseId}/${Date.now()}-${selectedFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('case-documents')
-        .upload(fileName, selectedFile);
-
-      if (uploadError) throw uploadError;
-
-      // Create document record with correct status value
-      const { error: insertError } = await supabase
-        .from('documents')
-        .insert({
-          document_name: selectedFile.name,
-          original_filename: selectedFile.name,
-          file_path: fileName,
-          document_type: 'Case Document',
-          document_category: 'Case Files',
-          file_size: selectedFile.size,
-          case_id: caseId,
-          status: 'Draft', // Use correct enum value
-          is_visible_to_client: true
-        });
-
-      if (insertError) throw insertError;
-
-      toast({
-        title: "Sucesso",
-        description: "Documento enviado com sucesso!"
-      });
-
-      setSelectedFile(null);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar documento. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setUploadingCaseId(null);
-    }
+  const handleUploadComplete = () => {
+    // Optionally refetch data or update UI
+    console.log('Upload completed successfully');
   };
 
   const formatCurrency = (value: number | null) => {
@@ -284,39 +230,15 @@ const PortalCases = () => {
                   {/* Actions */}
                   <div className="flex justify-between items-center pt-4 border-t">
                     <div className="flex space-x-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                            <Upload className="h-4 w-4" />
-                            <span>Enviar Documento</span>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Enviar Documento - {case_.case_title}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="file">Selecionar Arquivo</Label>
-                              <Input
-                                id="file"
-                                type="file"
-                                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                                className="mt-1"
-                              />
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                              <Button
-                                onClick={() => handleFileUpload(case_.id)}
-                                disabled={!selectedFile || uploadingCaseId === case_.id}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                {uploadingCaseId === case_.id ? 'Enviando...' : 'Enviar'}
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center space-x-2"
+                        onClick={() => handleUploadClick(case_.id, case_.case_title || case_.case_number)}
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>Enviar Documentos</span>
+                      </Button>
                     </div>
                     
                     <Button 
@@ -334,6 +256,20 @@ const PortalCases = () => {
           </div>
         )}
       </main>
+
+      {/* Document Upload Dialog */}
+      {selectedCaseForUpload && (
+        <DocumentUpload
+          caseId={selectedCaseForUpload.id}
+          caseTitle={selectedCaseForUpload.title}
+          isOpen={uploadDialogOpen}
+          onClose={() => {
+            setUploadDialogOpen(false);
+            setSelectedCaseForUpload(null);
+          }}
+          onUploadComplete={handleUploadComplete}
+        />
+      )}
     </div>
   );
 };
