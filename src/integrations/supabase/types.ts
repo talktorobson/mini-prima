@@ -1056,6 +1056,64 @@ export type Database = {
           },
         ]
       }
+      staff_client_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string
+          client_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          staff_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by: string
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          staff_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          staff_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_client_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "staff_client_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_client_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string
@@ -1159,6 +1217,22 @@ export type Database = {
       get_current_client_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_staff_assigned_clients: {
+        Args: { staff_user_id?: string }
+        Returns: {
+          client_id: string
+        }[]
+      }
+      get_staff_info: {
+        Args: { staff_user_id?: string }
+        Returns: {
+          staff_id: string
+          full_name: string
+          email: string
+          staff_position: string
+          role: string
+        }[]
       }
       is_admin_or_staff: {
         Args: Record<PropertyKey, never>
