@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   FileText, 
   MessageSquare, 
@@ -327,16 +328,16 @@ const Portal = () => {
           )}
         </div>
 
-        {/* Optimized Grid Layout */}
+        {/* Optimized Grid Layout with ScrollArea */}
         <div className={`grid gap-6 ${
           isMobile 
             ? 'grid-cols-1 space-y-4' 
-            : 'grid-cols-2 auto-rows-fr max-h-[calc(100vh-180px)]'
+            : 'grid-cols-2 auto-rows-fr h-[calc(100vh-180px)]'
         }`}>
           
           {/* Cases Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 flex-shrink-0">
               <CardTitle className="flex items-center justify-between text-xl text-white">
                 <div className="flex items-center space-x-3">
                   <Briefcase className="h-6 w-6 text-blue-400" />
@@ -352,8 +353,8 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
-              <div className="space-y-3 mb-4">
+            <CardContent className="flex-1 overflow-hidden flex flex-col">
+              <div className="space-y-3 mb-4 flex-shrink-0">
                 <div 
                   className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-3 rounded transition-colors"
                   onClick={handleCasesAtivosClick}
@@ -370,44 +371,81 @@ const Portal = () => {
                 </div>
               </div>
               
-              <div className="space-y-3 overflow-y-auto flex-1">
-                {cases.slice(0, 8).map((case_item) => (
-                  <div 
-                    key={case_item.id} 
-                    className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
-                    onClick={() => handleCaseClick(case_item.id)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-white truncate pr-2">{case_item.case_title}</h4>
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          case_item.status === 'Open' || case_item.status === 'In Progress' 
-                            ? 'border-green-400 text-green-400' 
-                            : 'border-gray-400 text-gray-400'
-                        }
+              {isMobile ? (
+                <div className="space-y-3 overflow-y-auto flex-1">
+                  {cases.slice(0, 3).map((case_item) => (
+                    <div 
+                      key={case_item.id} 
+                      className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                      onClick={() => handleCaseClick(case_item.id)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-white truncate pr-2">{case_item.case_title}</h4>
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            case_item.status === 'Open' || case_item.status === 'In Progress' 
+                              ? 'border-green-400 text-green-400' 
+                              : 'border-gray-400 text-gray-400'
+                          }
+                        >
+                          {case_item.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-200">Prioridade: {case_item.priority}</span>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-blue-400 hover:bg-blue-400/20">
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {cases.length === 0 && (
+                    <p className="text-slate-400 text-center py-8">Nenhum caso encontrado</p>
+                  )}
+                </div>
+              ) : (
+                <ScrollArea className="flex-1">
+                  <div className="space-y-3 pr-4">
+                    {cases.map((case_item) => (
+                      <div 
+                        key={case_item.id} 
+                        className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                        onClick={() => handleCaseClick(case_item.id)}
                       >
-                        {case_item.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-blue-200">Prioridade: {case_item.priority}</span>
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-blue-400 hover:bg-blue-400/20">
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-white truncate pr-2">{case_item.case_title}</h4>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              case_item.status === 'Open' || case_item.status === 'In Progress' 
+                                ? 'border-green-400 text-green-400' 
+                                : 'border-gray-400 text-gray-400'
+                            }
+                          >
+                            {case_item.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-blue-200">Prioridade: {case_item.priority}</span>
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-blue-400 hover:bg-blue-400/20">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {cases.length === 0 && (
+                      <p className="text-slate-400 text-center py-8">Nenhum caso encontrado</p>
+                    )}
                   </div>
-                ))}
-                {cases.length === 0 && (
-                  <p className="text-slate-400 text-center py-8">Nenhum caso encontrado</p>
-                )}
-              </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
           {/* Documents Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 flex-shrink-0">
               <CardTitle className="flex items-center justify-between text-xl text-white">
                 <div className="flex items-center space-x-3">
                   <FileText className="h-6 w-6 text-green-400" />
@@ -423,8 +461,8 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
-              <div className="space-y-3 mb-4">
+            <CardContent className="flex-1 overflow-hidden flex flex-col">
+              <div className="space-y-3 mb-4 flex-shrink-0">
                 <div 
                   className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-3 rounded transition-colors"
                   onClick={handleTotalDocumentosClick}
@@ -441,57 +479,107 @@ const Portal = () => {
                 </div>
               </div>
               
-              <div className="space-y-3 overflow-y-auto flex-1">
-                {documents.slice(0, 8).map((doc) => (
-                  <div 
-                    key={doc.id} 
-                    className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
-                    onClick={() => handleDocumentClick(doc.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-white truncate">{doc.document_name}</h4>
-                        <p className="text-sm text-green-200 mt-1">{doc.document_type}</p>
-                      </div>
-                      <div className="flex space-x-2 ml-3">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-8 w-8 p-0 text-green-400 hover:bg-green-400/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePreviewDocument(doc);
-                          }}
-                          title="Visualizar documento"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-8 w-8 p-0 text-green-400 hover:bg-green-400/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadDocument(doc);
-                          }}
-                          title="Baixar documento"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
+              {isMobile ? (
+                <div className="space-y-3 overflow-y-auto flex-1">
+                  {documents.slice(0, 3).map((doc) => (
+                    <div 
+                      key={doc.id} 
+                      className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                      onClick={() => handleDocumentClick(doc.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-white truncate">{doc.document_name}</h4>
+                          <p className="text-sm text-green-200 mt-1">{doc.document_type}</p>
+                        </div>
+                        <div className="flex space-x-2 ml-3">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-8 w-8 p-0 text-green-400 hover:bg-green-400/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePreviewDocument(doc);
+                            }}
+                            title="Visualizar documento"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-8 w-8 p-0 text-green-400 hover:bg-green-400/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadDocument(doc);
+                            }}
+                            title="Baixar documento"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                  ))}
+                  {documents.length === 0 && (
+                    <p className="text-slate-400 text-center py-8">Nenhum documento encontrado</p>
+                  )}
+                </div>
+              ) : (
+                <ScrollArea className="flex-1">
+                  <div className="space-y-3 pr-4">
+                    {documents.map((doc) => (
+                      <div 
+                        key={doc.id} 
+                        className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                        onClick={() => handleDocumentClick(doc.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-white truncate">{doc.document_name}</h4>
+                            <p className="text-sm text-green-200 mt-1">{doc.document_type}</p>
+                          </div>
+                          <div className="flex space-x-2 ml-3">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 text-green-400 hover:bg-green-400/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePreviewDocument(doc);
+                              }}
+                              title="Visualizar documento"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 text-green-400 hover:bg-green-400/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadDocument(doc);
+                              }}
+                              title="Baixar documento"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {documents.length === 0 && (
+                      <p className="text-slate-400 text-center py-8">Nenhum documento encontrado</p>
+                    )}
                   </div>
-                ))}
-                {documents.length === 0 && (
-                  <p className="text-slate-400 text-center py-8">Nenhum documento encontrado</p>
-                )}
-              </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
           {/* Financial Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 flex-shrink-0">
               <CardTitle className="flex items-center justify-between text-xl text-white">
                 <div className="flex items-center space-x-3">
                   <CreditCard className="h-6 w-6 text-orange-400" />
@@ -507,8 +595,8 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
-              <div className="space-y-3 mb-4">
+            <CardContent className="flex-1 overflow-hidden flex flex-col">
+              <div className="space-y-3 mb-4 flex-shrink-0">
                 <div 
                   className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-3 rounded transition-colors"
                   onClick={handlePendenciasClick}
@@ -525,39 +613,71 @@ const Portal = () => {
                 </div>
               </div>
               
-              <div className="space-y-3 overflow-y-auto flex-1">
-                {pendingInvoices.slice(0, 8).map((record) => (
-                  <div 
-                    key={record.id} 
-                    className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
-                    onClick={() => handleFinancialItemClick(record.id)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-white truncate pr-2">{record.description}</h4>
-                      <span className="font-semibold text-orange-400">
-                        R$ {(record.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
+              {isMobile ? (
+                <div className="space-y-3 overflow-y-auto flex-1">
+                  {pendingInvoices.slice(0, 3).map((record) => (
+                    <div 
+                      key={record.id} 
+                      className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                      onClick={() => handleFinancialItemClick(record.id)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-white truncate pr-2">{record.description}</h4>
+                        <span className="font-semibold text-orange-400">
+                          R$ {(record.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-orange-200">
+                          Venc: {record.due_date ? new Date(record.due_date).toLocaleDateString('pt-BR') : 'N/A'}
+                        </span>
+                        <Badge variant="outline" className="border-orange-400 text-orange-400">
+                          {record.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-orange-200">
-                        Venc: {record.due_date ? new Date(record.due_date).toLocaleDateString('pt-BR') : 'N/A'}
-                      </span>
-                      <Badge variant="outline" className="border-orange-400 text-orange-400">
-                        {record.status}
-                      </Badge>
-                    </div>
+                  ))}
+                  {pendingInvoices.length === 0 && (
+                    <p className="text-slate-400 text-center py-8">Nenhuma pendência financeira</p>
+                  )}
+                </div>
+              ) : (
+                <ScrollArea className="flex-1">
+                  <div className="space-y-3 pr-4">
+                    {pendingInvoices.map((record) => (
+                      <div 
+                        key={record.id} 
+                        className="p-4 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                        onClick={() => handleFinancialItemClick(record.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-white truncate pr-2">{record.description}</h4>
+                          <span className="font-semibold text-orange-400">
+                            R$ {(record.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-orange-200">
+                            Venc: {record.due_date ? new Date(record.due_date).toLocaleDateString('pt-BR') : 'N/A'}
+                          </span>
+                          <Badge variant="outline" className="border-orange-400 text-orange-400">
+                            {record.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {pendingInvoices.length === 0 && (
+                      <p className="text-slate-400 text-center py-8">Nenhuma pendência financeira</p>
+                    )}
                   </div>
-                ))}
-                {pendingInvoices.length === 0 && (
-                  <p className="text-slate-400 text-center py-8">Nenhuma pendência financeira</p>
-                )}
-              </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
           {/* Messages & Notifications Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 flex-shrink-0">
               <CardTitle className="flex items-center justify-between text-xl text-white">
                 <div className="flex items-center space-x-3">
                   <MessageSquare className="h-6 w-6 text-purple-400" />
@@ -573,8 +693,8 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
-              <div className="space-y-3 mb-4">
+            <CardContent className="flex-1 overflow-hidden flex flex-col">
+              <div className="space-y-3 mb-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Badge className="bg-green-500 text-white">Online</Badge>
@@ -597,43 +717,81 @@ const Portal = () => {
                 </div>
               </div>
               
-              <p className="text-purple-200 mb-4">
+              <p className="text-purple-200 mb-4 flex-shrink-0">
                 Comunique-se diretamente com nossa equipe jurídica
               </p>
               
-              <div className="space-y-3 overflow-y-auto flex-1">
-                {notificationsLoading ? (
-                  <p className="text-slate-400 text-center py-8">Carregando notificações...</p>
-                ) : notificationsError ? (
-                  <div className="text-center py-8">
-                    <p className="text-red-400 mb-2">Erro ao carregar notificações</p>
-                    <p className="text-slate-400 text-sm">{notificationsError.message}</p>
-                  </div>
-                ) : notifications.length > 0 ? (
-                  notifications.slice(0, 8).map((notification) => (
-                    <div 
-                      key={notification.id} 
-                      className="p-4 bg-slate-700/30 rounded border border-slate-600/50 cursor-pointer hover:bg-slate-700/50 transition-colors"
-                      onClick={() => handleNotificationClick(notification.id)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-medium text-white truncate">{notification.title}</h5>
-                          <p className="text-sm text-purple-200 mt-1 line-clamp-2">{notification.message}</p>
-                          <span className="text-xs text-slate-400 mt-2">
-                            {new Date(notification.created_at).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                        {!notification.is_read && (
-                          <div className="w-3 h-3 bg-purple-400 rounded-full flex-shrink-0 mt-1"></div>
-                        )}
-                      </div>
+              {isMobile ? (
+                <div className="space-y-3 overflow-y-auto flex-1">
+                  {notificationsLoading ? (
+                    <p className="text-slate-400 text-center py-8">Carregando notificações...</p>
+                  ) : notificationsError ? (
+                    <div className="text-center py-8">
+                      <p className="text-red-400 mb-2">Erro ao carregar notificações</p>
+                      <p className="text-slate-400 text-sm">{notificationsError.message}</p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-slate-400 text-center py-8">Nenhuma notificação</p>
-                )}
-              </div>
+                  ) : notifications.length > 0 ? (
+                    notifications.slice(0, 3).map((notification) => (
+                      <div 
+                        key={notification.id} 
+                        className="p-4 bg-slate-700/30 rounded border border-slate-600/50 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                        onClick={() => handleNotificationClick(notification.id)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-medium text-white truncate">{notification.title}</h5>
+                            <p className="text-sm text-purple-200 mt-1 line-clamp-2">{notification.message}</p>
+                            <span className="text-xs text-slate-400 mt-2">
+                              {new Date(notification.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          {!notification.is_read && (
+                            <div className="w-3 h-3 bg-purple-400 rounded-full flex-shrink-0 mt-1"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-400 text-center py-8">Nenhuma notificação</p>
+                  )}
+                </div>
+              ) : (
+                <ScrollArea className="flex-1">
+                  <div className="space-y-3 pr-4">
+                    {notificationsLoading ? (
+                      <p className="text-slate-400 text-center py-8">Carregando notificações...</p>
+                    ) : notificationsError ? (
+                      <div className="text-center py-8">
+                        <p className="text-red-400 mb-2">Erro ao carregar notificações</p>
+                        <p className="text-slate-400 text-sm">{notificationsError.message}</p>
+                      </div>
+                    ) : notifications.length > 0 ? (
+                      notifications.map((notification) => (
+                        <div 
+                          key={notification.id} 
+                          className="p-4 bg-slate-700/30 rounded border border-slate-600/50 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                          onClick={() => handleNotificationClick(notification.id)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h5 className="font-medium text-white truncate">{notification.title}</h5>
+                              <p className="text-sm text-purple-200 mt-1 line-clamp-2">{notification.message}</p>
+                              <span className="text-xs text-slate-400 mt-2">
+                                {new Date(notification.created_at).toLocaleDateString('pt-BR')}
+                              </span>
+                            </div>
+                            {!notification.is_read && (
+                              <div className="w-3 h-3 bg-purple-400 rounded-full flex-shrink-0 mt-1"></div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-slate-400 text-center py-8">Nenhuma notificação</p>
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </div>
