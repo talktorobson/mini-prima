@@ -121,19 +121,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background decorative elements */}
       <div 
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fbbf24' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}
       ></div>
       
       {/* Back to site link */}
       <Link 
         to="/" 
-        className="absolute top-6 left-6 flex items-center text-white/80 hover:text-white transition-colors duration-200 group"
+        className="absolute top-6 left-6 flex items-center text-amber-200 hover:text-amber-100 transition-colors duration-200 group"
       >
         <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
         <span className="text-sm font-medium">Voltar ao Site</span>
@@ -141,13 +141,13 @@ const Login = () => {
 
       <Card className="w-full max-w-md shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
         <CardHeader className="space-y-4 text-center pb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-2">
-            <Shield className="h-8 w-8 text-white" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center mb-2">
+            <Shield className="h-8 w-8 text-amber-400" />
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-navy-800 to-navy-600 bg-clip-text text-transparent">
             Portal do Cliente
           </CardTitle>
-          <CardDescription className="text-gray-600 text-base">
+          <CardDescription className="text-navy-600 text-base">
             Acesse sua conta para visualizar seus processos e documentos
           </CardDescription>
         </CardHeader>
@@ -155,7 +155,7 @@ const Login = () => {
         <CardContent className="pb-8">
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-3">
-              <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
+              <Label htmlFor="email" className="text-navy-700 font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -165,12 +165,12 @@ const Login = () => {
                 required
                 disabled={loading}
                 autoComplete="email"
-                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                className="h-12 border-navy-200 focus:border-navy-500 focus:ring-navy-500 transition-colors"
               />
             </div>
             
             <div className="space-y-3">
-              <Label htmlFor="password" className="text-gray-700 font-medium">Senha</Label>
+              <Label htmlFor="password" className="text-navy-700 font-medium">Senha</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -181,7 +181,7 @@ const Login = () => {
                   required
                   disabled={loading}
                   autoComplete="current-password"
-                  className="h-12 pr-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                  className="h-12 pr-12 border-navy-200 focus:border-navy-500 focus:ring-navy-500 transition-colors"
                 />
                 <Button
                   type="button"
@@ -192,9 +192,9 @@ const Login = () => {
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-navy-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-navy-400" />
                   )}
                 </Button>
               </div>
@@ -208,7 +208,7 @@ const Login = () => {
 
             <Button 
               type="submit" 
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium text-base shadow-lg hover:shadow-xl transition-all duration-200" 
+              className="w-full h-12 bg-gradient-to-r from-navy-700 to-navy-900 hover:from-navy-800 hover:to-navy-950 text-amber-400 font-medium text-base shadow-lg hover:shadow-xl transition-all duration-200" 
               disabled={loading}
             >
               {loading ? (
@@ -222,11 +222,11 @@ const Login = () => {
             </Button>
           </form>
           
-          <div className="mt-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-            <p className="text-center text-sm text-gray-600 mb-2 font-medium">
+          <div className="mt-8 p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg border border-amber-200">
+            <p className="text-center text-sm text-navy-600 mb-2 font-medium">
               Credenciais de teste:
             </p>
-            <p className="font-mono bg-white px-3 py-2 rounded border text-center text-blue-600 font-medium">
+            <p className="font-mono bg-white px-3 py-2 rounded border text-center text-navy-700 font-medium">
               teste@exemplo.com
             </p>
           </div>
@@ -234,8 +234,8 @@ const Login = () => {
       </Card>
       
       {/* Additional decorative elements */}
-      <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-      <div className="absolute bottom-20 left-20 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl"></div>
+      <div className="absolute top-20 right-20 w-32 h-32 bg-amber-400/10 rounded-full blur-xl"></div>
+      <div className="absolute bottom-20 left-20 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
     </div>
   );
 };
