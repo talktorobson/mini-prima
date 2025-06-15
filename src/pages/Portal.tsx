@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,12 +24,14 @@ import { casesService, documentsService, financialService, notificationsService 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Portal = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { data: client, isLoading: clientLoading } = useClientData();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Preview sheet state
   const [previewSheet, setPreviewSheet] = useState({
@@ -330,10 +331,14 @@ const Portal = () => {
           </p>
         </div>
 
-        {/* 2x2 Grid Layout - Fixed */}
-        <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[calc(100vh-200px)]">
+        {/* Responsive Grid Layout */}
+        <div className={`grid gap-4 ${
+          isMobile 
+            ? 'grid-cols-1 space-y-4' 
+            : 'grid-cols-2 grid-rows-2 h-[calc(100vh-200px)]'
+        }`}>
           
-          {/* Top Left: Cases */}
+          {/* Cases Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-lg text-white">
@@ -351,7 +356,7 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className={`flex-1 overflow-hidden ${isMobile ? 'max-h-64' : ''}`}>
               <div className="space-y-2 mb-3">
                 <div 
                   className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
@@ -370,7 +375,7 @@ const Portal = () => {
               </div>
               
               <div className="space-y-3 max-h-[calc(100%-80px)] overflow-y-auto">
-                {cases.slice(0, 6).map((case_item) => (
+                {cases.slice(0, isMobile ? 3 : 6).map((case_item) => (
                   <div 
                     key={case_item.id} 
                     className="p-3 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
@@ -404,7 +409,7 @@ const Portal = () => {
             </CardContent>
           </Card>
 
-          {/* Top Right: Documents */}
+          {/* Documents Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-lg text-white">
@@ -422,7 +427,7 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className={`flex-1 overflow-hidden ${isMobile ? 'max-h-64' : ''}`}>
               <div className="space-y-2 mb-3">
                 <div 
                   className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
@@ -441,7 +446,7 @@ const Portal = () => {
               </div>
               
               <div className="space-y-3 max-h-[calc(100%-80px)] overflow-y-auto">
-                {documents.slice(0, 6).map((doc) => (
+                {documents.slice(0, isMobile ? 3 : 6).map((doc) => (
                   <div 
                     key={doc.id} 
                     className="p-3 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
@@ -488,7 +493,7 @@ const Portal = () => {
             </CardContent>
           </Card>
 
-          {/* Bottom Left: Financial */}
+          {/* Financial Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-lg text-white">
@@ -506,7 +511,7 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className={`flex-1 overflow-hidden ${isMobile ? 'max-h-64' : ''}`}>
               <div className="space-y-2 mb-3">
                 <div 
                   className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
@@ -525,7 +530,7 @@ const Portal = () => {
               </div>
               
               <div className="space-y-3 max-h-[calc(100%-80px)] overflow-y-auto">
-                {pendingInvoices.slice(0, 6).map((record) => (
+                {pendingInvoices.slice(0, isMobile ? 3 : 6).map((record) => (
                   <div 
                     key={record.id} 
                     className="p-3 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
@@ -554,7 +559,7 @@ const Portal = () => {
             </CardContent>
           </Card>
 
-          {/* Bottom Right: Messages & Notifications */}
+          {/* Messages & Notifications Card */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-lg text-white">
@@ -572,7 +577,7 @@ const Portal = () => {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className={`flex-1 overflow-hidden ${isMobile ? 'max-h-64' : ''}`}>
               <div className="space-y-2 mb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -609,7 +614,7 @@ const Portal = () => {
                     <p className="text-slate-400 text-xs">{notificationsError.message}</p>
                   </div>
                 ) : notifications.length > 0 ? (
-                  notifications.slice(0, 6).map((notification) => (
+                  notifications.slice(0, isMobile ? 3 : 6).map((notification) => (
                     <div 
                       key={notification.id} 
                       className="p-3 bg-slate-700/30 rounded border border-slate-600/50 cursor-pointer hover:bg-slate-700/50 transition-colors"
