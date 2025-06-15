@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, FileText, Scale, DollarSign } from "lucide-react";
+import { Bell, FileText, Scale, DollarSign, MessagesSquare } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Notification {
@@ -30,6 +30,8 @@ function getColorByType(type: string) {
       return "border-yellow-200 bg-yellow-50";
     case "reminder":
       return "border-orange-200 bg-orange-50";
+    case "message":
+      return "border-purple-200 bg-purple-50";
     default:
       return "border-gray-200 bg-white";
   }
@@ -49,6 +51,8 @@ function getIconByType(type: string) {
       return <DollarSign className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />;
     case "reminder":
       return <Bell className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />;
+    case "message":
+      return <MessagesSquare className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />;
     default:
       return <Bell className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />;
   }
@@ -94,7 +98,7 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
 
   return (
     <ScrollArea className="h-full">
-      <div className="space-y-4">
+      <div className="space-y-3 p-1">
         {notifications.length === 0 ? (
           <div className="text-center text-gray-500 mt-16 text-lg">Nenhuma notificação até o momento.</div>
         ) : (
@@ -107,31 +111,49 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
               onClick={() => handleClick(notif)}
               tabIndex={0}
             >
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-4">
                 {getIconByType(notif.type)}
                 <div className="flex-1">
-                  <div className="flex items-baseline">
-                    <h4 className="font-medium text-base mr-2">
-                      {notif.title}
-                    </h4>
-                    {notif.type.startsWith("case") && notif.metadata?.case_number && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
-                        Processo #{notif.metadata.case_number}
-                      </span>
-                    )}
-                    {notif.type.startsWith("document") && notif.metadata?.document_name && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                        {notif.metadata.document_name}
-                      </span>
-                    )}
-                    {(notif.type === "financial" || notif.type === "financial_record") && notif.metadata?.description && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-700">
-                        {notif.metadata.description}
-                      </span>
-                    )}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold text-gray-800">
+                        {notif.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
+                    </div>
+                    <span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap pl-2">
+                      {timeAgo(notif.created_at)}
+                    </span>
                   </div>
-                  <p className="text-gray-700 text-sm mt-1">{notif.message}</p>
-                  <span className="text-xs text-gray-500">{timeAgo(notif.created_at)}</span>
+                  
+                  {notif.metadata && Object.keys(notif.metadata).length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200/80 space-y-1">
+                      {notif.metadata.case_number && (
+                        <div className="text-xs text-gray-600 flex items-center">
+                          <span className="font-semibold w-24 flex-shrink-0">Processo:</span>
+                          <span className="px-2 py-0.5 rounded bg-green-100 text-green-800 font-mono">#{notif.metadata.case_number}</span>
+                        </div>
+                      )}
+                      {notif.metadata.document_name && (
+                        <div className="text-xs text-gray-600 flex items-center">
+                          <span className="font-semibold w-24 flex-shrink-0">Documento:</span>
+                          <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800">{notif.metadata.document_name}</span>
+                        </div>
+                      )}
+                      {(notif.type.startsWith("financial") || notif.type === "financial_record") && notif.metadata.description && (
+                        <div className="text-xs text-gray-600 flex items-center">
+                          <span className="font-semibold w-24 flex-shrink-0">Referência:</span>
+                          <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">{notif.metadata.description}</span>
+                        </div>
+                      )}
+                       {notif.metadata.amount && (
+                        <div className="text-xs text-gray-600 flex items-center">
+                          <span className="font-semibold w-24 flex-shrink-0">Valor:</span>
+                          <span className="font-mono">R$ {notif.metadata.amount}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </button>
@@ -143,4 +165,3 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
 };
 
 export default PortalNotificationList;
-

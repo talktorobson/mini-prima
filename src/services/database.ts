@@ -52,43 +52,64 @@ export const debugService = {
     try {
       console.log('Inserting sample notifications for client:', clientId);
       
-      // Use only valid notification types based on the TypeScript error
       const sampleNotifications = [
         {
           client_id: clientId,
           title: 'Novo documento disponível',
-          message: 'Um novo documento foi adicionado ao seu caso #12345.',
-          type: 'document' as const,
-          is_read: false
+          message: 'O Contrato Social v2 foi adicionado ao seu caso #C-2024-789.',
+          type: 'document_upload' as const,
+          is_read: false,
+          action_url: '/portal/documents?open=doc-id-1',
+          metadata: {
+            document_id: 'doc-id-1',
+            document_name: 'Contrato Social - V2.pdf',
+            case_number: 'C-2024-789'
+          }
         },
         {
           client_id: clientId,
           title: 'Atualização do caso',
           message: 'Seu processo teve uma atualização de status para "Em Andamento".',
           type: 'case_update' as const,
-          is_read: false
+          is_read: false,
+          action_url: '/portal/cases?open=case-id-1',
+          metadata: {
+            case_id: 'case-id-1',
+            case_number: 'C-2024-789'
+          }
         },
         {
           client_id: clientId,
-          title: 'Informação importante',
-          message: 'Prazo para envio de documentos é amanhã.',
-          type: 'info' as const,
+          title: 'Lembrete importante',
+          message: 'Prazo para envio de documentos para o caso #C-2024-101 é amanhã.',
+          type: 'reminder' as const,
           is_read: true,
-          read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+          read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          metadata: {
+            case_number: 'C-2024-101'
+          }
         },
         {
           client_id: clientId,
-          title: 'Nova mensagem',
+          title: 'Nova mensagem da equipe',
           message: 'Você recebeu uma nova mensagem da equipe jurídica.',
           type: 'message' as const,
-          is_read: false
+          is_read: false,
+          action_url: '/portal/messages',
+          metadata: {}
         },
         {
           client_id: clientId,
           title: 'Cobrança pendente',
           message: 'Você possui uma fatura em aberto no valor de R$ 2.500,00.',
-          type: 'payment' as const,
-          is_read: false
+          type: 'financial_record' as const,
+          is_read: false,
+          action_url: '/portal/financial?open=fin-id-1',
+          metadata: {
+            financial_id: 'fin-id-1',
+            description: 'Fatura #INV-003',
+            amount: '2500.00'
+          }
         }
       ];
 
