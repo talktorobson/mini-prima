@@ -75,6 +75,32 @@ const PortalDocuments = () => {
   // Use real documents if available, otherwise use mock data
   const allDocuments = documents.length > 0 ? documents : mockDocuments;
 
+  // Helper functions defined before they are used
+  function getStatusFromDocument(doc: any) {
+    if (doc.status === 'Final') return 'Finalizado';
+    if (doc.status === 'Draft') return 'Pendente Assinatura';
+    return 'Processando';
+  }
+
+  function checkDateRange(uploadDate: string, range: string) {
+    const docDate = new Date(uploadDate);
+    const now = new Date();
+    
+    switch (range) {
+      case 'today':
+        return docDate.toDateString() === now.toDateString();
+      case 'week':
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return docDate >= weekAgo;
+      case 'month':
+        return docDate.getMonth() === now.getMonth() && docDate.getFullYear() === now.getFullYear();
+      case 'year':
+        return docDate.getFullYear() === now.getFullYear();
+      default:
+        return true;
+    }
+  }
+
   // Filter documents based on search criteria
   const filteredDocuments = useMemo(() => {
     return allDocuments.filter(doc => {
@@ -92,31 +118,6 @@ const PortalDocuments = () => {
       return matchesQuery && matchesType && matchesStatus && matchesDate;
     });
   }, [allDocuments, searchFilters]);
-
-  const getStatusFromDocument = (doc: any) => {
-    if (doc.status === 'Final') return 'Finalizado';
-    if (doc.status === 'Draft') return 'Pendente Assinatura';
-    return 'Processando';
-  };
-
-  const checkDateRange = (uploadDate: string, range: string) => {
-    const docDate = new Date(uploadDate);
-    const now = new Date();
-    
-    switch (range) {
-      case 'today':
-        return docDate.toDateString() === now.toDateString();
-      case 'week':
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return docDate >= weekAgo;
-      case 'month':
-        return docDate.getMonth() === now.getMonth() && docDate.getFullYear() === now.getFullYear();
-      case 'year':
-        return docDate.getFullYear() === now.getFullYear();
-      default:
-        return true;
-    }
-  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
