@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, ArrowLeft, Download, Eye } from 'lucide-react';
+import { FileText, ArrowLeft, Download, Eye, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDocuments } from '@/hooks/useDocuments';
 import DocumentSearch from '@/components/DocumentSearch';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
+import GeneralDocumentUpload from '@/components/GeneralDocumentUpload';
 import { getDocumentPreviewUrl, downloadDocument } from '@/services/documentPreview';
 import { useToast } from '@/hooks/useToast';
 
@@ -18,11 +19,12 @@ interface SearchFilters {
 
 const PortalDocuments = () => {
   const navigate = useNavigate();
-  const { data: documents = [], isLoading, error } = useDocuments();
+  const { data: documents = [], isLoading, error, refetch } = useDocuments();
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const { toast } = useToast();
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     query: '',
@@ -186,6 +188,10 @@ const PortalDocuments = () => {
     });
   };
 
+  const handleUploadComplete = () => {
+    refetch(); // Refresh the documents list
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -220,7 +226,17 @@ const PortalDocuments = () => {
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900">Documentos</h1>
               </div>
             </div>
-            <div className="w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm w-full sm:w-auto"
+                onClick={() => setIsUploadOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Enviar Documentos</span>
+                <span className="sm:hidden">Enviar</span>
+              </Button>
               <Button 
                 size="sm" 
                 className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm w-full sm:w-auto"
@@ -326,6 +342,12 @@ const PortalDocuments = () => {
         document={selectedDocument}
         previewUrl={previewUrl}
         onDownload={() => selectedDocument && handleDownload(selectedDocument)}
+      />
+
+      <GeneralDocumentUpload
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUploadComplete={handleUploadComplete}
       />
     </div>
   );
