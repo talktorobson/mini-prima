@@ -19,10 +19,14 @@ const PortalCases = () => {
   const [uploadingCaseId, setUploadingCaseId] = useState<string | null>(null);
 
   // Fetch cases from database
-  const { data: cases = [], isLoading, error } = useQuery({
+  const { data: cases = [], isLoading, error, refetch } = useQuery({
     queryKey: ['client-cases'],
-    queryFn: casesService.getCases
+    queryFn: casesService.getCases,
+    retry: 3,
+    retryDelay: 1000,
   });
+
+  console.log('Cases query state:', { cases, isLoading, error });
 
   const handleFileUpload = async (caseId: string) => {
     if (!selectedFile) {
@@ -146,11 +150,15 @@ const PortalCases = () => {
   }
 
   if (error) {
+    console.error('Cases loading error:', error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar casos</h2>
-          <p className="text-gray-600">Tente novamente mais tarde.</p>
+          <p className="text-gray-600 mb-4">Tente novamente mais tarde.</p>
+          <Button onClick={() => refetch()} className="bg-blue-600 hover:bg-blue-700">
+            Tentar Novamente
+          </Button>
         </div>
       </div>
     );

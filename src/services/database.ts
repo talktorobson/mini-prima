@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Messages service
@@ -41,17 +42,31 @@ export const messagesService = {
 // Client service
 export const clientService = {
   async getCurrentClient() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No authenticated user found');
+        return null;
+      }
 
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    
-    if (error) throw error;
-    return data;
+      console.log('Fetching client for user:', user.id);
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching client:', error);
+        throw error;
+      }
+      
+      console.log('Client data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in getCurrentClient:', error);
+      throw error;
+    }
   },
 
   async updateClient(updates: any) {
@@ -73,20 +88,36 @@ export const clientService = {
 // Cases service
 export const casesService = {
   async getCases() {
-    const client = await clientService.getCurrentClient();
-    if (!client) throw new Error('No client found');
+    try {
+      console.log('Starting getCases...');
+      const client = await clientService.getCurrentClient();
+      
+      if (!client) {
+        console.log('No client found, returning empty array');
+        return [];
+      }
 
-    const { data, error } = await supabase
-      .from('cases')
-      .select(`
-        *,
-        documents(count)
-      `)
-      .eq('client_id', client.id)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+      console.log('Fetching cases for client:', client.id);
+      const { data, error } = await supabase
+        .from('cases')
+        .select(`
+          *,
+          documents(count)
+        `)
+        .eq('client_id', client.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching cases:', error);
+        throw error;
+      }
+      
+      console.log('Cases data:', data);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getCases:', error);
+      throw error;
+    }
   },
 
   async getCaseById(caseId: string) {
