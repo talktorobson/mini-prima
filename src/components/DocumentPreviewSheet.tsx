@@ -57,31 +57,16 @@ const DocumentPreviewSheet = ({ isOpen, onClose, document, previewUrl, onDownloa
 
       case 'pdf':
         return (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg space-y-6">
-            <FileText className="h-20 w-20 text-red-500" />
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold text-gray-800">Documento PDF</h3>
-              <p className="text-gray-600 max-w-sm">
-                Visualize este documento PDF abrindo em uma nova aba ou fazendo o download.
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <Button
-                onClick={handleOpenInNewTab}
-                className="bg-red-500 hover:bg-red-600 text-white flex items-center space-x-2"
-              >
-                <ExternalLink className="h-4 w-4" />
-                <span>Abrir PDF</span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={onDownload}
-                className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white flex items-center space-x-2"
-              >
-                <Download className="h-4 w-4" />
-                <span>Download</span>
-              </Button>
-            </div>
+          <div className="w-full h-full bg-white rounded-lg border">
+            <iframe
+              src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+              className="w-full h-full rounded-lg"
+              title={`Preview of ${filename}`}
+              style={{ border: 'none', minHeight: '600px' }}
+              onError={() => {
+                console.error('PDF iframe failed to load');
+              }}
+            />
           </div>
         );
 
@@ -92,7 +77,7 @@ const DocumentPreviewSheet = ({ isOpen, onClose, document, previewUrl, onDownloa
               src={previewUrl}
               className="w-full h-full rounded-lg"
               title={`Preview of ${filename}`}
-              style={{ border: 'none' }}
+              style={{ border: 'none', minHeight: '600px' }}
             />
           </div>
         );
@@ -131,7 +116,7 @@ const DocumentPreviewSheet = ({ isOpen, onClose, document, previewUrl, onDownloa
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-2xl bg-white">
+      <SheetContent className="w-full sm:max-w-4xl bg-white">
         <SheetHeader className="space-y-4">
           <SheetTitle className="text-lg font-semibold text-gray-900 pr-8">
             {filename}

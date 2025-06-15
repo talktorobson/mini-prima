@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Initialize storage bucket
@@ -170,17 +171,32 @@ export const casesService = {
 // Documents service
 export const documentsService = {
   async getDocuments() {
-    const client = await clientService.getCurrentClient();
-    if (!client) throw new Error('No client found');
+    try {
+      const client = await clientService.getCurrentClient();
+      if (!client) {
+        console.log('No client found for documents');
+        return [];
+      }
 
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('client_id', client.id)
-      .order('upload_date', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+      console.log('Fetching documents for client:', client.id);
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('client_id', client.id)
+        .eq('is_visible_to_client', true)
+        .order('upload_date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching documents:', error);
+        throw error;
+      }
+      
+      console.log('Documents data:', data);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getDocuments:', error);
+      throw error;
+    }
   },
 
   async getCaseDocuments(caseId: string) {
@@ -223,6 +239,72 @@ export const documentsService = {
 
     if (error) throw error;
     return data;
+  },
+
+  async getDocumentPreviewUrl(documentId: string) {
+    try {
+      const { data: document, error } = await supabase
+        .from('documents')
+        .select('file_path')
+        .eq('id', documentId)
+        .single();
+
+      if (error) throw error;
+
+      if (!document.file_path) {
+        throw new Error('Document has no file path');
+      }
+
+      const { data: signedUrl, error: urlError } = await supabase.storage
+        .from('case-documents')
+        .createSignedUrl(document.file_path, 3600); // 1 hour expiry
+
+      if (urlError) throw urlError;
+
+      return signedUrl.signedUrl;
+    } catch (error) {
+      console.error('Error getting document preview URL:', error);
+      throw error;
+    }
+  },
+
+  async downloadDocument(documentId: string) {
+    try {
+      const { data: document, error } = await supabase
+        .from('documents')
+        .select('file_path, document_name')
+        .eq('id', documentId)
+        .single();
+
+      if (error) throw error;
+
+      if (!document.file_path) {
+        throw new Error('Document has no file path');
+      }
+
+      const { data: signedUrl, error: urlError } = await supabase.storage
+        .from('case-documents')
+        .createSignedUrl(document.file_path, 60); // 1 minute for download
+
+      if (urlError) throw urlError;
+
+      // Log the download for audit purposes
+      await supabase
+        .from('document_access_logs')
+        .insert({
+          document_id: documentId,
+          action: 'download',
+          client_id: (await clientService.getCurrentClient())?.id
+        });
+
+      return {
+        url: signedUrl.signedUrl,
+        filename: document.document_name
+      };
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      throw error;
+    }
   }
 };
 
