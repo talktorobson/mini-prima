@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,7 @@ interface Message {
   created_at: string;
   sender_type: 'client' | 'staff';
   sender_id: string;
-  recipient_id: string;
+  recipient_id?: string;
 }
 
 const PortalMessages = () => {
@@ -47,9 +46,8 @@ const PortalMessages = () => {
     mutationFn: (content: string) => 
       messagesService.sendMessage(
         content,
-        'default-thread', // You might want to implement thread management
-        client?.id || '',
-        'staff-id' // You'll need to determine the recipient
+        'default-thread',
+        client?.id || ''
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
