@@ -244,6 +244,36 @@ export const messagesService = {
       console.error('Messages service error:', error);
       throw error;
     }
+  },
+
+  sendMessage: async (content: string, recipientId: string, clientId: string) => {
+    console.log('Sending message:', { content, recipientId, clientId });
+    
+    try {
+      const { data, error } = await supabase
+        .from('portal_messages')
+        .insert({
+          content,
+          sender_type: 'client',
+          sender_id: clientId,
+          recipient_type: 'staff',
+          recipient_id: recipientId,
+          thread_id: crypto.randomUUID(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error sending message:', error);
+        throw error;
+      }
+
+      console.log('Successfully sent message:', data);
+      return data;
+    } catch (error) {
+      console.error('Message send error:', error);
+      throw error;
+    }
   }
 };
 

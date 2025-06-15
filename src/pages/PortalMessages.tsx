@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,8 +45,8 @@ const PortalMessages = () => {
 
   // Get messages
   const { data: messages = [], isLoading } = useQuery({
-    queryKey: ['messages', client?.id],
-    queryFn: () => messagesService.getMessages(client?.id || ''),
+    queryKey: ['messages'],
+    queryFn: messagesService.getMessages,
     enabled: !!client?.id
   });
 
