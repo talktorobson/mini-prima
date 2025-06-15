@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { clientService } from '@/services/database';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface DocumentUploadProps {
   caseId: string;
@@ -47,6 +47,22 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const { toast } = useToast();
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  // Fetch case data to get counterparty information
+  const { data: caseData } = useQuery({
+    queryKey: ['case-details', caseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('counterparty_name')
+        .eq('id', caseId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: isOpen && !!caseId,
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -184,7 +200,16 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Enviar Documentos - {caseTitle}</DialogTitle>
+          <DialogTitle>
+            <div className="space-y-1">
+              <div>Enviar Documentos - {caseTitle}</div>
+              {caseData?.counterparty_name && (
+                <div className="text-sm font-normal text-gray-600">
+                  Parte Contrária: <span className="font-medium text-gray-900">{caseData.counterparty_name}</span>
+                </div>
+              )}
+            </div>
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
