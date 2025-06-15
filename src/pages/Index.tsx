@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Users, Phone } from 'lucide-react';
+import { Users, Phone, Shield } from 'lucide-react';
 import Hero from '@/components/Hero';
 import RiskSection from '@/components/RiskSection';
 import Services from '@/components/Services';
@@ -23,6 +23,18 @@ const Index = () => {
         >
           <Users className="h-5 w-5" />
           Portal do Cliente
+        </Button>
+      </div>
+
+      {/* Admin Access Button */}
+      <div className="fixed top-6 right-48 z-50">
+        <Button 
+          onClick={() => navigate('/admin/login')}
+          variant="outline"
+          className="bg-red-600/10 hover:bg-red-600/20 text-red-400 border-red-500/30 hover:border-red-400 font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transform hover:scale-105 transition-all duration-200"
+        >
+          <Shield className="h-4 w-4" />
+          Admin
         </Button>
       </div>
 
