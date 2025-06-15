@@ -57,6 +57,55 @@ const Portal = () => {
     await signOut();
   };
 
+  const handleCasesAtivosClick = () => {
+    navigate('/portal/cases', { state: { filter: 'active' } });
+  };
+
+  const handleTotalCasosClick = () => {
+    navigate('/portal/cases');
+  };
+
+  const handleCaseClick = (caseId: string) => {
+    navigate('/portal/cases', { state: { selectedCaseId: caseId } });
+  };
+
+  const handleTotalDocumentosClick = () => {
+    navigate('/portal/documents');
+  };
+
+  const handleRecentesClick = () => {
+    navigate('/portal/documents', { state: { filter: 'recent' } });
+  };
+
+  const handleDocumentClick = (documentId: string) => {
+    navigate('/portal/documents', { state: { selectedDocumentId: documentId } });
+  };
+
+  const handlePendenciasClick = () => {
+    console.log('Navigating to financial pending items');
+    // Could navigate to a financial page or show a modal
+  };
+
+  const handleTotalRegistrosClick = () => {
+    console.log('Navigating to all financial records');
+    // Could navigate to a financial page
+  };
+
+  const handleFinancialItemClick = (recordId: string) => {
+    console.log('Viewing financial record:', recordId);
+    // Could show details modal or navigate to detail page
+  };
+
+  const handleNotificationsClick = () => {
+    console.log('Viewing all notifications');
+    // Could navigate to notifications page or show modal
+  };
+
+  const handleNotificationClick = (notificationId: string) => {
+    console.log('Viewing notification:', notificationId);
+    // Could mark as read and show details
+  };
+
   if (clientLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center">
@@ -131,11 +180,17 @@ const Portal = () => {
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
               <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
+                  onClick={handleCasesAtivosClick}
+                >
                   <span className="text-sm text-blue-300">Casos Ativos</span>
                   <Badge className="bg-blue-500 text-white text-xs">{activeCases.length}</Badge>
                 </div>
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
+                  onClick={handleTotalCasosClick}
+                >
                   <span className="text-sm text-slate-300">Total de Casos</span>
                   <span className="text-sm font-semibold text-white">{cases.length}</span>
                 </div>
@@ -143,7 +198,11 @@ const Portal = () => {
               
               <div className="space-y-3 max-h-[calc(100%-80px)] overflow-y-auto">
                 {cases.slice(0, 6).map((case_item) => (
-                  <div key={case_item.id} className="p-3 bg-slate-700/50 rounded border border-slate-600">
+                  <div 
+                    key={case_item.id} 
+                    className="p-3 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                    onClick={() => handleCaseClick(case_item.id)}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-white text-sm truncate pr-2">{case_item.case_title}</h4>
                       <Badge 
@@ -192,11 +251,17 @@ const Portal = () => {
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
               <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
+                  onClick={handleTotalDocumentosClick}
+                >
                   <span className="text-sm text-green-300">Total de Documentos</span>
                   <Badge className="bg-green-500 text-white text-xs">{documents.length}</Badge>
                 </div>
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
+                  onClick={handleRecentesClick}
+                >
                   <span className="text-sm text-slate-300">Recentes</span>
                   <span className="text-sm font-semibold text-white">{documents.slice(0, 5).length}</span>
                 </div>
@@ -204,17 +269,37 @@ const Portal = () => {
               
               <div className="space-y-3 max-h-[calc(100%-80px)] overflow-y-auto">
                 {documents.slice(0, 6).map((doc) => (
-                  <div key={doc.id} className="p-3 bg-slate-700/50 rounded border border-slate-600">
+                  <div 
+                    key={doc.id} 
+                    className="p-3 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                    onClick={() => handleDocumentClick(doc.id)}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-white text-sm truncate">{doc.document_name}</h4>
                         <p className="text-xs text-green-200 mt-1">{doc.document_type}</p>
                       </div>
                       <div className="flex space-x-1 ml-2">
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-green-400 hover:bg-green-400/20">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 w-6 p-0 text-green-400 hover:bg-green-400/20"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('View document:', doc.id);
+                          }}
+                        >
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-green-400 hover:bg-green-400/20">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 w-6 p-0 text-green-400 hover:bg-green-400/20"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('Download document:', doc.id);
+                          }}
+                        >
                           <Download className="h-3 w-3" />
                         </Button>
                       </div>
@@ -243,11 +328,17 @@ const Portal = () => {
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
               <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
+                  onClick={handlePendenciasClick}
+                >
                   <span className="text-sm text-orange-300">Pendências</span>
                   <Badge className="bg-orange-500 text-white text-xs">{pendingInvoices.length}</Badge>
                 </div>
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors"
+                  onClick={handleTotalRegistrosClick}
+                >
                   <span className="text-sm text-slate-300">Total de Registros</span>
                   <span className="text-sm font-semibold text-white">{financialRecords.length}</span>
                 </div>
@@ -255,7 +346,11 @@ const Portal = () => {
               
               <div className="space-y-3 max-h-[calc(100%-80px)] overflow-y-auto">
                 {pendingInvoices.slice(0, 6).map((record) => (
-                  <div key={record.id} className="p-3 bg-slate-700/50 rounded border border-slate-600">
+                  <div 
+                    key={record.id} 
+                    className="p-3 bg-slate-700/50 rounded border border-slate-600 cursor-pointer hover:bg-slate-700/70 transition-colors"
+                    onClick={() => handleFinancialItemClick(record.id)}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-white text-sm truncate pr-2">{record.description}</h4>
                       <span className="text-sm font-semibold text-orange-400">
@@ -303,13 +398,21 @@ const Portal = () => {
                   <div className="flex items-center space-x-2">
                     <Badge className="bg-green-500 text-white text-xs">Online</Badge>
                     {unreadNotifications.length > 0 && (
-                      <Badge className="bg-red-500 text-white text-xs flex items-center space-x-1">
+                      <Badge 
+                        className="bg-red-500 text-white text-xs flex items-center space-x-1 cursor-pointer hover:bg-red-600 transition-colors"
+                        onClick={handleNotificationsClick}
+                      >
                         <Bell className="h-3 w-3" />
                         <span>{unreadNotifications.length}</span>
                       </Badge>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-white">{notifications.length} notificações</span>
+                  <span 
+                    className="text-sm font-semibold text-white cursor-pointer hover:text-purple-300 transition-colors"
+                    onClick={handleNotificationsClick}
+                  >
+                    {notifications.length} notificações
+                  </span>
                 </div>
               </div>
               
@@ -320,7 +423,11 @@ const Portal = () => {
               <div className="space-y-3 max-h-[calc(100%-100px)] overflow-y-auto">
                 {notifications.length > 0 ? (
                   notifications.slice(0, 6).map((notification) => (
-                    <div key={notification.id} className="p-3 bg-slate-700/30 rounded border border-slate-600/50">
+                    <div 
+                      key={notification.id} 
+                      className="p-3 bg-slate-700/30 rounded border border-slate-600/50 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                      onClick={() => handleNotificationClick(notification.id)}
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <h5 className="text-sm font-medium text-white truncate">{notification.title}</h5>
