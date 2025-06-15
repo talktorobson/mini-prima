@@ -8,6 +8,7 @@ import { useDocuments } from '@/hooks/useDocuments';
 import DocumentSearch from '@/components/DocumentSearch';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
 import { getDocumentPreviewUrl, downloadDocument } from '@/services/documentPreview';
+import { useToast } from '@/hooks/useToast';
 
 interface SearchFilters {
   query: string;
@@ -22,6 +23,8 @@ const PortalDocuments = () => {
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const { toast } = useToast();
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     query: '',
     type: '',
@@ -128,25 +131,68 @@ const PortalDocuments = () => {
   };
 
   const handlePreview = async (document: any) => {
-    console.log('Previewing document:', document.document_name, 'Path:', document.file_path);
+    console.log('Previewing document:', document.document_name);
     setSelectedDocument(document);
-    const url = await getDocumentPreviewUrl(document);
-    setPreviewUrl(url);
+    setIsLoadingPreview(true);
     setIsPreviewOpen(true);
+    
+    try {
+      const url = await getDocumentPreviewUrl(document);
+      setPreviewUrl(url);
+      console.log('Preview URL generated:', url);
+    } catch (error) {
+      console.error('Error generating preview URL:', error);
+      toast({
+        title: 'Erro na visualização',
+        description: 'Não foi possível gerar a visualização do documento.',
+        variant: 'destructive'
+      });
+      setPreviewUrl('');
+    } finally {
+      setIsLoadingPreview(false);
+    }
   };
 
   const handleDownload = async (document: any) => {
-    await downloadDocument(document);
+    console.log('Starting download for:', document.document_name);
+    try {
+      await downloadDocument(document);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: 'Erro no download',
+        description: 'Não foi possível baixar o documento. Tente novamente.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
   };
 
+  const handleBulkDownload = () => {
+    toast({
+      title: 'Download em lote iniciado',
+      description: `Preparando download de ${filteredDocuments.length} documentos...`,
+      variant: 'success'
+    });
+    
+    // Simulate bulk download
+    filteredDocuments.forEach((doc, index) => {
+      setTimeout(() => {
+        handleDownload(doc);
+      }, index * 1000); // Delay each download by 1 second
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="text-gray-600">Carregando documentos...</span>
+        </div>
       </div>
     );
   }
@@ -174,9 +220,14 @@ const PortalDocuments = () => {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+              <Button 
+                size="sm" 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleBulkDownload}
+                disabled={filteredDocuments.length === 0}
+              >
                 <Download className="h-4 w-4 mr-2" />
-                Download em Lote
+                Download em Lote ({filteredDocuments.length})
               </Button>
               <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                 Acesso Seguro
@@ -240,9 +291,10 @@ const PortalDocuments = () => {
                           variant="outline" 
                           className="border-blue-500 text-blue-600 hover:bg-blue-50"
                           onClick={() => handlePreview(doc)}
+                          disabled={isLoadingPreview}
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Visualizar
+                          {isLoadingPreview && selectedDocument?.id === doc.id ? 'Carregando...' : 'Visualizar'}
                         </Button>
                         <Button 
                           size="sm" 
@@ -264,7 +316,11 @@ const PortalDocuments = () => {
 
       <DocumentPreviewSheet
         isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setSelectedDocument(null);
+          setPreviewUrl('');
+        }}
         document={selectedDocument}
         previewUrl={previewUrl}
         onDownload={() => selectedDocument && handleDownload(selectedDocument)}
