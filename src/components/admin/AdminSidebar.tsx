@@ -37,7 +37,7 @@ const AdminSidebar = () => {
     );
   }
 
-  const menuItems = [
+  const adminMenuItems = [
     {
       path: '/admin',
       label: 'Dashboard',
@@ -76,7 +76,7 @@ const AdminSidebar = () => {
     },
     {
       path: '/admin/permissions',
-      label: 'Permissões',
+      label: 'Equipe',
       icon: Shield,
       show: isAdmin
     },
@@ -88,6 +88,41 @@ const AdminSidebar = () => {
     }
   ];
 
+  const staffMenuItems = [
+    {
+      path: '/admin',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      show: true
+    },
+    {
+      path: '/admin/staff/cases',
+      label: 'Casos',
+      icon: Building,
+      show: canAccess.cases
+    },
+    {
+      path: '/admin/staff/documents',
+      label: 'Documentos',
+      icon: FileText,
+      show: canAccess.documents
+    },
+    {
+      path: '/admin/staff/messages',
+      label: 'Mensagens',
+      icon: MessageCircle,
+      show: canAccess.messaging
+    },
+    {
+      path: '/admin/staff/billing',
+      label: 'Faturamento',
+      icon: DollarSign,
+      show: canAccess.billing
+    }
+  ];
+
+  const menuItems = isAdmin ? adminMenuItems : staffMenuItems;
+
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
       {/* Header */}
@@ -97,9 +132,11 @@ const AdminSidebar = () => {
           <span className="font-bold text-gray-900">Admin Panel</span>
         </div>
         <div className="mt-2">
-          <p className="text-sm font-medium text-gray-900">{adminUser?.role === 'admin' ? 'Administrador' : 'Equipe'}</p>
-          <Badge variant={adminUser?.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-            {adminUser?.role === 'admin' ? 'Admin' : 'Staff'}
+          <p className="text-sm font-medium text-gray-900">
+            {isAdmin ? 'Administrador' : 'Equipe'}
+          </p>
+          <Badge variant={isAdmin ? 'default' : 'secondary'} className="text-xs">
+            {isAdmin ? 'Admin' : 'Staff'}
           </Badge>
         </div>
       </div>
