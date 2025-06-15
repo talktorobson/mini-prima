@@ -40,7 +40,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchAdminUser = async (userId: string) => {
+  const fetchAdminUser = async (userId: string): Promise<AdminUser | null> => {
     console.log('Fetching admin user for:', userId);
     
     try {
@@ -57,7 +57,7 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       }
 
       console.log('Admin user data:', data);
-      return data;
+      return data as AdminUser | null;
     } catch (error) {
       console.error('Unexpected error fetching admin user:', error);
       return null;

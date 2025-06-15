@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          permissions: Json | null
+          role: Database["public"]["Enums"]["admin_role"]
+          staff_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          staff_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          staff_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       case_updates: {
         Row: {
           case_id: string
@@ -1086,6 +1119,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_admin_or_staff: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       log_client_activity: {
         Args: {
           activity_type_param: string
@@ -1101,6 +1142,7 @@ export type Database = {
     }
     Enums: {
       access_action: "view" | "download" | "preview"
+      admin_role: "admin" | "staff"
       case_status:
         | "Open"
         | "In Progress"
@@ -1263,6 +1305,7 @@ export const Constants = {
   public: {
     Enums: {
       access_action: ["view", "download", "preview"],
+      admin_role: ["admin", "staff"],
       case_status: [
         "Open",
         "In Progress",
