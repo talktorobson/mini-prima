@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,8 @@ import {
   AlertCircle,
   Building
 } from 'lucide-react';
+
+// Import jsPDF and html2canvas with proper module resolution
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
