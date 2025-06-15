@@ -8,7 +8,6 @@ import AdminStaffCases from '@/pages/AdminStaffCases';
 import AdminStaffDocuments from '@/pages/AdminStaffDocuments';
 import AdminStaffMessages from '@/pages/AdminStaffMessages';
 import AdminStaffBilling from '@/pages/AdminStaffBilling';
-import StaffDashboardSummary from '@/components/admin/StaffDashboardSummary';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {

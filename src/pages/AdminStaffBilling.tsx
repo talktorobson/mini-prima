@@ -34,7 +34,7 @@ interface FinancialRecord {
   client_id: string;
   case_id?: string;
   created_at: string;
-  client: {
+  client?: {
     company_name: string;
     contact_person: string;
   };
@@ -69,11 +69,11 @@ const AdminStaffBilling = () => {
         .from('financial_records')
         .select(`
           *,
-          client:clients (
+          client:clients!financial_records_client_id_fkey (
             company_name,
             contact_person
           ),
-          case:cases (
+          case:cases!financial_records_case_id_fkey (
             case_title,
             case_number
           )
@@ -82,7 +82,15 @@ const AdminStaffBilling = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRecords(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData: FinancialRecord[] = (data || []).map(record => ({
+        ...record,
+        client: Array.isArray(record.client) ? record.client[0] : record.client,
+        case: Array.isArray(record.case) ? record.case[0] : record.case
+      }));
+      
+      setRecords(transformedData);
     } catch (error: any) {
       console.error('Error fetching financial records:', error);
       toast({
@@ -97,7 +105,7 @@ const AdminStaffBilling = () => {
 
   const filteredRecords = records.filter(record => {
     const matchesSearch = record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         record.client.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (record.client?.company_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (record.invoice_number && record.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
     const matchesType = typeFilter === 'all' || record.type === typeFilter;
@@ -341,7 +349,7 @@ const AdminStaffBilling = () => {
                             <div className="flex items-center gap-4 text-xs text-gray-500">
                               <span className="flex items-center gap-1">
                                 <Building className="h-3 w-3" />
-                                {record.client.company_name}
+                                {record.client?.company_name || 'Cliente não encontrado'}
                               </span>
                               {record.invoice_number && (
                                 <span>Nº {record.invoice_number}</span>

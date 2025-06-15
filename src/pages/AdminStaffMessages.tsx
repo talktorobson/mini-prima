@@ -71,11 +71,11 @@ const AdminStaffMessages = () => {
         .from('portal_messages')
         .select(`
           *,
-          client:sender_id (
+          client:sender_id!portal_messages_sender_id_fkey (
             company_name,
             contact_person
           ),
-          case:cases (
+          case:cases!portal_messages_case_id_fkey (
             case_title,
             case_number
           )
@@ -84,7 +84,15 @@ const AdminStaffMessages = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData: Message[] = (data || []).map(message => ({
+        ...message,
+        client: Array.isArray(message.client) ? message.client[0] : message.client,
+        case: Array.isArray(message.case) ? message.case[0] : message.case
+      }));
+      
+      setMessages(transformedData);
     } catch (error: any) {
       console.error('Error fetching staff messages:', error);
       toast({
