@@ -156,7 +156,14 @@ const PortalMessages = () => {
         console.error("Error fetching notifications:", error);
         return [];
       }
-      return data;
+      // SAFELY coerce metadata to be an object, as expected by Notification[]
+      return (data ?? []).map((notif) => ({
+        ...notif,
+        metadata:
+          typeof notif.metadata === "object" && notif.metadata !== null
+            ? notif.metadata
+            : {},
+      }));
     },
     enabled: !!client?.id && !isChatActive,
   });
