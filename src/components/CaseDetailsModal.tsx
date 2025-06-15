@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -166,13 +165,18 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                       <span className="text-gray-900">{case_.assigned_lawyer || 'N/A'}</span>
                     </div>
                     {case_.counterparty_name && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="font-medium text-gray-600">Parte Contrária:</span>
-                        <span className="text-gray-900">{case_.counterparty_name}</span>
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                        <div className="flex items-center space-x-2">
+                          <Building className="h-4 w-4 text-red-600" />
+                          <span className="font-semibold text-red-800">Parte Contrária:</span>
+                        </div>
+                        <div className="mt-1 text-red-900 font-medium">
+                          {case_.counterparty_name}
+                        </div>
                       </div>
                     )}
                     {case_.opposing_party && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 mt-2">
                         <span className="font-medium text-gray-600">Advogado da parte:</span>
                         <span className="text-gray-900">{case_.opposing_party}</span>
                       </div>
