@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { casesService } from '@/services/database';
 import DocumentUpload from '@/components/DocumentUpload';
 import CaseDetailsModal from '@/components/CaseDetailsModal';
+import * as XLSX from 'xlsx';
 
 const PortalCases = () => {
   const navigate = useNavigate();
@@ -106,45 +107,43 @@ const PortalCases = () => {
   };
 
   const handleExport = () => {
-    // Create CSV content
-    const headers = [
-      'Título do Caso',
-      'Número do Caso',
-      'Parte Contrária',
-      'Status',
-      'Prioridade',
-      'Risco',
-      'Valor da Causa',
-      'Tribunal',
-      'Data de Criação'
+    // Create data for Excel export
+    const excelData = filteredCases.map((case_: any) => ({
+      'Título do Caso': case_.case_title || 'N/A',
+      'Número do Caso': case_.case_number || 'N/A',
+      'Parte Contrária': case_.counterparty_name || 'N/A',
+      'Status': getStatusDisplayName(case_.status),
+      'Prioridade': getPriorityDisplayName(case_.priority),
+      'Risco': getRiskDisplayName(case_.risk_level),
+      'Valor da Causa': case_.case_risk_value ? formatCurrency(Number(case_.case_risk_value)) : 'N/A',
+      'Tribunal': case_.court_agency || 'N/A',
+      'Data de Criação': new Date(case_.created_at).toLocaleDateString('pt-BR')
+    }));
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
+
+    // Set column widths for better readability
+    const colWidths = [
+      { wch: 30 }, // Título do Caso
+      { wch: 15 }, // Número do Caso
+      { wch: 25 }, // Parte Contrária
+      { wch: 15 }, // Status
+      { wch: 10 }, // Prioridade
+      { wch: 10 }, // Risco
+      { wch: 15 }, // Valor da Causa
+      { wch: 20 }, // Tribunal
+      { wch: 12 }  // Data de Criação
     ];
-    
-    const csvData = filteredCases.map((case_: any) => [
-      case_.case_title || 'N/A',
-      case_.case_number || 'N/A',
-      case_.counterparty_name || 'N/A',
-      getStatusDisplayName(case_.status),
-      getPriorityDisplayName(case_.priority),
-      getRiskDisplayName(case_.risk_level),
-      case_.case_risk_value ? formatCurrency(Number(case_.case_risk_value)) : 'N/A',
-      case_.court_agency || 'N/A',
-      new Date(case_.created_at).toLocaleDateString('pt-BR')
-    ]);
-    
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
-    
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `casos-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    ws['!cols'] = colWidths;
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Casos');
+
+    // Generate and download Excel file
+    const fileName = `casos-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   };
 
   const clearAllFilters = () => {
