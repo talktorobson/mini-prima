@@ -27,31 +27,20 @@ export const initializeStorage = async () => {
 export const debugService = {
   async checkNotificationTypes() {
     try {
-      // Get the enum values for notification_type
-      const { data, error } = await supabase
-        .rpc('get_enum_values', { enum_name: 'notification_type' })
-        .single();
+      // Fallback: try to get existing notification types from the table
+      const { data: existingNotifications, error: notifError } = await supabase
+        .from('portal_notifications')
+        .select('type')
+        .limit(10);
       
-      if (error) {
-        console.error('Error getting enum values:', error);
-        // Fallback: try to get existing notification types from the table
-        const { data: existingNotifications, error: notifError } = await supabase
-          .from('portal_notifications')
-          .select('notification_type')
-          .limit(10);
-        
-        if (notifError) {
-          console.error('Error getting existing notifications:', notifError);
-          return null;
-        }
-        
-        const uniqueTypes = [...new Set(existingNotifications?.map(n => n.notification_type) || [])];
-        console.log('Existing notification types found:', uniqueTypes);
-        return uniqueTypes;
+      if (notifError) {
+        console.error('Error getting existing notifications:', notifError);
+        return null;
       }
       
-      console.log('Available notification types:', data);
-      return data;
+      const uniqueTypes = [...new Set(existingNotifications?.map(n => n.type) || [])];
+      console.log('Existing notification types found:', uniqueTypes);
+      return uniqueTypes;
     } catch (error) {
       console.error('Error in checkNotificationTypes:', error);
       return null;
@@ -62,35 +51,35 @@ export const debugService = {
     try {
       console.log('Inserting sample notifications for client:', clientId);
       
-      // Use basic notification types that should exist
+      // Use basic notification types that should exist based on the enum
       const sampleNotifications = [
         {
           client_id: clientId,
           title: 'Novo documento disponível',
           message: 'Um novo documento foi adicionado ao seu caso #12345.',
-          notification_type: 'document_upload', // Try this type
+          type: 'document_upload' as const,
           is_read: false
         },
         {
           client_id: clientId,
           title: 'Atualização do caso',
           message: 'Seu processo teve uma atualização de status para "Em Andamento".',
-          notification_type: 'case_update', // This should exist
+          type: 'case_update' as const,
           is_read: false
         },
         {
           client_id: clientId,
           title: 'Lembrete importante',
           message: 'Prazo para envio de documentos é amanhã.',
-          notification_type: 'reminder', // Try this type
+          type: 'reminder' as const,
           is_read: true,
-          read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // Read yesterday
+          read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
         },
         {
           client_id: clientId,
           title: 'Nova mensagem',
           message: 'Você recebeu uma nova mensagem da equipe jurídica.',
-          notification_type: 'message', // Try this type
+          type: 'message' as const,
           is_read: false
         }
       ];
