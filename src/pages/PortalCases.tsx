@@ -48,7 +48,7 @@ const PortalCases = () => {
 
       if (uploadError) throw uploadError;
 
-      // Create document record
+      // Create document record with correct status value
       const { error: insertError } = await supabase
         .from('documents')
         .insert({
@@ -59,7 +59,7 @@ const PortalCases = () => {
           document_category: 'Case Files',
           file_size: selectedFile.size,
           case_id: caseId,
-          status: 'Active',
+          status: 'Draft', // Use correct enum value
           is_visible_to_client: true
         });
 
@@ -94,9 +94,13 @@ const PortalCases = () => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'open': return 'bg-blue-100 text-blue-800';
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
-      case 'closed': return 'bg-green-100 text-green-800';
-      case 'on_hold': return 'bg-gray-100 text-gray-800';
+      case 'in progress': return 'bg-yellow-100 text-yellow-800';
+      case 'waiting client': return 'bg-orange-100 text-orange-800';
+      case 'waiting court': return 'bg-purple-100 text-purple-800';
+      case 'on hold': return 'bg-gray-100 text-gray-800';
+      case 'closed - won': return 'bg-green-100 text-green-800';
+      case 'closed - lost': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -107,6 +111,29 @@ const PortalCases = () => {
       case 'medium': return 'bg-orange-100 text-orange-800';
       case 'low': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusDisplayName = (status: string) => {
+    switch (status) {
+      case 'Open': return 'Aberto';
+      case 'In Progress': return 'Em Andamento';
+      case 'Waiting Client': return 'Aguardando Cliente';
+      case 'Waiting Court': return 'Aguardando Tribunal';
+      case 'On Hold': return 'Pausado';
+      case 'Closed - Won': return 'Fechado - Ganho';
+      case 'Closed - Lost': return 'Fechado - Perdido';
+      case 'Cancelled': return 'Cancelado';
+      default: return status;
+    }
+  };
+
+  const getPriorityDisplayName = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'Alta';
+      case 'Medium': return 'Média';
+      case 'Low': return 'Baixa';
+      default: return priority;
     }
   };
 
@@ -188,15 +215,10 @@ const PortalCases = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(case_.status)}`}>
-                        {case_.status === 'Open' ? 'Aberto' : 
-                         case_.status === 'In_Progress' ? 'Em Andamento' :
-                         case_.status === 'Closed' ? 'Fechado' : 
-                         case_.status === 'On_Hold' ? 'Pausado' : case_.status}
+                        {getStatusDisplayName(case_.status)}
                       </span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(case_.priority)}`}>
-                        {case_.priority === 'High' ? 'Alta' :
-                         case_.priority === 'Medium' ? 'Média' :
-                         case_.priority === 'Low' ? 'Baixa' : case_.priority}
+                        {getPriorityDisplayName(case_.priority)}
                       </span>
                     </div>
                   </div>
