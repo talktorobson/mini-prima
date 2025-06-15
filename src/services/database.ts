@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Initialize storage bucket - simplified version that doesn't try to create buckets
@@ -59,11 +58,12 @@ export const debugService = {
           message: 'O Contrato Social v2 foi adicionado ao seu caso #C-2024-789.',
           type: 'document' as const,
           is_read: false,
-          action_url: '/portal/documents?open=doc-id-1',
+          action_url: '/portal/documents?open=doc-123',
           metadata: {
-            document_id: 'doc-id-1',
+            document_id: 'doc-123',
             document_name: 'Contrato Social - V2.pdf',
-            case_number: 'C-2024-789'
+            case_number: 'C-2024-789',
+            case_id: 'case-123'
           }
         },
         {
@@ -72,10 +72,11 @@ export const debugService = {
           message: 'Seu processo teve uma atualização de status para "Em Andamento".',
           type: 'case_update' as const,
           is_read: false,
-          action_url: '/portal/cases?open=case-id-1',
+          action_url: '/portal/cases?open=case-456',
           metadata: {
-            case_id: 'case-id-1',
-            case_number: 'C-2024-789'
+            case_id: 'case-456',
+            case_number: 'C-2024-789',
+            status_change: 'Em Andamento'
           }
         },
         {
@@ -86,17 +87,21 @@ export const debugService = {
           is_read: true,
           read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
           metadata: {
-            case_number: 'C-2024-101'
+            case_number: 'C-2024-101',
+            deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
           }
         },
         {
           client_id: clientId,
           title: 'Nova mensagem da equipe',
-          message: 'Você recebeu uma nova mensagem da equipe jurídica.',
+          message: 'Você recebeu uma nova mensagem da equipe jurídica sobre seu caso.',
           type: 'message' as const,
           is_read: false,
           action_url: '/portal/messages',
-          metadata: {}
+          metadata: {
+            message_count: 1,
+            sender: 'Equipe Jurídica'
+          }
         },
         {
           client_id: clientId,
@@ -104,14 +109,21 @@ export const debugService = {
           message: 'Você possui uma fatura em aberto no valor de R$ 2.500,00.',
           type: 'payment' as const,
           is_read: false,
-          action_url: '/portal/financial?open=fin-id-1',
+          action_url: '/portal/financial?open=fin-789',
           metadata: {
-            financial_id: 'fin-id-1',
+            financial_id: 'fin-789',
             description: 'Fatura #INV-003',
-            amount: '2500.00'
+            amount: '2500.00',
+            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
           }
         }
       ];
+
+      // First, delete existing sample notifications to avoid duplicates
+      await supabase
+        .from('portal_notifications')
+        .delete()
+        .eq('client_id', clientId);
 
       const { data, error } = await supabase
         .from('portal_notifications')
