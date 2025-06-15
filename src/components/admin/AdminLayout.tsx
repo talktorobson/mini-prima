@@ -1,11 +1,15 @@
 
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Loader2 } from 'lucide-react';
 
-const AdminLayout = () => {
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { loading, adminUser } = useAdminAuth();
   const location = useLocation();
 
@@ -38,7 +42,7 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-gray-50 flex">
       {!isLoginPage && <AdminSidebar />}
       <div className={`flex-1 ${!isLoginPage ? 'ml-64' : ''}`}>
-        <Outlet />
+        {children}
       </div>
     </div>
   );
