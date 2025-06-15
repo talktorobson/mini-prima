@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { casesService } from '@/services/database';
 import DocumentUpload from '@/components/DocumentUpload';
+import CaseDetailsModal from '@/components/CaseDetailsModal';
 
 const PortalCases = () => {
   const navigate = useNavigate();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedCaseForUpload, setSelectedCaseForUpload] = useState<{ id: string; title: string } | null>(null);
+  const [selectedCaseForDetails, setSelectedCaseForDetails] = useState<any>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   // Fetch cases from database with proper error handling
   const { data: cases = [], isLoading, error, refetch } = useQuery({
@@ -26,6 +28,11 @@ const PortalCases = () => {
   const handleUploadClick = (caseId: string, caseTitle: string) => {
     setSelectedCaseForUpload({ id: caseId, title: caseTitle });
     setUploadDialogOpen(true);
+  };
+
+  const handleDetailsClick = (case_: any) => {
+    setSelectedCaseForDetails(case_);
+    setDetailsModalOpen(true);
   };
 
   const handleUploadComplete = () => {
@@ -245,6 +252,7 @@ const PortalCases = () => {
                       variant="outline" 
                       size="sm"
                       className="flex items-center space-x-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                      onClick={() => handleDetailsClick(case_)}
                     >
                       <span>Ver Detalhes</span>
                       <ArrowRight className="h-4 w-4" />
@@ -268,6 +276,18 @@ const PortalCases = () => {
             setSelectedCaseForUpload(null);
           }}
           onUploadComplete={handleUploadComplete}
+        />
+      )}
+
+      {/* Case Details Modal */}
+      {selectedCaseForDetails && (
+        <CaseDetailsModal
+          case_={selectedCaseForDetails}
+          isOpen={detailsModalOpen}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedCaseForDetails(null);
+          }}
         />
       )}
     </div>
