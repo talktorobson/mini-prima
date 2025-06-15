@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useClientData } from '@/hooks/useClientData';
 import { financialService } from '@/services/database';
 import { exportFinancialRecordsToExcel } from '@/utils/excelExport';
+import FinancialRecordModal from '@/components/FinancialRecordModal';
 
 type FilterType = 'all' | 'pending' | 'paid' | 'overdue';
 
@@ -29,6 +30,8 @@ const PortalFinancial = () => {
   
   const [activeTab, setActiveTab] = useState('pending');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { data: financialRecords = [], isLoading } = useQuery({
     queryKey: ['financial-records'],
@@ -70,6 +73,11 @@ const PortalFinancial = () => {
     } else {
       setActiveTab('all');
     }
+  };
+
+  const handleRecordClick = (record: any) => {
+    setSelectedRecord(record);
+    setIsModalOpen(true);
   };
 
   const handleExportToExcel = () => {
@@ -288,7 +296,11 @@ const PortalFinancial = () => {
               <TabsContent value="pending" className="space-y-4">
                 {(activeFilter === 'all' ? pendingRecords : activeFilter === 'pending' || activeFilter === 'overdue' ? filteredRecords : []).length > 0 ? (
                   (activeFilter === 'all' ? pendingRecords : activeFilter === 'pending' || activeFilter === 'overdue' ? filteredRecords : []).map((record) => (
-                    <div key={record.id} className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div 
+                      key={record.id} 
+                      className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-600/50 transition-colors"
+                      onClick={() => handleRecordClick(record)}
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           {getStatusIcon(record.status)}
@@ -352,7 +364,11 @@ const PortalFinancial = () => {
               <TabsContent value="paid" className="space-y-4">
                 {(activeFilter === 'all' ? paidRecords : activeFilter === 'paid' ? filteredRecords : []).length > 0 ? (
                   (activeFilter === 'all' ? paidRecords : activeFilter === 'paid' ? filteredRecords : []).map((record) => (
-                    <div key={record.id} className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div 
+                      key={record.id} 
+                      className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-600/50 transition-colors"
+                      onClick={() => handleRecordClick(record)}
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           {getStatusIcon(record.status)}
@@ -407,7 +423,11 @@ const PortalFinancial = () => {
               <TabsContent value="all" className="space-y-4">
                 {filteredRecords.length > 0 ? (
                   filteredRecords.map((record) => (
-                    <div key={record.id} className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div 
+                      key={record.id} 
+                      className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-600/50 transition-colors"
+                      onClick={() => handleRecordClick(record)}
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           {getStatusIcon(record.status)}
@@ -463,6 +483,13 @@ const PortalFinancial = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Financial Record Modal */}
+        <FinancialRecordModal
+          record={selectedRecord}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </main>
     </div>
   );
