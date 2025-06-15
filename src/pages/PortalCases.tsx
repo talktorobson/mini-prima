@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, ArrowRight, Upload, Scale, Search } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, ArrowRight, Upload, Scale, Search, Filter, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { casesService } from '@/services/database';
@@ -16,6 +17,12 @@ const PortalCases = () => {
   const [selectedCaseForDetails, setSelectedCaseForDetails] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filter states
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [riskFilter, setRiskFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
 
   // Fetch cases from database with proper error handling
   const { data: cases = [], isLoading, error, refetch } = useQuery({
@@ -27,35 +34,61 @@ const PortalCases = () => {
 
   console.log('Cases query state:', { cases, isLoading, error });
 
-  // Filter cases based on search query
+  // Filter cases based on search query and filters
   const filteredCases = useMemo(() => {
-    if (!searchQuery.trim()) return cases;
+    let filtered = cases;
     
-    const query = searchQuery.toLowerCase().trim();
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      
+      filtered = filtered.filter((case_: any) => {
+        // Search in counterparty name
+        if (case_.counterparty_name?.toLowerCase().includes(query)) return true;
+        
+        // Search in case number/ID
+        if (case_.case_number?.toLowerCase().includes(query)) return true;
+        if (case_.id?.toLowerCase().includes(query)) return true;
+        
+        // Search in opposing party (same as counterparty)
+        if (case_.opposing_party?.toLowerCase().includes(query)) return true;
+        
+        // Search in risk level
+        if (case_.risk_level?.toLowerCase().includes(query)) return true;
+        
+        // Search in case risk value (convert to string and search)
+        if (case_.case_risk_value?.toString().includes(query)) return true;
+        
+        // Search in case title
+        if (case_.case_title?.toLowerCase().includes(query)) return true;
+        
+        return false;
+      });
+    }
     
-    return cases.filter((case_: any) => {
-      // Search in counterparty name
-      if (case_.counterparty_name?.toLowerCase().includes(query)) return true;
-      
-      // Search in case number/ID
-      if (case_.case_number?.toLowerCase().includes(query)) return true;
-      if (case_.id?.toLowerCase().includes(query)) return true;
-      
-      // Search in opposing party (same as counterparty)
-      if (case_.opposing_party?.toLowerCase().includes(query)) return true;
-      
-      // Search in risk level
-      if (case_.risk_level?.toLowerCase().includes(query)) return true;
-      
-      // Search in case risk value (convert to string and search)
-      if (case_.case_risk_value?.toString().includes(query)) return true;
-      
-      // Search in case title
-      if (case_.case_title?.toLowerCase().includes(query)) return true;
-      
-      return false;
-    });
-  }, [cases, searchQuery]);
+    // Apply status filter
+    if (statusFilter) {
+      filtered = filtered.filter((case_: any) => 
+        case_.status?.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+    
+    // Apply risk filter
+    if (riskFilter) {
+      filtered = filtered.filter((case_: any) => 
+        case_.risk_level?.toLowerCase() === riskFilter.toLowerCase()
+      );
+    }
+    
+    // Apply priority filter
+    if (priorityFilter) {
+      filtered = filtered.filter((case_: any) => 
+        case_.priority?.toLowerCase() === priorityFilter.toLowerCase()
+      );
+    }
+    
+    return filtered;
+  }, [cases, searchQuery, statusFilter, riskFilter, priorityFilter]);
 
   const handleUploadClick = (caseId: string, caseTitle: string) => {
     setSelectedCaseForUpload({ id: caseId, title: caseTitle });
@@ -71,6 +104,57 @@ const PortalCases = () => {
     // Optionally refetch data or update UI
     console.log('Upload completed successfully');
   };
+
+  const handleExport = () => {
+    // Create CSV content
+    const headers = [
+      'Título do Caso',
+      'Número do Caso',
+      'Parte Contrária',
+      'Status',
+      'Prioridade',
+      'Risco',
+      'Valor da Causa',
+      'Tribunal',
+      'Data de Criação'
+    ];
+    
+    const csvData = filteredCases.map((case_: any) => [
+      case_.case_title || 'N/A',
+      case_.case_number || 'N/A',
+      case_.counterparty_name || 'N/A',
+      getStatusDisplayName(case_.status),
+      getPriorityDisplayName(case_.priority),
+      getRiskDisplayName(case_.risk_level),
+      case_.case_risk_value ? formatCurrency(Number(case_.case_risk_value)) : 'N/A',
+      case_.court_agency || 'N/A',
+      new Date(case_.created_at).toLocaleDateString('pt-BR')
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `casos-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const clearAllFilters = () => {
+    setStatusFilter('');
+    setRiskFilter('');
+    setPriorityFilter('');
+    setSearchQuery('');
+  };
+
+  const hasActiveFilters = statusFilter || riskFilter || priorityFilter || searchQuery;
 
   const formatCurrency = (value: number | null) => {
     if (!value) return 'N/A';
@@ -186,11 +270,97 @@ const PortalCases = () => {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Filtros
-              </Button>
-              <Button size="sm" variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
-                Exportar
+              <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    className={`${hasActiveFilters ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} text-white flex items-center space-x-2`}
+                  >
+                    <Filter className="h-4 w-4" />
+                    <span>Filtros</span>
+                    {hasActiveFilters && (
+                      <span className="bg-white text-blue-600 rounded-full px-2 py-0.5 text-xs font-medium">
+                        {[statusFilter, riskFilter, priorityFilter, searchQuery].filter(Boolean).length}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Filtros</h4>
+                      {hasActiveFilters && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={clearAllFilters}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          Limpar tudo
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
+                        <select 
+                          value={statusFilter} 
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="">Todos os status</option>
+                          <option value="open">Aberto</option>
+                          <option value="in progress">Em Andamento</option>
+                          <option value="waiting client">Aguardando Cliente</option>
+                          <option value="waiting court">Aguardando Tribunal</option>
+                          <option value="on hold">Pausado</option>
+                          <option value="closed - won">Fechado - Ganho</option>
+                          <option value="closed - lost">Fechado - Perdido</option>
+                          <option value="cancelled">Cancelado</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Nível de Risco</label>
+                        <select 
+                          value={riskFilter} 
+                          onChange={(e) => setRiskFilter(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="">Todos os riscos</option>
+                          <option value="low">Baixo</option>
+                          <option value="medium">Médio</option>
+                          <option value="high">Alto</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Prioridade</label>
+                        <select 
+                          value={priorityFilter} 
+                          onChange={(e) => setPriorityFilter(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="">Todas as prioridades</option>
+                          <option value="low">Baixa</option>
+                          <option value="medium">Média</option>
+                          <option value="high">Alta</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-300 text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
+                onClick={handleExport}
+              >
+                <Download className="h-4 w-4" />
+                <span>Exportar</span>
               </Button>
             </div>
           </div>
@@ -210,9 +380,19 @@ const PortalCases = () => {
               className="pl-10 pr-4 py-2 w-full"
             />
           </div>
-          {searchQuery && (
+          {(searchQuery || statusFilter || riskFilter || priorityFilter) && (
             <p className="mt-2 text-sm text-gray-600">
               Mostrando {filteredCases.length} de {cases.length} casos
+              {hasActiveFilters && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearAllFilters}
+                  className="ml-2 text-blue-600 hover:text-blue-700 p-0 underline"
+                >
+                  (limpar filtros)
+                </Button>
+              )}
             </p>
           )}
         </div>
@@ -221,21 +401,21 @@ const PortalCases = () => {
           <div className="text-center py-12">
             <Scale className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {searchQuery ? 'Nenhum caso encontrado para esta busca' : 'Nenhum caso encontrado'}
+              {searchQuery || statusFilter || riskFilter || priorityFilter ? 'Nenhum caso encontrado para esta busca' : 'Nenhum caso encontrado'}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchQuery 
-                ? 'Tente usar termos diferentes ou limpe a busca.' 
+              {searchQuery || statusFilter || riskFilter || priorityFilter
+                ? 'Tente usar termos diferentes ou limpe os filtros.' 
                 : 'Você não possui casos associados no momento.'
               }
             </p>
-            {searchQuery && (
+            {hasActiveFilters && (
               <Button 
                 variant="outline" 
-                onClick={() => setSearchQuery('')}
+                onClick={clearAllFilters}
                 className="mt-4"
               >
-                Limpar busca
+                Limpar filtros
               </Button>
             )}
           </div>
