@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagesService, clientService } from '@/services/database';
 import { useAuth } from '@/contexts/AuthContext';
+import PortalNotificationList from "@/components/PortalNotificationList";
 
 interface Message {
   id: string;
@@ -140,6 +140,26 @@ const PortalMessages = () => {
     }, 2000);
   };
 
+  // Fetch notifications for this client
+  const { data: notifications = [], isLoading: loadingNotifications } = useQuery({
+    queryKey: ["portal-notifications", client?.id],
+    queryFn: async () => {
+      if (!client?.id) return [];
+      // Load from Supabase
+      const { data, error } = await window.supabase
+        .from("portal_notifications")
+        .select("*")
+        .eq("client_id", client.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        return [];
+      }
+      return data;
+    },
+    enabled: !!client?.id && !isChatActive,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -259,47 +279,18 @@ const PortalMessages = () => {
               <CardTitle className="flex items-center space-x-2 text-lg">
                 <Bell className="h-5 w-5" />
                 <span>Notificações do Sistema</span>
-                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">{notifications.length}</span>
               </CardTitle>
             </CardHeader>
             
             <CardContent className="flex-1 p-4 overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <Bell className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-900">Novo documento disponível</h4>
-                        <p className="text-blue-700 text-sm mt-1">Um novo documento foi adicionado ao seu caso #12345.</p>
-                        <span className="text-xs text-blue-600">Há 2 horas</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <Bell className="h-5 w-5 text-yellow-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-yellow-900">Prazo importante</h4>
-                        <p className="text-yellow-700 text-sm mt-1">Lembrete: prazo para envio de documentos é amanhã.</p>
-                        <span className="text-xs text-yellow-600">Há 1 dia</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <Bell className="h-5 w-5 text-green-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-green-900">Processo atualizado</h4>
-                        <p className="text-green-700 text-sm mt-1">Seu processo teve uma atualização de status.</p>
-                        <span className="text-xs text-green-600">Há 3 dias</span>
-                      </div>
-                    </div>
-                  </div>
+              {loadingNotifications ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-              </ScrollArea>
+              ) : (
+                <PortalNotificationList notifications={notifications} />
+              )}
             </CardContent>
           </Card>
         )}
