@@ -63,6 +63,7 @@ export type Database = {
           assigned_lawyer: string | null
           case_number: string
           case_number_external: string | null
+          case_risk_value: number | null
           case_title: string
           client_id: string
           client_satisfaction: number | null
@@ -100,6 +101,7 @@ export type Database = {
           assigned_lawyer?: string | null
           case_number: string
           case_number_external?: string | null
+          case_risk_value?: number | null
           case_title: string
           client_id: string
           client_satisfaction?: number | null
@@ -137,6 +139,7 @@ export type Database = {
           assigned_lawyer?: string | null
           case_number?: string
           case_number_external?: string | null
+          case_risk_value?: number | null
           case_title?: string
           client_id?: string
           client_satisfaction?: number | null

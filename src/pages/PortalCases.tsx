@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,6 +92,24 @@ const PortalCases = () => {
       case 'Medium': return 'Média';
       case 'Low': return 'Baixa';
       default: return priority;
+    }
+  };
+
+  const getRiskDisplayName = (risk: string) => {
+    switch (risk) {
+      case 'High': return 'Alto';
+      case 'Medium': return 'Médio';
+      case 'Low': return 'Baixo';
+      default: return risk || 'N/A';
+    }
+  };
+
+  const getRiskColor = (risk: string) => {
+    switch (risk?.toLowerCase()) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-orange-100 text-orange-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -191,28 +210,26 @@ const PortalCases = () => {
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Detalhes do Caso</h4>
                       <div className="space-y-1 text-sm text-gray-600">
-                        <p><span className="font-medium">Serviço:</span> {case_.service_type || 'N/A'}</p>
-                        <p><span className="font-medium">Responsável:</span> {case_.assigned_lawyer || 'N/A'}</p>
                         {case_.counterparty_name && (
                           <p><span className="font-medium">Parte Contrária:</span> {case_.counterparty_name}</p>
                         )}
                         {case_.court_agency && (
                           <p><span className="font-medium">Tribunal:</span> {case_.court_agency}</p>
                         )}
+                        <p>
+                          <span className="font-medium">Risco:</span> 
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(case_.risk_level)}`}>
+                            {getRiskDisplayName(case_.risk_level)}
+                          </span>
+                        </p>
                       </div>
                     </div>
                     
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Informações Financeiras</h4>
+                      <h4 className="font-medium text-gray-900 mb-2">Informações do Processo</h4>
                       <div className="space-y-1 text-sm text-gray-600">
-                        {case_.total_value && (
-                          <p><span className="font-medium">Valor Total:</span> {formatCurrency(Number(case_.total_value))}</p>
-                        )}
-                        {case_.fixed_fee && (
-                          <p><span className="font-medium">Taxa Fixa:</span> {formatCurrency(Number(case_.fixed_fee))}</p>
-                        )}
-                        {case_.hourly_rate && (
-                          <p><span className="font-medium">Valor/Hora:</span> {formatCurrency(Number(case_.hourly_rate))}</p>
+                        {case_.case_risk_value && (
+                          <p><span className="font-medium">Valor da Causa (pleiteado):</span> {formatCurrency(Number(case_.case_risk_value))}</p>
                         )}
                       </div>
                     </div>

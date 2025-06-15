@@ -129,6 +129,14 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                     <span>{case_.court_agency}</span>
                   </div>
                 )}
+                {case_.case_risk_value && (
+                  <div className="flex justify-between">
+                    <span className="font-medium">Valor da Causa (pleiteado):</span>
+                    <span className="text-lg font-semibold text-green-600">
+                      {formatCurrency(Number(case_.case_risk_value))}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
