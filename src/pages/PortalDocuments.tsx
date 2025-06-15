@@ -102,6 +102,13 @@ const PortalDocuments = () => {
     }
   }
 
+  // Helper function to get display label for document type
+  function getDocumentTypeDisplayLabel(docType: string) {
+    if (docType === 'General Document') return 'Documento Escritório';
+    if (docType === 'Case Document') return 'Documento Processo';
+    return docType; // Return original type for other cases
+  }
+
   // Filter documents based on search criteria
   const filteredDocuments = useMemo(() => {
     return allDocuments.filter(doc => {
@@ -284,7 +291,7 @@ const PortalDocuments = () => {
                       <div className="min-w-0 flex-1">
                         <h3 className="font-medium text-gray-900 text-xs sm:text-sm break-words leading-tight">{doc.document_name}</h3>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs text-gray-600 mt-1 space-y-1 sm:space-y-0">
-                          <span>{doc.document_type}</span>
+                          <span>{getDocumentTypeDisplayLabel(doc.document_type)}</span>
                           <span className="hidden sm:inline">•</span>
                           <span>{formatFileSize(doc.file_size || 0)}</span>
                           <span className="hidden sm:inline">•</span>
