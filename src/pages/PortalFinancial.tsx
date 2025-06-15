@@ -11,12 +11,14 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useClientData } from '@/hooks/useClientData';
 import { financialService } from '@/services/database';
+import { exportFinancialRecordsToExcel } from '@/utils/excelExport';
 
 type FilterType = 'all' | 'pending' | 'paid' | 'overdue';
 
@@ -68,6 +70,11 @@ const PortalFinancial = () => {
     } else {
       setActiveTab('all');
     }
+  };
+
+  const handleExportToExcel = () => {
+    const filteredRecords = getFilteredRecords();
+    exportFinancialRecordsToExcel(filteredRecords, activeFilter);
   };
 
   const getStatusIcon = (status: string) => {
@@ -131,6 +138,16 @@ const PortalFinancial = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Export Button */}
+            <Button
+              onClick={handleExportToExcel}
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={filteredRecords.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
           </div>
         </div>
       </header>
@@ -213,35 +230,45 @@ const PortalFinancial = () => {
 
         {/* Active Filter Indicator */}
         {activeFilter !== 'all' && (
-          <div className="mb-4 flex items-center space-x-2">
-            <span className="text-sm text-slate-400">Filtro ativo:</span>
-            <Badge variant="outline" className="text-white border-orange-400">
-              {activeFilter === 'pending' && 'Pendentes'}
-              {activeFilter === 'paid' && 'Pagos'}
-              {activeFilter === 'overdue' && 'Em Atraso'}
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCardClick('all')}
-              className="text-orange-300 hover:text-orange-200"
-            >
-              Limpar filtro
-            </Button>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-slate-400">Filtro ativo:</span>
+              <Badge variant="outline" className="text-white border-orange-400">
+                {activeFilter === 'pending' && 'Pendentes'}
+                {activeFilter === 'paid' && 'Pagos'}
+                {activeFilter === 'overdue' && 'Em Atraso'}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCardClick('all')}
+                className="text-orange-300 hover:text-orange-200"
+              >
+                Limpar filtro
+              </Button>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-slate-400">
+                {filteredRecords.length} registro(s) selecionado(s)
+              </span>
+            </div>
           </div>
         )}
 
         {/* Financial Records */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-xl text-white flex items-center space-x-2">
-              <FileText className="h-5 w-5 text-orange-400" />
-              <span>Registros Financeiros</span>
-              {filteredRecords.length !== financialRecords.length && (
-                <span className="text-sm text-slate-400">
-                  ({filteredRecords.length} de {financialRecords.length})
-                </span>
-              )}
+            <CardTitle className="text-xl text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-orange-400" />
+                <span>Registros Financeiros</span>
+                {filteredRecords.length !== financialRecords.length && (
+                  <span className="text-sm text-slate-400">
+                    ({filteredRecords.length} de {financialRecords.length})
+                  </span>
+                )}
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
