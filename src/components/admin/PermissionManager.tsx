@@ -72,7 +72,8 @@ const PermissionManager = () => {
 
   const fetchPermissions = async () => {
     try {
-      const { data, error } = await supabase
+      // Using type assertion to work around TypeScript issues until types are regenerated
+      const { data, error } = await (supabase as any)
         .from('staff_access_permissions')
         .select('*')
         .eq('is_active', true);
@@ -114,7 +115,7 @@ const PermissionManager = () => {
       if (!currentUser.user) throw new Error('Usuário não autenticado');
 
       // Remove existing permissions first
-      await supabase
+      await (supabase as any)
         .from('staff_access_permissions')
         .delete()
         .eq('staff_id', selectedStaff);
@@ -127,7 +128,7 @@ const PermissionManager = () => {
         is_active: true
       }));
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('staff_access_permissions')
         .insert(permissionsToInsert);
 
@@ -155,7 +156,7 @@ const PermissionManager = () => {
 
   const revokePermission = async (staffId: string, accessType: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('staff_access_permissions')
         .delete()
         .eq('staff_id', staffId)

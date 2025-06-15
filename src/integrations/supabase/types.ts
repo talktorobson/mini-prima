@@ -1015,6 +1015,47 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_access_permissions: {
+        Row: {
+          access_type: Database["public"]["Enums"]["access_type"]
+          created_at: string | null
+          granted_at: string | null
+          granted_by: string
+          id: string
+          is_active: boolean | null
+          staff_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_type: Database["public"]["Enums"]["access_type"]
+          created_at?: string | null
+          granted_at?: string | null
+          granted_by: string
+          id?: string
+          is_active?: boolean | null
+          staff_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_type?: Database["public"]["Enums"]["access_type"]
+          created_at?: string | null
+          granted_at?: string | null
+          granted_by?: string
+          id?: string
+          is_active?: boolean | null
+          staff_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_access_permissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string
@@ -1142,6 +1183,13 @@ export type Database = {
     }
     Enums: {
       access_action: "view" | "download" | "preview"
+      access_type:
+        | "client_access"
+        | "billing"
+        | "messaging"
+        | "cases_management"
+        | "document_management"
+        | "system_setup"
       admin_role: "admin" | "staff"
       case_status:
         | "Open"
@@ -1305,6 +1353,14 @@ export const Constants = {
   public: {
     Enums: {
       access_action: ["view", "download", "preview"],
+      access_type: [
+        "client_access",
+        "billing",
+        "messaging",
+        "cases_management",
+        "document_management",
+        "system_setup",
+      ],
       admin_role: ["admin", "staff"],
       case_status: [
         "Open",

@@ -50,7 +50,8 @@ export const useAdminPermissions = () => {
       }
 
       // For staff, fetch their specific permissions
-      const { data, error } = await supabase
+      // Using type assertion to work around TypeScript issues until types are regenerated
+      const { data, error } = await (supabase as any)
         .from('staff_access_permissions')
         .select('access_type')
         .eq('staff_id', adminUser.staff_id)
@@ -62,7 +63,7 @@ export const useAdminPermissions = () => {
         return;
       }
 
-      setPermissions(data.map(p => p.access_type as AccessType));
+      setPermissions(data.map((p: any) => p.access_type as AccessType));
     } catch (error) {
       console.error('Error fetching permissions:', error);
       setPermissions([]);
