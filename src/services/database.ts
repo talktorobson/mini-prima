@@ -1,24 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
-// Initialize storage bucket
+// Initialize storage bucket - simplified version that doesn't try to create buckets
 export const initializeStorage = async () => {
-  // Check if bucket exists, create if not
-  const { data: buckets } = await supabase.storage.listBuckets();
-  const bucketExists = buckets?.some(bucket => bucket.name === 'case-documents');
-  
-  if (!bucketExists) {
-    const { error } = await supabase.storage.createBucket('case-documents', {
-      public: false,
-      allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
-      fileSizeLimit: 50 * 1024 * 1024 // 50MB
-    });
+  try {
+    // Just check if bucket exists, don't try to create it
+    const { data: buckets, error } = await supabase.storage.listBuckets();
     
     if (error) {
-      console.error('Error creating storage bucket:', error);
-    } else {
-      console.log('Storage bucket created successfully');
+      console.error('Error checking storage buckets:', error);
+      return;
     }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === 'case-documents');
+    
+    if (bucketExists) {
+      console.log('Storage bucket case-documents already exists');
+    } else {
+      console.log('Storage bucket case-documents does not exist - it should be created via SQL migration');
+    }
+  } catch (error) {
+    console.error('Error initializing storage:', error);
   }
 };
 
