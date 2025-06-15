@@ -159,7 +159,7 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                     </div>
                   )}
                   
-                  {/* Moved Responsáveis section here */}
+                  {/* Responsáveis section */}
                   <div className="pt-2 border-t border-gray-200">
                     <div className="grid grid-cols-2 gap-2">
                       <span className="font-medium text-gray-600">Advogado:</span>
@@ -171,9 +171,15 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                         <span className="text-gray-900">{case_.counterparty_name}</span>
                       </div>
                     )}
+                    {case_.opposing_party && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <span className="font-medium text-gray-600">Advogado da parte:</span>
+                        <span className="text-gray-900">{case_.opposing_party}</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Moved metadata section here */}
+                  {/* Metadata section */}
                   <div className="pt-2 border-t border-gray-200">
                     <div className="grid grid-cols-2 gap-2">
                       <span className="font-medium text-gray-600">Criado em:</span>
@@ -192,42 +198,6 @@ const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({ case_, isOpen, onCl
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <Calendar className="h-5 w-5 mr-2" />
-                  Cronograma
-                </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <span className="font-medium text-gray-600">Data de Início:</span>
-                    <span className="text-gray-900">{case_.start_date ? new Date(case_.start_date).toLocaleDateString('pt-BR') : 'N/A'}</span>
-                  </div>
-                  {case_.actual_close_date && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="font-medium text-gray-600">Data de Conclusão:</span>
-                      <span className="text-gray-900">{new Date(case_.actual_close_date).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                  )}
-                  {(case_.hours_budgeted || case_.hours_worked) && (
-                    <div className="pt-2 border-t border-gray-200">
-                      {case_.hours_budgeted && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <span className="font-medium text-gray-600">Horas Orçadas:</span>
-                          <span className="text-gray-900">{case_.hours_budgeted}h</span>
-                        </div>
-                      )}
-                      {case_.hours_worked && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <span className="font-medium text-gray-600">Horas Trabalhadas:</span>
-                          <span className="text-gray-900">{case_.hours_worked}h</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
 
