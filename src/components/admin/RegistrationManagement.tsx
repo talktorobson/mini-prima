@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,10 +45,13 @@ interface Client {
   reference_source?: string;
 }
 
+type RegistrationStatus = 'pending' | 'approved' | 'rejected' | 'under_review';
+type FilterStatus = 'all' | RegistrationStatus;
+
 const RegistrationManagement = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [statusUpdateReason, setStatusUpdateReason] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -83,7 +85,7 @@ const RegistrationManagement = () => {
     try {
       await clientRegistrationService.updateRegistrationStatus(
         clientId, 
-        newStatus as 'pending' | 'approved' | 'rejected' | 'under_review', 
+        newStatus as RegistrationStatus, 
         statusUpdateReason
       );
 
@@ -149,7 +151,7 @@ const RegistrationManagement = () => {
           <h2 className="text-2xl font-bold text-gray-900">Gestão de Cadastros</h2>
           <p className="text-gray-600">Gerencie solicitações de cadastro de novos clientes</p>
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus} onValueChange={(value: FilterStatus) => setFilterStatus(value)}>
           <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
