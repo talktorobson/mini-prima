@@ -1,5 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
+
+// Initialize storage bucket
+export const initializeStorage = async () => {
+  // Check if bucket exists, create if not
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const bucketExists = buckets?.some(bucket => bucket.name === 'case-documents');
+  
+  if (!bucketExists) {
+    const { error } = await supabase.storage.createBucket('case-documents', {
+      public: false,
+      allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
+      fileSizeLimit: 50 * 1024 * 1024 // 50MB
+    });
+    
+    if (error) {
+      console.error('Error creating storage bucket:', error);
+    } else {
+      console.log('Storage bucket created successfully');
+    }
+  }
+};
 
 // Messages service
 export const messagesService = {

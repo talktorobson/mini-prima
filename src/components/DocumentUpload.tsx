@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { clientService } from '@/services/database';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentUploadProps {
@@ -85,24 +86,46 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setUploading(true);
 
     try {
+      // Get current user and client
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('Getting current client...');
+      const client = await clientService.getCurrentClient();
+      if (!client) {
+        throw new Error('Cliente não encontrado');
+      }
+
+      console.log('Client found:', client.id);
 
       const uploadPromises = selectedFiles.map(async ({ file, category }) => {
         console.log(`Uploading file: ${file.name}, category: ${category}, case: ${caseId}`);
         
+        // Create a safe file path
+        const timestamp = Date.now();
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileName = `${user.id}/${caseId}/${timestamp}-${safeName}`;
+        
+        console.log('Uploading to storage path:', fileName);
+
         // Upload file to storage
-        const fileName = `${user.id}/${caseId}/${Date.now()}-${file.name}`;
         const { error: uploadError } = await supabase.storage
           .from('case-documents')
-          .upload(fileName, file);
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error('Storage upload error:', uploadError);
           throw uploadError;
         }
 
-        // Create document record
+        console.log('File uploaded successfully, creating document record...');
+
+        // Create document record with client_id
         const { error: insertError } = await supabase
           .from('documents')
           .insert({
@@ -113,6 +136,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             document_category: category,
             file_size: file.size,
             case_id: caseId,
+            client_id: client.id, // This is crucial for RLS
             status: 'Draft',
             is_visible_to_client: true
           });
@@ -122,6 +146,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           throw insertError;
         }
 
+        console.log('Document record created successfully');
         return file.name;
       });
 
@@ -139,7 +164,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       console.error('Error uploading files:', error);
       toast({
         title: "Erro",
-        description: "Erro ao enviar documentos. Tente novamente.",
+        description: `Erro ao enviar documentos: ${error.message}`,
         variant: "destructive"
       });
     } finally {
