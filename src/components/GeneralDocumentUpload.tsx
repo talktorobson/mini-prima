@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/useToast';
 import { clientService, casesService } from '@/services/database';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { getDocumentTypeDisplayLabel } from '@/lib/documentUtils';
 
 interface GeneralDocumentUploadProps {
   isOpen: boolean;
@@ -277,7 +278,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="general" className="text-xs">
-                              Documento Geral
+                              {getDocumentTypeDisplayLabel('General Document')}
                             </SelectItem>
                             <SelectItem value="administrative" className="text-xs">
                               Financeiro D'avila Reis Advogados

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { clientService } from '@/services/database';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { getDocumentTypeDisplayLabel } from '@/lib/documentUtils';
 
 interface DocumentUploadProps {
   caseId: string;

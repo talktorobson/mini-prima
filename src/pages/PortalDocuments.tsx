@@ -8,6 +8,7 @@ import DocumentSearch from '@/components/DocumentSearch';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
 import GeneralDocumentUpload from '@/components/GeneralDocumentUpload';
 import { getDocumentPreviewUrl, downloadDocument } from '@/services/documentPreview';
+import { getDocumentTypeDisplayLabel } from '@/lib/documentUtils';
 import { useToast } from '@/hooks/useToast';
 
 interface SearchFilters {
