@@ -58,11 +58,35 @@ const Portal = () => {
     enabled: !!client
   });
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: notificationsService.getNotifications,
-    enabled: !!client
+  const { data: notifications = [], isLoading: notificationsLoading, error: notificationsError } = useQuery({
+    queryKey: ['notifications', client?.id],
+    queryFn: async () => {
+      console.log('Fetching notifications for client:', client?.id);
+      if (!client?.id) {
+        console.log('No client ID available for notifications');
+        return [];
+      }
+      try {
+        const result = await notificationsService.getNotifications();
+        console.log('Notifications fetched successfully:', result);
+        return result;
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        throw error;
+      }
+    },
+    enabled: !!client?.id
   });
+
+  // Log notifications data for debugging
+  React.useEffect(() => {
+    console.log('Notifications state:', {
+      notifications,
+      isLoading: notificationsLoading,
+      error: notificationsError,
+      clientId: client?.id
+    });
+  }, [notifications, notificationsLoading, notificationsError, client?.id]);
 
   const handleLogout = async () => {
     await signOut();
@@ -229,12 +253,16 @@ const Portal = () => {
 
   const handleNotificationsClick = () => {
     console.log('Viewing all notifications');
-    // Could navigate to notifications page or show modal
+    navigate('/portal/messages');
   };
 
   const handleNotificationClick = (notificationId: string) => {
     console.log('Viewing notification:', notificationId);
-    // Could mark as read and show details
+    // Mark as read and navigate to messages
+    if (notificationId) {
+      notificationsService.markAsRead(notificationId).catch(console.error);
+    }
+    navigate('/portal/messages');
   };
 
   if (clientLoading) {
@@ -249,6 +277,14 @@ const Portal = () => {
   const unreadNotifications = notifications.filter(n => !n.is_read);
   const pendingInvoices = financialRecords.filter(f => f.status === 'Pending');
   const totalPending = pendingInvoices.reduce((sum, record) => sum + (record.amount || 0), 0);
+
+  // Debug logging for notifications
+  console.log('Rendering Portal with notifications:', {
+    total: notifications.length,
+    unread: unreadNotifications.length,
+    notificationsError,
+    notificationsLoading
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
@@ -559,7 +595,14 @@ const Portal = () => {
               </p>
               
               <div className="space-y-3 max-h-[calc(100%-100px)] overflow-y-auto">
-                {notifications.length > 0 ? (
+                {notificationsLoading ? (
+                  <p className="text-slate-400 text-center py-8 text-sm">Carregando notificações...</p>
+                ) : notificationsError ? (
+                  <div className="text-center py-8">
+                    <p className="text-red-400 text-sm mb-2">Erro ao carregar notificações</p>
+                    <p className="text-slate-400 text-xs">{notificationsError.message}</p>
+                  </div>
+                ) : notifications.length > 0 ? (
                   notifications.slice(0, 6).map((notification) => (
                     <div 
                       key={notification.id} 

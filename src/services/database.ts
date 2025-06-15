@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Initialize storage bucket - simplified version that doesn't try to create buckets
@@ -329,28 +330,54 @@ export const financialService = {
 // Notifications service
 export const notificationsService = {
   async getNotifications() {
-    const client = await clientService.getCurrentClient();
-    if (!client) throw new Error('No client found');
+    try {
+      console.log('Starting getNotifications...');
+      const client = await clientService.getCurrentClient();
+      
+      if (!client || !client.id) {
+        console.log('No client found or no client ID for notifications');
+        return [];
+      }
 
-    const { data, error } = await supabase
-      .from('portal_notifications')
-      .select('*')
-      .eq('client_id', client.id)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+      console.log('Fetching notifications for client:', client.id);
+      
+      const { data, error } = await supabase
+        .from('portal_notifications')
+        .select('*')
+        .eq('client_id', client.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        throw error;
+      }
+      
+      console.log('Notifications data fetched:', data);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getNotifications:', error);
+      throw error;
+    }
   },
 
   async markAsRead(notificationId: string) {
-    const { data, error } = await supabase
-      .from('portal_notifications')
-      .update({ is_read: true, read_at: new Date().toISOString() })
-      .eq('id', notificationId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('portal_notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('id', notificationId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error marking notification as read:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in markAsRead:', error);
+      throw error;
+    }
   }
 };
