@@ -1,7 +1,6 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, FileText, Scale, DollarSign, MessagesSquare } from "lucide-react";
+import { Bell, FileText, Scale, DollarSign, MessagesSquare, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Notification {
@@ -19,16 +18,12 @@ interface Notification {
 function getColorByType(type: string) {
   switch (type) {
     case "document":
-    case "document_upload":
-    case "document_update":
       return "border-blue-200 bg-blue-50";
     case "case_update":
-    case "case":
       return "border-green-200 bg-green-50";
-    case "financial":
-    case "financial_record":
+    case "payment":
       return "border-yellow-200 bg-yellow-50";
-    case "reminder":
+    case "info":
       return "border-orange-200 bg-orange-50";
     case "message":
       return "border-purple-200 bg-purple-50";
@@ -40,17 +35,13 @@ function getColorByType(type: string) {
 function getIconByType(type: string) {
   switch (type) {
     case "document":
-    case "document_upload":
-    case "document_update":
       return <FileText className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />;
     case "case_update":
-    case "case":
       return <Scale className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />;
-    case "financial":
-    case "financial_record":
+    case "payment":
       return <DollarSign className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />;
-    case "reminder":
-      return <Bell className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />;
+    case "info":
+      return <Info className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />;
     case "message":
       return <MessagesSquare className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />;
     default:
@@ -83,12 +74,12 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
       return;
     }
     // fallback by type/metadata
-    if (notif.type.startsWith("case") && notif.metadata?.case_id) {
+    if (notif.type === "case_update" && notif.metadata?.case_id) {
       navigate(`/portal/cases?open=${notif.metadata.case_id}`);
-    } else if (notif.type.startsWith("document") && notif.metadata?.document_id) {
+    } else if (notif.type === "document" && notif.metadata?.document_id) {
       navigate(`/portal/documents?open=${notif.metadata.document_id}`);
     } else if (
-      (notif.type.startsWith("financial") || notif.type === "financial_record") &&
+      notif.type === "payment" &&
       notif.metadata?.financial_id
     ) {
       navigate(`/portal/financial?open=${notif.metadata.financial_id}`);
@@ -140,7 +131,7 @@ const PortalNotificationList: React.FC<{ notifications: Notification[] }> = ({
                           <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800">{notif.metadata.document_name}</span>
                         </div>
                       )}
-                      {(notif.type.startsWith("financial") || notif.type === "financial_record") && notif.metadata.description && (
+                      {notif.type === "payment" && notif.metadata.description && (
                         <div className="text-xs text-gray-600 flex items-center">
                           <span className="font-semibold w-24 flex-shrink-0">Referência:</span>
                           <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">{notif.metadata.description}</span>

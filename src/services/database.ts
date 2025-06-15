@@ -57,7 +57,7 @@ export const debugService = {
           client_id: clientId,
           title: 'Novo documento disponível',
           message: 'O Contrato Social v2 foi adicionado ao seu caso #C-2024-789.',
-          type: 'document_upload' as const,
+          type: 'document' as const,
           is_read: false,
           action_url: '/portal/documents?open=doc-id-1',
           metadata: {
@@ -82,7 +82,7 @@ export const debugService = {
           client_id: clientId,
           title: 'Lembrete importante',
           message: 'Prazo para envio de documentos para o caso #C-2024-101 é amanhã.',
-          type: 'reminder' as const,
+          type: 'info' as const,
           is_read: true,
           read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
           metadata: {
@@ -102,7 +102,7 @@ export const debugService = {
           client_id: clientId,
           title: 'Cobrança pendente',
           message: 'Você possui uma fatura em aberto no valor de R$ 2.500,00.',
-          type: 'financial_record' as const,
+          type: 'payment' as const,
           is_read: false,
           action_url: '/portal/financial?open=fin-id-1',
           metadata: {
