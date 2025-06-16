@@ -95,7 +95,7 @@ const ClientRoutes: React.FC = () => (
   <AuthProvider>
     <Routes>
       <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
-
+      <Route path="/mock" element={<MockHome />} />
       {/* Protected Portal Routes */}
       <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
       <Route path="/portal/cases" element={<ProtectedRoute><PortalCases /></ProtectedRoute>} />

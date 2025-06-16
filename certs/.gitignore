@@ -1,0 +1,30 @@
+# Certificate Security - Prevent accidental commits
+# NEVER commit actual certificates to version control
+
+# Certificate files
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Certificate backups
+*.bak
+*.backup
+
+# Certificate archives
+*.zip
+*.tar.gz
+*.tar
+
+# Temporary certificate files
+*.tmp
+*.temp
+
+# Certificate configuration files with sensitive data
+*-config.json
+*-secrets.json
+
+# Allow README and gitignore
+!README.md
+!.gitignore
