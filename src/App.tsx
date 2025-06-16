@@ -9,6 +9,9 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import MockHome from "./pages/MockHome";
+import MockHome1 from "./pages/MockHome1";
+import MockHome2 from "./pages/MockHome2";
+import MockHome3 from "./pages/MockHome3";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
 import PortalCases from "./pages/PortalCases";
@@ -96,7 +99,6 @@ const ClientRoutes: React.FC = () => (
     <Routes>
       <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
       <Route path="/mock" element={<MockHome />} />
-      
       {/* Protected Portal Routes */}
       <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
       <Route path="/portal/cases" element={<ProtectedRoute><PortalCases /></ProtectedRoute>} />
@@ -122,12 +124,18 @@ const AppRoutes: React.FC = () => (
   <Routes>
     {/* Unified login route with both auth contexts */}
     <Route path="/login" element={<UnifiedLogin />} />
-    
-    {/* Client Routes */}
-    <Route path="/*" element={<ClientRoutes />} />
-    
+
+    {/* Mock marketing homepages */}
+    <Route path="/mock" element={<MockHome />} />
+    <Route path="/mock1" element={<MockHome1 />} />
+    <Route path="/mock2" element={<MockHome2 />} />
+    <Route path="/mock3" element={<MockHome3 />} />
+
     {/* Admin Routes */}
     <Route path="/admin/*" element={<AdminRoutes />} />
+
+    {/* Client Routes */}
+    <Route path="/*" element={<ClientRoutes />} />
     
     {/* Catch-all 404 route */}
     <Route path="*" element={<NotFound />} />
