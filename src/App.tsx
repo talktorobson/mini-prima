@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
+import MockHome from "./pages/MockHome";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
 import PortalCases from "./pages/PortalCases";
@@ -94,6 +95,7 @@ const ClientRoutes: React.FC = () => (
   <AuthProvider>
     <Routes>
       <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
+      <Route path="/mock" element={<MockHome />} />
       
       {/* Protected Portal Routes */}
       <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
