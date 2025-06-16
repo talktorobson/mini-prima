@@ -1,4 +1,4 @@
-# CLAUDE.md - Direito Moderno Brasil (D'Avila Reis Legal Practice Management System)
+# CLAUDE.md - Mini Prima (D'Avila Reis Legal Practice Management System)
 
 ## Project Overview
 
