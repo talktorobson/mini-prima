@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Center - D'Avila Reis Legal-as-a-Service Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h1 class="text-3xl font-bold text-red-600 mb-2">🧪 Legal-as-a-Service Test Center</h1>
+            <p class="text-gray-600">D'Avila Reis Advogados - Hybrid Billing & Subscription Platform</p>
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <strong>Status:</strong> <span id="connection-status" class="font-mono">Checking...</span> | 
+                    <strong>Environment:</strong> Development | 
+                    <strong>Database:</strong> <span id="db-status">Testing...</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Test Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Phase 1: Subscription Management -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-green-600 mb-4">📋 Phase 1: Subscription Management</h2>
+                
+                <div class="space-y-4">
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Subscription Plans</h3>
+                        <div class="space-y-2" id="subscription-plans">
+                            <div class="text-sm text-gray-500">Loading plans...</div>
+                        </div>
+                        <button onclick="testSubscriptionPlans()" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            Test Plans
+                        </button>
+                    </div>
+
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Client Subscriptions</h3>
+                        <div class="space-y-2" id="client-subscriptions">
+                            <div class="text-sm text-gray-500">Loading subscriptions...</div>
+                        </div>
+                        <button onclick="testClientSubscriptions()" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            Test Subscriptions
+                        </button>
+                    </div>
+
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Usage Tracking</h3>
+                        <div class="space-y-2" id="usage-tracking">
+                            <div class="text-sm text-gray-500">Loading usage data...</div>
+                        </div>
+                        <button onclick="testUsageTracking()" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            Test Usage
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2: Payment Plans & Discounts -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-blue-600 mb-4">💳 Phase 2: Payment Plans & Discounts</h2>
+                
+                <div class="space-y-4">
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Payment Plan Calculator</h3>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <label>Amount (R$):</label>
+                            <input type="number" id="payment-amount" class="border rounded px-2 py-1" value="15000">
+                            <label>Installments:</label>
+                            <input type="number" id="payment-installments" class="border rounded px-2 py-1" value="6">
+                            <label>Interest (%):</label>
+                            <input type="number" id="payment-interest" class="border rounded px-2 py-1" value="2" step="0.1">
+                        </div>
+                        <button onclick="calculatePaymentPlan()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Calculate Plan
+                        </button>
+                        <div id="payment-result" class="mt-2 text-sm text-gray-600"></div>
+                    </div>
+
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Discount Engine</h3>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <label>Subscription Tier:</label>
+                            <select id="sub-tier" class="border rounded px-2 py-1">
+                                <option value="basic">Basic</option>
+                                <option value="professional">Professional</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                            <label>Litigation Type:</label>
+                            <select id="litigation-type" class="border rounded px-2 py-1">
+                                <option value="labor_litigation">Labor Litigation</option>
+                                <option value="corporate_litigation">Corporate Litigation</option>
+                                <option value="civil_litigation">Civil Litigation</option>
+                            </select>
+                            <label>Original Amount:</label>
+                            <input type="number" id="original-amount" class="border rounded px-2 py-1" value="10000">
+                        </div>
+                        <button onclick="calculateDiscount()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Calculate Discount
+                        </button>
+                        <div id="discount-result" class="mt-2 text-sm text-gray-600"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3: Business Intelligence -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-purple-600 mb-4">📊 Phase 3: Business Intelligence</h2>
+                
+                <div class="space-y-4">
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">MRR Tracking</h3>
+                        <div class="space-y-2" id="mrr-metrics">
+                            <div class="text-sm text-gray-500">Loading MRR data...</div>
+                        </div>
+                        <button onclick="testMRR()" class="mt-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                            Calculate MRR
+                        </button>
+                    </div>
+
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Cross-sell Analytics</h3>
+                        <div class="space-y-2" id="crosssell-metrics">
+                            <div class="text-sm text-gray-500">Loading cross-sell data...</div>
+                        </div>
+                        <button onclick="testCrossSell()" class="mt-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                            Analyze Cross-sell
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Testing -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-red-600 mb-4">🗄️ Database Testing</h2>
+                
+                <div class="space-y-4">
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Connection Status</h3>
+                        <div class="space-y-2" id="db-connection">
+                            <div class="text-sm text-gray-500">Testing connection...</div>
+                        </div>
+                        <button onclick="testDatabase()" class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                            Test Database
+                        </button>
+                    </div>
+
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-semibold mb-2">Schema Status</h3>
+                        <div class="space-y-2" id="schema-status">
+                            <div class="text-sm text-gray-500">Checking schema...</div>
+                        </div>
+                        <button onclick="checkSchema()" class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                            Check Schema
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Test Results</h2>
+            <div id="test-results" class="font-mono text-sm bg-gray-100 p-4 rounded-lg max-h-96 overflow-y-auto">
+                <div class="text-gray-500">Test results will appear here...</div>
+            </div>
+            <button onclick="clearResults()" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                Clear Results
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = "https://cmgtjqycneerfdxmdmwp.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtZ3RqcXljbmVlcmZkeG1kbXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MjM5MzcsImV4cCI6MjA2NTQ5OTkzN30.iYW8plD4fm80ljPUQPl3HU7yJtFKZehKkkEcGohz5OI";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const typeColors = {
+                'info': 'text-blue-600',
+                'success': 'text-green-600', 
+                'error': 'text-red-600',
+                'warning': 'text-yellow-600'
+            };
+            results.innerHTML += `<div class="${typeColors[type]}"><span class="text-gray-500">[${timestamp}]</span> ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '<div class="text-gray-500">Test results cleared...</div>';
+        }
+
+        // Database connection test
+        async function testDatabase() {
+            log('🔗 Testing database connection...', 'info');
+            try {
+                const { data, error } = await supabase.from('clients').select('count(*)', { count: 'exact', head: true });
+                if (error) throw error;
+                log('✅ Database connection successful', 'success');
+                document.getElementById('connection-status').textContent = 'Connected ✅';
+                document.getElementById('db-status').textContent = 'Online ✅';
+            } catch (error) {
+                log(`❌ Database connection failed: ${error.message}`, 'error');
+                document.getElementById('connection-status').textContent = 'Failed ❌';
+                document.getElementById('db-status').textContent = 'Error ❌';
+            }
+        }
+
+        // Schema checking
+        async function checkSchema() {
+            log('🗄️ Checking database schema...', 'info');
+            const tables = ['subscription_plans', 'client_subscriptions', 'subscription_usage', 'payment_installments'];
+            
+            for (const table of tables) {
+                try {
+                    const { data, error } = await supabase.from(table).select('*').limit(1);
+                    if (error) {
+                        log(`⚠️ Table ${table}: ${error.message}`, 'warning');
+                    } else {
+                        log(`✅ Table ${table}: Available`, 'success');
+                    }
+                } catch (error) {
+                    log(`❌ Table ${table}: Error - ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Subscription plans testing
+        async function testSubscriptionPlans() {
+            log('📋 Testing subscription plans...', 'info');
+            // This will be implemented when we create the tables
+            log('⚠️ Subscription plans table not yet migrated', 'warning');
+        }
+
+        // Payment plan calculator
+        function calculatePaymentPlan() {
+            const amount = parseFloat(document.getElementById('payment-amount').value);
+            const installments = parseInt(document.getElementById('payment-installments').value);
+            const interestRate = parseFloat(document.getElementById('payment-interest').value) / 100;
+            
+            log(`💳 Calculating payment plan: R$ ${amount.toLocaleString('pt-BR')} in ${installments} installments at ${(interestRate * 100)}% monthly`, 'info');
+            
+            const monthlyPayment = interestRate > 0 
+                ? (amount * interestRate * Math.pow(1 + interestRate, installments)) / (Math.pow(1 + interestRate, installments) - 1)
+                : amount / installments;
+            
+            const totalWithInterest = monthlyPayment * installments;
+            const totalInterest = totalWithInterest - amount;
+            
+            const result = `
+                Monthly Payment: R$ ${monthlyPayment.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                Total with Interest: R$ ${totalWithInterest.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                Total Interest: R$ ${totalInterest.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            `;
+            
+            document.getElementById('payment-result').innerHTML = result.replace(/\n/g, '<br>');
+            log(`✅ Payment plan calculated successfully`, 'success');
+        }
+
+        // Discount calculator
+        function calculateDiscount() {
+            const tier = document.getElementById('sub-tier').value;
+            const litigationType = document.getElementById('litigation-type').value;
+            const originalAmount = parseFloat(document.getElementById('original-amount').value);
+            
+            // Discount matrix (from roadmap)
+            const discountMatrix = {
+                basic: {
+                    labor_litigation: 15,
+                    corporate_litigation: 5,
+                    civil_litigation: 0
+                },
+                professional: {
+                    labor_litigation: 25,
+                    corporate_litigation: 10,
+                    civil_litigation: 5
+                },
+                enterprise: {
+                    labor_litigation: 30,
+                    corporate_litigation: 30,
+                    civil_litigation: 25
+                }
+            };
+            
+            const discountPercentage = discountMatrix[tier]?.[litigationType] || 0;
+            const discountAmount = originalAmount * (discountPercentage / 100);
+            const finalAmount = originalAmount - discountAmount;
+            
+            log(`💰 Calculating discount: ${tier} tier, ${litigationType}, R$ ${originalAmount.toLocaleString('pt-BR')}`, 'info');
+            
+            const result = `
+                Discount: ${discountPercentage}%
+                Discount Amount: R$ ${discountAmount.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                Final Amount: R$ ${finalAmount.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            `;
+            
+            document.getElementById('discount-result').innerHTML = result.replace(/\n/g, '<br>');
+            log(`✅ Discount calculated: ${discountPercentage}% off`, 'success');
+        }
+
+        // MRR testing
+        function testMRR() {
+            log('📊 Testing MRR calculations...', 'info');
+            // Placeholder for now
+            log('⚠️ MRR calculations will be implemented with subscription data', 'warning');
+        }
+
+        // Cross-sell testing
+        function testCrossSell() {
+            log('🎯 Testing cross-sell analytics...', 'info');
+            // Placeholder for now
+            log('⚠️ Cross-sell analytics will be implemented with subscription data', 'warning');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Legal-as-a-Service Test Center initialized', 'success');
+            testDatabase();
+        });
+    </script>
+</body>
+</html>
