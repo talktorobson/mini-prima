@@ -83,11 +83,12 @@ const RegistrationManagement = () => {
 
   const handleStatusUpdate = async (clientId: string, newStatus: string) => {
     try {
-      await clientRegistrationService.updateRegistrationStatus(
-        clientId, 
-        newStatus as RegistrationStatus, 
-        statusUpdateReason
-      );
+      await clientRegistrationService.updateRegistrationStatus(clientId, {
+        status: newStatus as RegistrationStatus,
+        reason: statusUpdateReason,
+        portal_access: newStatus === 'approved',
+        assigned_lawyer: newStatus === 'approved' ? selectedClient?.primary_lawyer : undefined
+      });
 
       toast({
         title: "Sucesso",

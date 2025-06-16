@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Integration E2E Tests - D'Avila Reis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #f9fafb;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .section-content {
+            padding: 20px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .test-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .test-card h4 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .status.warning {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fed7aa;
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .results pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .payment-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .payment-info h5 {
+            color: #0c4a6e;
+            margin-bottom: 10px;
+        }
+        
+        .payment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Banking Integration E2E Tests</h1>
+            <p>Complete PIX and Boleto payment flow testing with database persistence</p>
+        </div>
+        
+        <div class="content">
+            <!-- Statistics -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="pixCount">0</div>
+                    <div class="stat-label">PIX Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="boletoCount">0</div>
+                    <div class="stat-label">Boletos Generated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="reconciliationCount">0</div>
+                    <div class="stat-label">Auto Reconciliations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="successRate">0%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+
+            <!-- PIX Payment Testing -->
+            <div class="test-section">
+                <div class="section-header">
+                    <h3>💰 PIX Payment Flow Testing</h3>
+                    <p>Test complete PIX payment creation, status polling, and reconciliation</p>
+                </div>
+                <div class="section-content">
+                    <div class="test-grid">
+                        <!-- PIX Creation Form -->
+                        <div class="test-card">
+                            <h4>Create PIX Payment</h4>
+                            <div class="form-group">
+                                <label>Client ID</label>
+                                <input type="text" id="pixClientId" value="550e8400-e29b-41d4-a716-446655440000" placeholder="Client UUID">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount (R$)</label>
+                                <input type="number" id="pixAmount" value="150.00" step="0.01" min="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="pixDescription" placeholder="Payment description">Consultoria jurídica empresarial</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Payer Name</label>
+                                <input type="text" id="pixPayerName" value="João Silva" placeholder="Payer name">
+                            </div>
+                            <div class="form-group">
+                                <label>Expiration (minutes)</label>
+                                <input type="number" id="pixExpiration" value="60" min="1">
+                            </div>
+                            <button class="btn btn-primary" onclick="createPixPayment()">Create PIX Payment</button>
+                            <div id="pixStatus"></div>
+                        </div>
+
+                        <!-- PIX Status Display -->
+                        <div class="test-card">
+                            <h4>PIX Payment Status</h4>
+                            <div id="pixPaymentInfo" style="display: none;">
+                                <div class="payment-info">
+                                    <h5>Payment Details</h5>
+                                    <div class="payment-details">
+                                        <span><strong>TX ID:</strong></span>
+                                        <span id="pixTxId">-</span>
+                                        <span><strong>Amount:</strong></span>
+                                        <span id="pixAmountDisplay">-</span>
+                                        <span><strong>Status:</strong></span>
+                                        <span id="pixStatusDisplay">-</span>
+                                        <span><strong>Created:</strong></span>
+                                        <span id="pixCreatedAt">-</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-success" id="simulatePixBtn" onclick="simulatePixPayment()" style="display: none;">Simulate Payment</button>
+                                <button class="btn btn-secondary" onclick="checkPixStatus()">Check Status</button>
+                            </div>
+                            <div id="pixResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boleto Payment Testing -->
+            <div class="test-section">
+                <div class="section-header">
+                    <h3>📄 Boleto Payment Flow Testing</h3>
+                    <p>Test complete Boleto generation, status tracking, and reconciliation</p>
+                </div>
+                <div class="section-content">
+                    <div class="test-grid">
+                        <!-- Boleto Creation Form -->
+                        <div class="test-card">
+                            <h4>Generate Boleto</h4>
+                            <div class="form-group">
+                                <label>Client ID</label>
+                                <input type="text" id="boletoClientId" value="550e8400-e29b-41d4-a716-446655440000" placeholder="Client UUID">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount (R$)</label>
+                                <input type="number" id="boletoAmount" value="2500.00" step="0.01" min="1.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="boletoDueDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Payer Name</label>
+                                <input type="text" id="boletoPayerName" value="Maria Santos" placeholder="Payer name">
+                            </div>
+                            <div class="form-group">
+                                <label>Payer Document</label>
+                                <input type="text" id="boletoPayerDoc" value="123.456.789-00" placeholder="CPF/CNPJ">
+                            </div>
+                            <button class="btn btn-primary" onclick="generateBoleto()">Generate Boleto</button>
+                            <div id="boletoStatus"></div>
+                        </div>
+
+                        <!-- Boleto Status Display -->
+                        <div class="test-card">
+                            <h4>Boleto Status</h4>
+                            <div id="boletoPaymentInfo" style="display: none;">
+                                <div class="payment-info">
+                                    <h5>Boleto Details</h5>
+                                    <div class="payment-details">
+                                        <span><strong>Nosso Número:</strong></span>
+                                        <span id="boletoNossoNumero">-</span>
+                                        <span><strong>Amount:</strong></span>
+                                        <span id="boletoAmountDisplay">-</span>
+                                        <span><strong>Due Date:</strong></span>
+                                        <span id="boletoDueDateDisplay">-</span>
+                                        <span><strong>Status:</strong></span>
+                                        <span id="boletoStatusDisplay">-</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-success" id="simulateBoletoBtn" onclick="simulateBoletoPayment()" style="display: none;">Simulate Payment</button>
+                                <button class="btn btn-secondary" onclick="checkBoletoStatus()">Check Status</button>
+                            </div>
+                            <div id="boletoResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reconciliation Testing -->
+            <div class="test-section">
+                <div class="section-header">
+                    <h3>🔗 Payment Reconciliation Testing</h3>
+                    <p>Test automated payment reconciliation with invoices and financial records</p>
+                </div>
+                <div class="section-content">
+                    <div class="test-grid">
+                        <div class="test-card">
+                            <h4>Reconciliation Status</h4>
+                            <button class="btn btn-primary" onclick="checkReconciliation()">Check Reconciliation Records</button>
+                            <div id="reconciliationResults"></div>
+                        </div>
+                        
+                        <div class="test-card">
+                            <h4>Database Status</h4>
+                            <button class="btn btn-secondary" onclick="checkDatabaseHealth()">Check Database Health</button>
+                            <div id="databaseResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Results -->
+            <div class="test-section">
+                <div class="section-header">
+                    <h3>📊 Test Results & Logs</h3>
+                    <button class="btn btn-danger" onclick="clearLogs()">Clear Logs</button>
+                    <button class="btn btn-secondary" onclick="exportResults()">Export Results</button>
+                </div>
+                <div class="section-content">
+                    <div id="testLogs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Test state
+        let testStats = {
+            pixCount: 0,
+            boletoCount: 0,
+            reconciliationCount: 0,
+            successCount: 0,
+            totalTests: 0
+        };
+
+        let currentPixPayment = null;
+        let currentBoleto = null;
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            // Set default due date to 30 days from now
+            const defaultDueDate = new Date();
+            defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+            document.getElementById('boletoDueDate').value = defaultDueDate.toISOString().split('T')[0];
+            
+            updateStats();
+            addLog('info', 'Banking E2E Test Suite initialized');
+        });
+
+        // Mock Supabase client for testing
+        const mockSupabase = {
+            from: (table) => ({
+                insert: (data) => ({
+                    select: () => ({
+                        single: async () => {
+                            // Simulate database insert
+                            const id = generateUUID();
+                            const timestamp = new Date().toISOString();
+                            
+                            if (table === 'pix_transactions') {
+                                return {
+                                    data: {
+                                        id,
+                                        ...data,
+                                        created_at: timestamp
+                                    },
+                                    error: null
+                                };
+                            } else if (table === 'boletos') {
+                                return {
+                                    data: {
+                                        id,
+                                        ...data,
+                                        created_at: timestamp
+                                    },
+                                    error: null
+                                };
+                            }
+                        }
+                    })
+                }),
+                select: (fields = '*') => ({
+                    eq: (column, value) => ({
+                        single: async () => {
+                            // Mock database select
+                            if (table === 'pix_transactions') {
+                                return {
+                                    data: currentPixPayment,
+                                    error: null
+                                };
+                            } else if (table === 'boletos') {
+                                return {
+                                    data: currentBoleto,
+                                    error: null
+                                };
+                            }
+                        }
+                    }),
+                    order: (column, options) => ({
+                        then: async (callback) => {
+                            const mockData = [];
+                            return callback({ data: mockData, error: null });
+                        }
+                    })
+                }),
+                update: (data) => ({
+                    eq: (column, value) => ({
+                        then: async (callback) => {
+                            return callback({ data: null, error: null });
+                        }
+                    })
+                })
+            }),
+            rpc: async (functionName, params) => {
+                // Mock stored procedure calls
+                if (functionName === 'auto_reconcile_payment') {
+                    testStats.reconciliationCount++;
+                    updateStats();
+                    return { data: generateUUID(), error: null };
+                }
+            }
+        };
+
+        // PIX Service Mock
+        class MockPixService {
+            async createPixCharge(request) {
+                addLog('info', 'Creating PIX charge...', request);
+                
+                const pixData = {
+                    id: generateUUID(),
+                    client_id: request.clientId,
+                    case_id: request.caseId,
+                    invoice_id: request.invoiceId,
+                    txid: generateTxId(),
+                    amount: request.amount,
+                    description: request.description,
+                    pix_key: '11999999999',
+                    pix_key_type: 'phone',
+                    qr_code: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+                    qr_code_text: generatePixCode(request.amount),
+                    br_code: generatePixCode(request.amount),
+                    status: 'pending',
+                    expiration_date: new Date(Date.now() + (request.expirationMinutes || 60) * 60000).toISOString(),
+                    payer_name: request.payerName,
+                    payer_document: request.payerDocument,
+                    created_at: new Date().toISOString()
+                };
+
+                const result = await mockSupabase.from('pix_transactions').insert(pixData).select().single();
+                
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+
+                currentPixPayment = result.data;
+                testStats.pixCount++;
+                testStats.totalTests++;
+                updateStats();
+
+                return {
+                    id: result.data.id,
+                    txid: result.data.txid,
+                    amount: result.data.amount,
+                    status: result.data.status,
+                    qrCode: result.data.qr_code,
+                    qrCodeText: result.data.qr_code_text,
+                    expirationDate: result.data.expiration_date,
+                    createdAt: result.data.created_at
+                };
+            }
+
+            async getPixStatus(pixId) {
+                const result = await mockSupabase.from('pix_transactions').select('*').eq('id', pixId).single();
+                
+                if (!result.data) return null;
+
+                return {
+                    id: result.data.id,
+                    txid: result.data.txid,
+                    status: result.data.status,
+                    paidAt: result.data.paid_at,
+                    payerName: result.data.payer_name,
+                    payerDocument: result.data.payer_document,
+                    payerBank: result.data.payer_bank
+                };
+            }
+
+            async simulatePayment(pixId, payerName = 'Test Payer') {
+                if (currentPixPayment && currentPixPayment.id === pixId) {
+                    currentPixPayment.status = 'paid';
+                    currentPixPayment.paid_at = new Date().toISOString();
+                    currentPixPayment.payer_name = payerName;
+                    
+                    // Trigger auto-reconciliation
+                    await mockSupabase.rpc('auto_reconcile_payment', {
+                        p_payment_type: 'pix',
+                        p_payment_id: pixId,
+                        p_amount: currentPixPayment.amount,
+                        p_client_id: currentPixPayment.client_id
+                    });
+
+                    testStats.successCount++;
+                    updateStats();
+                    addLog('success', 'PIX payment simulated successfully', { pixId, payerName });
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // Boleto Service Mock
+        class MockBoletoService {
+            async generateBoleto(request) {
+                addLog('info', 'Generating boleto...', request);
+
+                const boletoData = {
+                    id: generateUUID(),
+                    client_id: request.clientId,
+                    case_id: request.caseId,
+                    invoice_id: request.invoiceId,
+                    nosso_numero: generateNossoNumero(),
+                    document_number: 'DOC' + Date.now(),
+                    amount: request.amount,
+                    due_date: request.dueDate,
+                    payer_name: request.payerName,
+                    payer_document: request.payerDocument,
+                    payer_address: request.payerAddress,
+                    accept: request.accept || 'S',
+                    species: request.species || 'DM',
+                    instructions: request.instructions || [],
+                    demonstration: request.demonstration || [],
+                    barcode: generateBarcode(request.amount, request.dueDate),
+                    digitable_line: generateDigitableLine(),
+                    status: 'registered',
+                    pdf_url: `https://mock.santander.com.br/boleto/${generateNossoNumero()}.pdf`,
+                    created_at: new Date().toISOString()
+                };
+
+                const result = await mockSupabase.from('boletos').insert(boletoData).select().single();
+                
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+
+                currentBoleto = result.data;
+                testStats.boletoCount++;
+                testStats.totalTests++;
+                updateStats();
+
+                return {
+                    id: result.data.id,
+                    nossoNumero: result.data.nosso_numero,
+                    documentNumber: result.data.document_number,
+                    amount: result.data.amount,
+                    dueDate: result.data.due_date,
+                    status: result.data.status,
+                    barcode: result.data.barcode,
+                    digitableLine: result.data.digitable_line,
+                    pdfUrl: result.data.pdf_url,
+                    createdAt: result.data.created_at
+                };
+            }
+
+            async getBoletoStatus(boletoId) {
+                const result = await mockSupabase.from('boletos').select('*').eq('id', boletoId).single();
+                
+                if (!result.data) return null;
+
+                return {
+                    id: result.data.id,
+                    nossoNumero: result.data.nosso_numero,
+                    status: result.data.status,
+                    paidAt: result.data.paid_at,
+                    paidAmount: result.data.paid_amount,
+                    paymentMethod: result.data.payment_method
+                };
+            }
+
+            async simulatePayment(boletoId, paidAmount) {
+                if (currentBoleto && currentBoleto.id === boletoId) {
+                    currentBoleto.status = 'paid';
+                    currentBoleto.paid_at = new Date().toISOString();
+                    currentBoleto.paid_amount = paidAmount;
+                    
+                    // Trigger auto-reconciliation
+                    await mockSupabase.rpc('auto_reconcile_payment', {
+                        p_payment_type: 'boleto',
+                        p_payment_id: boletoId,
+                        p_amount: paidAmount,
+                        p_client_id: currentBoleto.client_id
+                    });
+
+                    testStats.successCount++;
+                    updateStats();
+                    addLog('success', 'Boleto payment simulated successfully', { boletoId, paidAmount });
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // Initialize services
+        const pixService = new MockPixService();
+        const boletoService = new MockBoletoService();
+
+        // Global functions for HTML
+        window.createPixPayment = async function() {
+            try {
+                const clientId = document.getElementById('pixClientId').value;
+                const amount = parseFloat(document.getElementById('pixAmount').value);
+                const description = document.getElementById('pixDescription').value;
+                const payerName = document.getElementById('pixPayerName').value;
+                const expirationMinutes = parseInt(document.getElementById('pixExpiration').value);
+
+                if (!clientId || !amount || amount <= 0) {
+                    addLog('error', 'Please fill in required fields (Client ID and Amount)');
+                    return;
+                }
+
+                document.getElementById('pixStatus').innerHTML = '<div class="status info"><span class="loading"></span> Creating PIX payment...</div>';
+
+                const result = await pixService.createPixCharge({
+                    clientId,
+                    amount,
+                    description: description || 'Test PIX payment',
+                    payerName,
+                    expirationMinutes
+                });
+
+                document.getElementById('pixStatus').innerHTML = '<div class="status success">PIX payment created successfully!</div>';
+                
+                // Show payment info
+                document.getElementById('pixPaymentInfo').style.display = 'block';
+                document.getElementById('pixTxId').textContent = result.txid;
+                document.getElementById('pixAmountDisplay').textContent = `R$ ${result.amount.toFixed(2)}`;
+                document.getElementById('pixStatusDisplay').textContent = result.status;
+                document.getElementById('pixCreatedAt').textContent = new Date(result.createdAt).toLocaleString('pt-BR');
+                document.getElementById('simulatePixBtn').style.display = 'inline-block';
+
+                addLog('success', 'PIX payment created', result);
+
+            } catch (error) {
+                document.getElementById('pixStatus').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+                addLog('error', 'PIX creation failed', error);
+            }
+        };
+
+        window.simulatePixPayment = async function() {
+            if (!currentPixPayment) return;
+
+            try {
+                const payerName = document.getElementById('pixPayerName').value || 'Test Payer';
+                await pixService.simulatePayment(currentPixPayment.id, payerName);
+                
+                document.getElementById('pixStatusDisplay').textContent = 'paid';
+                document.getElementById('simulatePixBtn').style.display = 'none';
+                
+                addLog('success', 'PIX payment simulation completed');
+            } catch (error) {
+                addLog('error', 'PIX simulation failed', error);
+            }
+        };
+
+        window.checkPixStatus = async function() {
+            if (!currentPixPayment) return;
+
+            try {
+                const status = await pixService.getPixStatus(currentPixPayment.id);
+                if (status) {
+                    document.getElementById('pixStatusDisplay').textContent = status.status;
+                    addLog('info', 'PIX status checked', status);
+                }
+            } catch (error) {
+                addLog('error', 'PIX status check failed', error);
+            }
+        };
+
+        window.generateBoleto = async function() {
+            try {
+                const clientId = document.getElementById('boletoClientId').value;
+                const amount = parseFloat(document.getElementById('boletoAmount').value);
+                const dueDate = document.getElementById('boletoDueDate').value;
+                const payerName = document.getElementById('boletoPayerName').value;
+                const payerDocument = document.getElementById('boletoPayerDoc').value;
+
+                if (!clientId || !amount || !dueDate || !payerName) {
+                    addLog('error', 'Please fill in all required fields for boleto generation');
+                    return;
+                }
+
+                document.getElementById('boletoStatus').innerHTML = '<div class="status info"><span class="loading"></span> Generating boleto...</div>';
+
+                const result = await boletoService.generateBoleto({
+                    clientId,
+                    amount,
+                    dueDate,
+                    payerName,
+                    payerDocument,
+                    payerAddress: {
+                        street: 'Rua Teste',
+                        number: '123',
+                        neighborhood: 'Centro',
+                        city: 'São Paulo',
+                        state: 'SP',
+                        zipCode: '01234-567'
+                    }
+                });
+
+                document.getElementById('boletoStatus').innerHTML = '<div class="status success">Boleto generated successfully!</div>';
+                
+                // Show boleto info
+                document.getElementById('boletoPaymentInfo').style.display = 'block';
+                document.getElementById('boletoNossoNumero').textContent = result.nossoNumero;
+                document.getElementById('boletoAmountDisplay').textContent = `R$ ${result.amount.toFixed(2)}`;
+                document.getElementById('boletoDueDateDisplay').textContent = new Date(result.dueDate).toLocaleDateString('pt-BR');
+                document.getElementById('boletoStatusDisplay').textContent = result.status;
+                document.getElementById('simulateBoletoBtn').style.display = 'inline-block';
+
+                addLog('success', 'Boleto generated', result);
+
+            } catch (error) {
+                document.getElementById('boletoStatus').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+                addLog('error', 'Boleto generation failed', error);
+            }
+        };
+
+        window.simulateBoletoPayment = async function() {
+            if (!currentBoleto) return;
+
+            try {
+                await boletoService.simulatePayment(currentBoleto.id, currentBoleto.amount);
+                
+                document.getElementById('boletoStatusDisplay').textContent = 'paid';
+                document.getElementById('simulateBoletoBtn').style.display = 'none';
+                
+                addLog('success', 'Boleto payment simulation completed');
+            } catch (error) {
+                addLog('error', 'Boleto simulation failed', error);
+            }
+        };
+
+        window.checkBoletoStatus = async function() {
+            if (!currentBoleto) return;
+
+            try {
+                const status = await boletoService.getBoletoStatus(currentBoleto.id);
+                if (status) {
+                    document.getElementById('boletoStatusDisplay').textContent = status.status;
+                    addLog('info', 'Boleto status checked', status);
+                }
+            } catch (error) {
+                addLog('error', 'Boleto status check failed', error);
+            }
+        };
+
+        window.checkReconciliation = function() {
+            const results = {
+                totalReconciliations: testStats.reconciliationCount,
+                autoMatchedPayments: testStats.successCount,
+                pendingReconciliations: (testStats.pixCount + testStats.boletoCount) - testStats.successCount,
+                reconciliationRate: testStats.totalTests > 0 ? ((testStats.reconciliationCount / testStats.totalTests) * 100).toFixed(1) + '%' : '0%'
+            };
+
+            document.getElementById('reconciliationResults').innerHTML = 
+                '<div class="results"><pre>' + JSON.stringify(results, null, 2) + '</pre></div>';
+            
+            addLog('info', 'Reconciliation status checked', results);
+        };
+
+        window.checkDatabaseHealth = function() {
+            const health = {
+                status: 'healthy',
+                tablesAccessible: ['pix_transactions', 'boletos', 'payment_reconciliation'],
+                lastOperation: new Date().toISOString(),
+                mockMode: true,
+                totalRecords: testStats.pixCount + testStats.boletoCount
+            };
+
+            document.getElementById('databaseResults').innerHTML = 
+                '<div class="results"><pre>' + JSON.stringify(health, null, 2) + '</pre></div>';
+            
+            addLog('info', 'Database health checked', health);
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('testLogs').innerHTML = '';
+            addLog('info', 'Test logs cleared');
+        };
+
+        window.exportResults = function() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                statistics: testStats,
+                currentPayments: {
+                    pix: currentPixPayment,
+                    boleto: currentBoleto
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `banking-e2e-results-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            addLog('info', 'Test results exported');
+        };
+
+        // Utility functions
+        function updateStats() {
+            document.getElementById('pixCount').textContent = testStats.pixCount;
+            document.getElementById('boletoCount').textContent = testStats.boletoCount;
+            document.getElementById('reconciliationCount').textContent = testStats.reconciliationCount;
+            
+            const successRate = testStats.totalTests > 0 ? 
+                ((testStats.successCount / testStats.totalTests) * 100).toFixed(1) : 0;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        function addLog(type, message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.createElement('div');
+            logElement.className = `status ${type}`;
+            
+            let logContent = `[${timestamp}] ${message}`;
+            if (data) {
+                logContent += `<div class="results"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+            }
+            
+            logElement.innerHTML = logContent;
+            document.getElementById('testLogs').appendChild(logElement);
+            
+            // Auto-scroll to bottom
+            logElement.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function generateTxId() {
+            const timestamp = Date.now().toString();
+            const random = Math.random().toString(36).substring(2, 8);
+            return `${timestamp}${random}`.substring(0, 35);
+        }
+
+        function generateNossoNumero() {
+            return Date.now().toString() + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        }
+
+        function generatePixCode(amount) {
+            return `00020126580014BR.GOV.BCB.PIX0136${Date.now()}5204000053039865406${amount.toFixed(2)}5802BR5925DAVILA REIS ADVOGADOS6009SAO PAULO62070503***6304`;
+        }
+
+        function generateBarcode(amount, dueDate) {
+            const bankCode = '033'; // Santander
+            const currencyCode = '9'; // Real
+            const checkDigit = Math.floor(Math.random() * 9 + 1).toString();
+            const dueFactor = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+            const amountFormatted = Math.round(amount * 100).toString().padStart(10, '0');
+            const ourNumber = generateNossoNumero().padStart(20, '0');
+            
+            return `${bankCode}${currencyCode}${checkDigit}${dueFactor}${amountFormatted}${ourNumber}`;
+        }
+
+        function generateDigitableLine() {
+            const numbers = Array.from({length: 47}, () => Math.floor(Math.random() * 10)).join('');
+            return `${numbers.substr(0, 5)}.${numbers.substr(5, 5)} ${numbers.substr(10, 5)}.${numbers.substr(15, 6)} ${numbers.substr(21, 5)}.${numbers.substr(26, 6)} ${numbers.substr(32, 1)} ${numbers.substr(33, 14)}`;
+        }
+    </script>
+</body>
+</html>

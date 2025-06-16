@@ -321,13 +321,198 @@ The system requires ICP-Brasil compatible certificates for production use:
 
 ---
 
+## 💾 DATABASE INTEGRATION
+
+### Database Schema Overview
+
+The banking integration uses a comprehensive database schema designed for production-grade payment processing:
+
+```sql
+-- Core Payment Tables
+pix_transactions     # PIX instant payments with QR codes and status tracking
+boletos             # Traditional boleto payments with barcode generation
+payment_reconciliation  # Automated payment matching with invoices
+banking_webhooks    # External payment notifications and signatures
+payment_methods     # Available payment options and configurations
+transaction_logs    # Complete audit trail for all payment operations
+```
+
+### PIX Transactions Table
+
+**Location:** `supabase/migrations/20250616120000-banking-integration-tables.sql`
+
+```sql
+CREATE TABLE public.pix_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
+    case_id UUID REFERENCES public.cases(id) ON DELETE SET NULL,
+    invoice_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL,
+    
+    -- PIX Transaction Details
+    txid VARCHAR(35) UNIQUE NOT NULL,
+    end_to_end_id VARCHAR(32),
+    amount DECIMAL(12,2) NOT NULL,
+    description TEXT,
+    
+    -- PIX Key Information
+    pix_key VARCHAR(77),
+    pix_key_type VARCHAR(20),
+    
+    -- QR Code Information
+    qr_code TEXT,                    -- Base64 QR code image
+    qr_code_text TEXT,              -- PIX copy/paste code
+    br_code TEXT,                   -- PIX payload
+    
+    -- Status and Payment Information
+    status VARCHAR(20) DEFAULT 'pending',
+    expiration_date TIMESTAMP WITH TIME ZONE,
+    paid_at TIMESTAMP WITH TIME ZONE,
+    payer_name VARCHAR(255),
+    payer_document VARCHAR(18),
+    payer_bank VARCHAR(3),
+    
+    -- Webhook and Metadata
+    webhook_received_at TIMESTAMP WITH TIME ZONE,
+    webhook_data JSONB,
+    created_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+```
+
+### Boletos Table
+
+```sql
+CREATE TABLE public.boletos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
+    case_id UUID REFERENCES public.cases(id) ON DELETE SET NULL,
+    invoice_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL,
+    
+    -- Boleto Identification
+    nosso_numero VARCHAR(20) UNIQUE NOT NULL,
+    document_number VARCHAR(100) NOT NULL,
+    
+    -- Payment Details
+    amount DECIMAL(12,2) NOT NULL,
+    due_date DATE NOT NULL,
+    
+    -- Payer Information
+    payer_name VARCHAR(255) NOT NULL,
+    payer_document VARCHAR(18) NOT NULL,
+    payer_address JSONB NOT NULL,
+    
+    -- Boleto Configuration
+    accept VARCHAR(1) DEFAULT 'S',
+    species VARCHAR(2) DEFAULT 'DM',
+    instructions TEXT[],
+    demonstration TEXT[],
+    
+    -- Interest and Fees
+    interest_config JSONB,
+    fine_config JSONB,
+    discount_config JSONB,
+    
+    -- Boleto Codes
+    barcode VARCHAR(44) NOT NULL,
+    digitable_line VARCHAR(54) NOT NULL,
+    
+    -- Status and URLs
+    status VARCHAR(20) DEFAULT 'registered',
+    pdf_url TEXT,
+    paid_at TIMESTAMP WITH TIME ZONE,
+    paid_amount DECIMAL(12,2),
+    payment_method VARCHAR(50),
+    
+    created_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+```
+
+### Payment Reconciliation System
+
+The auto-reconciliation system automatically matches payments with invoices:
+
+```sql
+-- Auto-reconciliation function
+CREATE OR REPLACE FUNCTION public.auto_reconcile_payment(
+    p_payment_type VARCHAR(10),
+    p_payment_id UUID,
+    p_amount DECIMAL(12,2),
+    p_client_id UUID
+)
+RETURNS UUID AS $$
+DECLARE
+    v_invoice_id UUID;
+    v_reconciliation_id UUID;
+BEGIN
+    -- Find matching invoice by client and amount
+    SELECT id INTO v_invoice_id
+    FROM public.invoices
+    WHERE client_id = p_client_id
+    AND amount = p_amount
+    AND status = 'sent'
+    ORDER BY created_at DESC
+    LIMIT 1;
+    
+    -- Create reconciliation record and update invoice status
+    INSERT INTO public.payment_reconciliation (
+        payment_type, payment_id, invoice_id,
+        reconciliation_status, matched_amount,
+        difference_amount, matching_method,
+        matched_by, matched_at
+    ) VALUES (
+        p_payment_type, p_payment_id, v_invoice_id,
+        CASE WHEN v_invoice_id IS NOT NULL THEN 'matched' ELSE 'pending' END,
+        p_amount, 0, 'auto', auth.uid(), now()
+    ) RETURNING id INTO v_reconciliation_id;
+    
+    IF v_invoice_id IS NOT NULL THEN
+        UPDATE public.invoices 
+        SET status = 'paid', paid_date = CURRENT_DATE
+        WHERE id = v_invoice_id;
+    END IF;
+    
+    RETURN v_reconciliation_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### Service Layer Integration
+
+**PIX Service:** `src/services/pixService.ts`
+- Complete database integration with Supabase
+- Real-time payment status tracking
+- Auto-reconciliation triggers
+- Payment simulation for development
+
+**Boleto Service:** `src/services/boletoService.ts`
+- Full database persistence
+- Barcode generation with database storage
+- Payment status monitoring
+- PDF URL management
+
+**Key Features:**
+- Type-safe database operations with TypeScript
+- Comprehensive error handling
+- Transaction logging
+- RLS policy compliance
+
+---
+
 ## 🧪 TESTING
 
-### Unified Test Center
+### Comprehensive Testing Framework
 
-Access the comprehensive testing interface:
+**Main Test Center:**
 ```
 http://localhost:5173/test-unified-center.html
+```
+
+**Banking E2E Test Suite:**
+```
+http://localhost:5173/test-banking-e2e.html
 ```
 
 **Banking Integration Tests:**
@@ -336,9 +521,20 @@ http://localhost:5173/test-unified-center.html
 - ✅ OAuth 2.0 token flow
 - ✅ API client security headers
 - ✅ Mock API responses
-- 🔄 PIX charge creation (in development)
-- 🔄 Boleto generation (in development)
-- 🔄 Payment reconciliation (in development)
+- ✅ **PIX charge creation with database persistence**
+- ✅ **Boleto generation with database storage**
+- ✅ **Payment reconciliation system**
+- ✅ **Real-time payment status tracking**
+- ✅ **Payment simulation framework**
+
+**New E2E Testing Features:**
+- **Complete PIX Payment Flow Testing**: Create charges, track status, simulate payments
+- **Full Boleto Generation Testing**: Generate boletos, monitor status, test payments
+- **Auto-Reconciliation Verification**: Test automated payment matching
+- **Database Health Monitoring**: Verify table operations and data integrity
+- **Real-time Statistics**: Live tracking of test success rates and operation counts
+- **Payment Simulation**: Mock payment completion for development testing
+- **Export/Import Results**: JSON export of test results for analysis
 
 ### Test Commands
 
@@ -454,6 +650,9 @@ npm run test:banking
 - ✅ PIX webhook handler with signature validation
 - ✅ Real-time payment status polling
 - ✅ PIX payment form component with validation
+- ✅ **Database integration with Supabase persistence**
+- ✅ **Real-time status tracking from database**
+- ✅ **Payment simulation for development testing**
 
 ### Phase 3: Boleto Integration (✅ Complete)
 - ✅ Boleto generation service with full address support
@@ -461,6 +660,9 @@ npm run test:banking
 - ✅ Payment tracking and status monitoring
 - ✅ Boleto cancellation service
 - ✅ Comprehensive boleto form component
+- ✅ **Database integration with complete data persistence**
+- ✅ **Barcode and digitable line generation with database storage**
+- ✅ **Payment status monitoring with database polling**
 
 ### Phase 4: Advanced Features (✅ Complete)
 - ✅ Automated reconciliation engine with matching algorithm
@@ -468,6 +670,8 @@ npm run test:banking
 - ✅ Unified payment interface (PIX + Boleto)
 - ✅ Real testing functions with detailed logging
 - ✅ Complete environment configuration
+- ✅ **Auto-reconciliation with invoice matching via database functions**
+- ✅ **Transaction logging with comprehensive audit trail**
 
 ### Phase 5: Production Ready Features (✅ Complete)
 - ✅ Complete React UI components for client interface
@@ -476,6 +680,22 @@ npm run test:banking
 - ✅ Security validation and error handling
 - ✅ Payment reconciliation with invoice matching
 - ✅ Banking integration status monitoring
+- ✅ **Full database schema with RLS policies and security**
+- ✅ **End-to-end testing framework with database persistence**
+- ✅ **Complete service layer integration (PIX + Boleto services)**
+
+### Phase 6: Database Integration & E2E Testing (✅ **NEW - Complete**)
+- ✅ **Complete database schema migration for banking tables**
+- ✅ **PIX transactions table with full payment lifecycle tracking**
+- ✅ **Boletos table with comprehensive payment data storage**
+- ✅ **Payment reconciliation system with automated matching**
+- ✅ **Banking webhooks table for external payment notifications**
+- ✅ **Transaction logs table for complete audit trail**
+- ✅ **Row Level Security (RLS) policies for data protection**
+- ✅ **Real-time payment status polling from database**
+- ✅ **Auto-reconciliation functions with stored procedures**
+- ✅ **Comprehensive E2E testing suite with database persistence**
+- ✅ **Payment simulation framework for development and testing**
 
 ---
 

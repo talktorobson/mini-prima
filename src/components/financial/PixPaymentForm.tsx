@@ -26,44 +26,8 @@ import {
   Calendar
 } from 'lucide-react';
 
-// PIX Service Types
-interface PixChargeRequest {
-  calendario: {
-    expiracao: number;
-  };
-  devedor?: {
-    cpf?: string;
-    cnpj?: string;
-    nome: string;
-  };
-  valor: {
-    original: string;
-  };
-  chave: string;
-  solicitacaoPagador?: string;
-  infoAdicionais?: Array<{
-    nome: string;
-    valor: string;
-  }>;
-}
-
-interface PixChargeResponse {
-  txid: string;
-  status: 'ATIVA' | 'CONCLUIDA' | 'REMOVIDA_PELO_USUARIO_RECEBEDOR' | 'REMOVIDA_PELO_PSP';
-  pixCopiaECola: string;
-  calendario: {
-    criacao: string;
-    expiracao: number;
-  };
-  valor: {
-    original: string;
-  };
-  devedor?: {
-    nome: string;
-    cpf?: string;
-    cnpj?: string;
-  };
-}
+// Import PIX Service
+import { pixService, type PixChargeResponse, type PixPaymentStatus } from '@/services/pixService';
 
 interface Props {
   clientId?: string;
@@ -93,48 +57,16 @@ export const PixPaymentForm: React.FC<Props> = ({
 
   // PIX Charge State
   const [pixCharge, setPixCharge] = useState<PixChargeResponse | null>(null);
+  const [pixStatus, setPixStatus] = useState<PixPaymentStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<'idle' | 'creating' | 'active' | 'completed' | 'expired'>('idle');
 
-  // Mock PIX Service (replace with actual Santander integration)
-  const createPixCharge = async (request: PixChargeRequest): Promise<PixChargeResponse> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock response - replace with actual Santander API call
-    const mockResponse: PixChargeResponse = {
-      txid: generateTxId(),
-      status: 'ATIVA',
-      pixCopiaECola: generatePixPayload(request.valor.original),
-      calendario: {
-        criacao: new Date().toISOString(),
-        expiracao: request.calendario.expiracao
-      },
-      valor: {
-        original: request.valor.original
-      },
-      devedor: request.devedor
-    };
-
-    return mockResponse;
-  };
-
-  const generateTxId = (): string => {
-    return 'PIX' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-  };
-
-  const generatePixPayload = (amount: string): string => {
-    // Simplified PIX payload generation
-    const pixKey = formData.pixKey;
-    const amountFormatted = parseFloat(amount).toFixed(2);
-    return `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${amountFormatted.length}${amountFormatted}5802BR5925D'AVILA REIS ADVOGADOS6009SAO PAULO62070503***6304${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-  };
-
+  // Handle PIX charge creation using database service
   const handleCreateCharge = async () => {
-    if (!formData.amount || !formData.payerName) {
-      setError('Valor e nome do pagador são obrigatórios');
+    if (!formData.amount || !clientId) {
+      setError('Valor e cliente são obrigatórios');
       return;
     }
 
@@ -143,30 +75,17 @@ export const PixPaymentForm: React.FC<Props> = ({
     setStatus('creating');
 
     try {
-      const request: PixChargeRequest = {
-        calendario: {
-          expiracao: parseInt(formData.expirationHours) * 3600
-        },
-        devedor: {
-          nome: formData.payerName,
-          ...(formData.documentType === 'cpf' 
-            ? { cpf: formData.payerDocument } 
-            : { cnpj: formData.payerDocument }
-          )
-        },
-        valor: {
-          original: parseFloat(formData.amount).toFixed(2)
-        },
-        chave: formData.pixKey,
-        solicitacaoPagador: formData.description,
-        infoAdicionais: [
-          { nome: 'Cliente', valor: clientId || 'N/A' },
-          { nome: 'Caso', valor: caseId || 'N/A' },
-          { nome: 'Fatura', valor: invoiceId || 'N/A' }
-        ]
-      };
+      const charge = await pixService.createPixCharge({
+        clientId,
+        caseId,
+        invoiceId,
+        amount: parseFloat(formData.amount),
+        description: formData.description || 'Pagamento de serviços jurídicos',
+        payerName: formData.payerName || undefined,
+        payerDocument: formData.payerDocument || undefined,
+        expirationMinutes: parseInt(formData.expirationHours) * 60
+      });
 
-      const charge = await createPixCharge(request);
       setPixCharge(charge);
       setStatus('active');
       
@@ -174,8 +93,8 @@ export const PixPaymentForm: React.FC<Props> = ({
         onPaymentCreated(charge);
       }
 
-      // Start polling for payment status
-      startStatusPolling(charge.txid);
+      // Start status polling
+      startStatusPolling(charge.id);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar cobrança PIX');
@@ -185,18 +104,24 @@ export const PixPaymentForm: React.FC<Props> = ({
     }
   };
 
-  const startStatusPolling = (txid: string) => {
+  const startStatusPolling = (pixId: string) => {
     // Poll for payment status every 5 seconds
     const interval = setInterval(async () => {
       try {
-        // Mock status check - replace with actual API call
-        const random = Math.random();
-        if (random > 0.7) { // 30% chance of completion for demo
-          setStatus('completed');
-          if (onPaymentCompleted) {
-            onPaymentCompleted(txid);
+        const currentStatus = await pixService.getPixStatus(pixId);
+        if (currentStatus) {
+          setPixStatus(currentStatus);
+          
+          if (currentStatus.status === 'paid') {
+            setStatus('completed');
+            if (onPaymentCompleted) {
+              onPaymentCompleted(currentStatus.txid);
+            }
+            clearInterval(interval);
+          } else if (currentStatus.status === 'expired' || currentStatus.status === 'cancelled') {
+            setStatus('expired');
+            clearInterval(interval);
           }
-          clearInterval(interval);
         }
       } catch (error) {
         console.error('Error checking payment status:', error);
@@ -213,10 +138,27 @@ export const PixPaymentForm: React.FC<Props> = ({
   };
 
   const copyPixCode = () => {
-    if (pixCharge?.pixCopiaECola) {
-      navigator.clipboard.writeText(pixCharge.pixCopiaECola);
+    if (pixCharge?.qrCodeText) {
+      navigator.clipboard.writeText(pixCharge.qrCodeText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Add payment simulation for testing
+  const simulatePayment = async () => {
+    if (pixCharge) {
+      try {
+        const success = await pixService.simulatePayment(pixCharge.id, formData.payerName || 'Test Payer');
+        if (success) {
+          setStatus('completed');
+          if (onPaymentCompleted) {
+            onPaymentCompleted(pixCharge.txid);
+          }
+        }
+      } catch (error) {
+        console.error('Error simulating payment:', error);
+      }
     }
   };
 
@@ -261,7 +203,7 @@ export const PixPaymentForm: React.FC<Props> = ({
             <div>
               <Label className="text-sm font-medium text-gray-500">Valor</Label>
               <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(pixCharge.valor.original)}
+                {formatCurrency(pixCharge.amount.toString())}
               </p>
             </div>
             <div>
@@ -279,7 +221,7 @@ export const PixPaymentForm: React.FC<Props> = ({
             <Label className="text-sm font-medium">Código PIX Copia e Cola</Label>
             <div className="flex gap-2">
               <Textarea
-                value={pixCharge.pixCopiaECola}
+                value={pixCharge.qrCodeText}
                 readOnly
                 className="font-mono text-xs resize-none"
                 rows={3}
@@ -298,11 +240,15 @@ export const PixPaymentForm: React.FC<Props> = ({
             )}
           </div>
 
-          {/* QR Code Placeholder */}
+          {/* QR Code */}
           <div className="text-center">
             <div className="inline-block p-4 border-2 border-dashed border-gray-300 rounded-lg">
-              <QrCode className="w-24 h-24 mx-auto text-gray-400" />
-              <p className="text-sm text-gray-500 mt-2">QR Code</p>
+              {pixCharge.qrCode ? (
+                <img src={pixCharge.qrCode} alt="QR Code PIX" className="w-24 h-24 mx-auto" />
+              ) : (
+                <QrCode className="w-24 h-24 mx-auto text-gray-400" />
+              )}
+              <p className="text-sm text-gray-500 mt-2">QR Code PIX</p>
               <p className="text-xs text-gray-400">Escaneie com seu banco</p>
             </div>
           </div>
@@ -315,16 +261,11 @@ export const PixPaymentForm: React.FC<Props> = ({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Criado em:</span>
-              <span>{new Date(pixCharge.calendario.criacao).toLocaleString('pt-BR')}</span>
+              <span>{new Date(pixCharge.createdAt).toLocaleString('pt-BR')}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Expira em:</span>
-              <span>
-                {new Date(
-                  new Date(pixCharge.calendario.criacao).getTime() + 
-                  pixCharge.calendario.expiracao * 1000
-                ).toLocaleString('pt-BR')}
-              </span>
+              <span>{new Date(pixCharge.expirationDate).toLocaleString('pt-BR')}</span>
             </div>
           </div>
 
@@ -334,6 +275,7 @@ export const PixPaymentForm: React.FC<Props> = ({
               variant="outline" 
               onClick={() => {
                 setPixCharge(null);
+                setPixStatus(null);
                 setStatus('idle');
                 setFormData(prev => ({ ...prev, amount: '', description: '', payerName: '', payerDocument: '' }));
               }}
@@ -341,6 +283,16 @@ export const PixPaymentForm: React.FC<Props> = ({
             >
               Nova Cobrança
             </Button>
+            {status === 'active' && (
+              <Button 
+                variant="outline" 
+                onClick={simulatePayment}
+                size="sm"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Simular Pagamento
+              </Button>
+            )}
             <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
               Baixar QR

@@ -28,6 +28,9 @@ import {
   MapPin
 } from 'lucide-react';
 
+// Import Boleto Service
+import { boletoService, type BoletoResponse, type BoletoPaymentStatus } from '@/services/boletoService';
+
 // Boleto Service Types
 interface BoletoRequest {
   sacado: {
@@ -137,6 +140,7 @@ export const BoletoForm: React.FC<Props> = ({
 
   // Boleto State
   const [boleto, setBoleto] = useState<BoletoResponse | null>(null);
+  const [boletoStatus, setBoletoStatus] = useState<BoletoPaymentStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'generating' | 'generated' | 'paid' | 'expired'>('idle');
@@ -175,55 +179,9 @@ export const BoletoForm: React.FC<Props> = ({
     return 'DOC' + Date.now().toString();
   };
 
-  // Mock Boleto Service (replace with actual Santander integration)
-  const generateBoleto = async (request: BoletoRequest): Promise<BoletoResponse> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock response - replace with actual Santander API call
-    const nossoNumero = generateNossoNumero();
-    const mockResponse: BoletoResponse = {
-      nossoNumero,
-      codigoBarras: generateBarCode(request.valor),
-      linhaDigitavel: generateDigitableLine(request.valor),
-      dataVencimento: request.vencimento,
-      valor: request.valor,
-      url: `https://boleto.santander.com.br/pdf/${nossoNumero}.pdf`,
-      status: 'REGISTRADO'
-    };
-
-    return mockResponse;
-  };
-
-  const generateNossoNumero = (): string => {
-    return Date.now().toString() + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  };
-
-  const generateBarCode = (valor: string): string => {
-    const amount = parseFloat(valor).toFixed(2).replace('.', '').padStart(10, '0');
-    return `03391${generateCheckDigit()}${generateDueDate()}${amount}033900000000000000000`;
-  };
-
-  const generateDigitableLine = (valor: string): string => {
-    const barCode = generateBarCode(valor);
-    return `${barCode.substr(0, 5)}.${barCode.substr(5, 5)} ${barCode.substr(10, 5)}.${barCode.substr(15, 6)} ${barCode.substr(21, 5)}.${barCode.substr(26, 6)} ${barCode.substr(4, 1)} ${barCode.substr(32, 14)}`;
-  };
-
-  const generateCheckDigit = (): string => {
-    return Math.floor(Math.random() * 9 + 1).toString();
-  };
-
-  const generateDueDate = (): string => {
-    const baseDate = new Date('1997-10-07');
-    const dueDate = new Date(formData.dueDate);
-    const diffTime = dueDate.getTime() - baseDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays.toString().padStart(4, '0');
-  };
-
   const handleGenerateBoleto = async () => {
-    if (!formData.amount || !formData.payerName || !formData.dueDate) {
-      setError('Valor, nome do pagador e data de vencimento são obrigatórios');
+    if (!formData.amount || !formData.payerName || !formData.dueDate || !clientId) {
+      setError('Valor, nome do pagador, data de vencimento e cliente são obrigatórios');
       return;
     }
 
@@ -232,51 +190,51 @@ export const BoletoForm: React.FC<Props> = ({
     setStatus('generating');
 
     try {
-      const request: BoletoRequest = {
-        sacado: {
-          nome: formData.payerName,
-          cpfCnpj: formData.payerDocument,
-          endereco: {
-            logradouro: formData.street,
-            numero: formData.number,
-            complemento: formData.complement,
-            bairro: formData.neighborhood,
-            cidade: formData.city,
-            uf: formData.state,
-            cep: formData.zipCode
-          }
+      const boletoResponse = await boletoService.generateBoleto({
+        clientId,
+        caseId,
+        invoiceId,
+        amount: parseFloat(formData.amount),
+        dueDate: formData.dueDate,
+        documentNumber: formData.documentNumber,
+        payerName: formData.payerName,
+        payerDocument: formData.payerDocument,
+        payerAddress: {
+          street: formData.street,
+          number: formData.number,
+          complement: formData.complement,
+          neighborhood: formData.neighborhood,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode
         },
-        valor: parseFloat(formData.amount).toFixed(2),
-        vencimento: formData.dueDate,
-        numeroDocumento: formData.documentNumber,
-        instrucoes: formData.instructions.split('\n').filter(line => line.trim()),
-        demonstrativo: formData.demonstration.split('\n').filter(line => line.trim()),
-        aceite: formData.accept,
-        especie: formData.species,
+        accept: formData.accept,
+        species: formData.species,
+        instructions: formData.instructions.split('\n').filter(line => line.trim()),
+        demonstration: formData.demonstration.split('\n').filter(line => line.trim()),
         ...(formData.enableInterest && {
-          juros: {
-            tipo: formData.interestType,
-            valor: formData.interestValue,
-            data: formData.interestDate
+          interestConfig: {
+            type: formData.interestType,
+            value: formData.interestValue,
+            date: formData.interestDate
           }
         }),
         ...(formData.enableFine && {
-          multa: {
-            tipo: formData.fineType,
-            valor: formData.fineValue,
-            data: formData.fineDate
+          fineConfig: {
+            type: formData.fineType,
+            value: formData.fineValue,
+            date: formData.fineDate
           }
         }),
         ...(formData.enableDiscount && {
-          desconto: {
-            tipo: formData.discountType,
-            valor: formData.discountValue,
-            data: formData.discountDate
+          discountConfig: {
+            type: formData.discountType,
+            value: formData.discountValue,
+            date: formData.discountDate
           }
         })
-      };
+      });
 
-      const boletoResponse = await generateBoleto(request);
       setBoleto(boletoResponse);
       setStatus('generated');
       
@@ -285,7 +243,7 @@ export const BoletoForm: React.FC<Props> = ({
       }
 
       // Start polling for payment status
-      startPaymentPolling(boletoResponse.nossoNumero);
+      startPaymentPolling(boletoResponse.id);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao gerar boleto');
@@ -295,18 +253,24 @@ export const BoletoForm: React.FC<Props> = ({
     }
   };
 
-  const startPaymentPolling = (nossoNumero: string) => {
+  const startPaymentPolling = (boletoId: string) => {
     // Poll for payment status every 30 seconds
     const interval = setInterval(async () => {
       try {
-        // Mock status check - replace with actual API call
-        const random = Math.random();
-        if (random > 0.8) { // 20% chance of payment for demo
-          setStatus('paid');
-          if (onBoletoPaymentConfirmed) {
-            onBoletoPaymentConfirmed(nossoNumero);
+        const currentStatus = await boletoService.getBoletoStatus(boletoId);
+        if (currentStatus) {
+          setBoletoStatus(currentStatus);
+          
+          if (currentStatus.status === 'paid') {
+            setStatus('paid');
+            if (onBoletoPaymentConfirmed) {
+              onBoletoPaymentConfirmed(currentStatus.nossoNumero);
+            }
+            clearInterval(interval);
+          } else if (currentStatus.status === 'expired' || currentStatus.status === 'cancelled') {
+            setStatus('expired');
+            clearInterval(interval);
           }
-          clearInterval(interval);
         }
       } catch (error) {
         console.error('Error checking boleto status:', error);
@@ -322,9 +286,26 @@ export const BoletoForm: React.FC<Props> = ({
     }, 30 * 24 * 60 * 60 * 1000);
   };
 
+  // Add payment simulation for testing
+  const simulatePayment = async () => {
+    if (boleto) {
+      try {
+        const success = await boletoService.simulatePayment(boleto.id, boleto.amount);
+        if (success) {
+          setStatus('paid');
+          if (onBoletoPaymentConfirmed) {
+            onBoletoPaymentConfirmed(boleto.nossoNumero);
+          }
+        }
+      } catch (error) {
+        console.error('Error simulating payment:', error);
+      }
+    }
+  };
+
   const copyDigitableLine = () => {
-    if (boleto?.linhaDigitavel) {
-      navigator.clipboard.writeText(boleto.linhaDigitavel);
+    if (boleto?.digitableLine) {
+      navigator.clipboard.writeText(boleto.digitableLine);
     }
   };
 
@@ -369,13 +350,13 @@ export const BoletoForm: React.FC<Props> = ({
             <div>
               <Label className="text-sm font-medium text-gray-500">Valor</Label>
               <p className="text-2xl font-bold text-blue-600">
-                {formatCurrency(boleto.valor)}
+                {formatCurrency(boleto.amount.toString())}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-gray-500">Vencimento</Label>
               <p className="text-lg font-semibold">
-                {new Date(boleto.dataVencimento).toLocaleDateString('pt-BR')}
+                {new Date(boleto.dueDate).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <div>
@@ -395,7 +376,7 @@ export const BoletoForm: React.FC<Props> = ({
               <div className="bg-gray-50 p-3 rounded-lg">
                 <div className="flex items-center justify-center h-12 bg-white border-2 border-dashed border-gray-300 rounded">
                   <BarChart3 className="w-8 h-8 text-gray-400" />
-                  <span className="ml-2 font-mono text-xs text-gray-500">{boleto.codigoBarras}</span>
+                  <span className="ml-2 font-mono text-xs text-gray-500">{boleto.barcode}</span>
                 </div>
               </div>
             </div>
@@ -404,7 +385,7 @@ export const BoletoForm: React.FC<Props> = ({
               <Label className="text-sm font-medium">Linha Digitável</Label>
               <div className="flex gap-2">
                 <Input
-                  value={boleto.linhaDigitavel}
+                  value={boleto.digitableLine}
                   readOnly
                   className="font-mono text-sm"
                 />
@@ -428,7 +409,7 @@ export const BoletoForm: React.FC<Props> = ({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Número do Documento:</span>
-              <span className="font-mono">{formData.documentNumber}</span>
+              <span className="font-mono">{boleto.documentNumber}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Espécie:</span>
@@ -446,6 +427,7 @@ export const BoletoForm: React.FC<Props> = ({
               variant="outline" 
               onClick={() => {
                 setBoleto(null);
+                setBoletoStatus(null);
                 setStatus('idle');
                 setFormData(prev => ({ 
                   ...prev, 
@@ -463,9 +445,19 @@ export const BoletoForm: React.FC<Props> = ({
             >
               Novo Boleto
             </Button>
+            {status === 'generated' && (
+              <Button 
+                variant="outline" 
+                onClick={simulatePayment}
+                size="sm"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Simular Pagamento
+              </Button>
+            )}
             <Button 
               variant="default"
-              onClick={() => window.open(boleto.url, '_blank')}
+              onClick={() => window.open(boleto.pdfUrl, '_blank')}
               className="flex-1"
             >
               <Download className="w-4 h-4 mr-2" />
