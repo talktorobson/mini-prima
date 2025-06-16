@@ -13,7 +13,8 @@ import {
   DollarSign,
   UserPlus,
   Briefcase,
-  Archive
+  Archive,
+  Repeat
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import {
@@ -91,6 +92,18 @@ const AdminSidebar = () => {
               >
                 <UserPlus className="h-4 w-4" />
                 Cadastros
+              </Link>
+
+              <Link
+                to="/admin/subscriptions"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/subscriptions') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Repeat className="h-4 w-4" />
+                Assinaturas
               </Link>
 
               <Link

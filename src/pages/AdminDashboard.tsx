@@ -7,6 +7,7 @@ import AdminStaffCases from '@/pages/AdminStaffCases';
 import AdminStaffDocuments from '@/pages/AdminStaffDocuments';
 import AdminStaffMessages from '@/pages/AdminStaffMessages';
 import AdminStaffBilling from '@/pages/AdminStaffBilling';
+import AdminSubscriptions from '@/pages/AdminSubscriptions';
 import RegistrationManagement from '@/components/admin/RegistrationManagement';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -58,6 +59,7 @@ const AdminDashboard = () => {
                 <RegistrationManagement />
               </div>
             } />
+            <Route path="/subscriptions" element={<AdminSubscriptions />} />
             <Route path="/clients" element={<div className="p-6"><h1>Gestão de Clientes (Em desenvolvimento)</h1></div>} />
             <Route path="/cases" element={<div className="p-6"><h1>Gestão de Casos (Em desenvolvimento)</h1></div>} />
             <Route path="/documents" element={<div className="p-6"><h1>Gestão de Documentos (Em desenvolvimento)</h1></div>} />
