@@ -350,49 +350,96 @@ export const billingService = {
     };
   },
 
-  // Calculate payment plan installments
+  // Calculate payment plan installments with precision fixes
   calculatePaymentPlan(config: PaymentPlan): {
     installments: PaymentInstallment[];
     totalWithInterest: number;
     totalInterest: number;
   } {
-    const downPayment = config.downPayment || 0;
+    // Input validation
+    if (config.totalAmount <= 0) {
+      throw new Error('Total amount must be greater than zero');
+    }
+    if (config.numberOfInstallments <= 0) {
+      throw new Error('Number of installments must be greater than zero');
+    }
+    if (config.interestRate < 0) {
+      throw new Error('Interest rate cannot be negative');
+    }
+    
+    const downPayment = Math.max(0, config.downPayment || 0);
     const financedAmount = config.totalAmount - downPayment;
     
-    // Calculate monthly payment using compound interest formula
+    // Handle edge case where down payment equals or exceeds total
+    if (financedAmount <= 0) {
+      return {
+        installments: [],
+        totalWithInterest: config.totalAmount,
+        totalInterest: 0
+      };
+    }
+    
+    // Handle single installment case
+    if (config.numberOfInstallments === 1) {
+      return {
+        installments: [{
+          installmentNumber: 1,
+          dueDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)),
+          principalAmount: financedAmount,
+          interestAmount: 0,
+          totalAmount: financedAmount
+        }],
+        totalWithInterest: config.totalAmount,
+        totalInterest: 0
+      };
+    }
+    
+    // Calculate monthly payment using compound interest formula with precision handling
     const monthlyRate = config.interestRate;
-    const monthlyPayment = monthlyRate > 0 
-      ? (financedAmount * monthlyRate * Math.pow(1 + monthlyRate, config.numberOfInstallments)) /
-        (Math.pow(1 + monthlyRate, config.numberOfInstallments) - 1)
-      : financedAmount / config.numberOfInstallments;
+    let monthlyPayment: number;
+    
+    if (monthlyRate === 0) {
+      monthlyPayment = financedAmount / config.numberOfInstallments;
+    } else {
+      const powerFactor = Math.pow(1 + monthlyRate, config.numberOfInstallments);
+      monthlyPayment = (financedAmount * monthlyRate * powerFactor) / (powerFactor - 1);
+    }
+    
+    // Round to cents to avoid floating point precision issues
+    monthlyPayment = Math.round(monthlyPayment * 100) / 100;
     
     const installments: PaymentInstallment[] = [];
     let remainingBalance = financedAmount;
+    let totalPaid = 0;
     
     for (let i = 1; i <= config.numberOfInstallments; i++) {
-      const interestAmount = remainingBalance * monthlyRate;
-      const principalAmount = monthlyPayment - interestAmount;
+      const interestAmount = Math.round(remainingBalance * monthlyRate * 100) / 100;
+      let principalAmount = monthlyPayment - interestAmount;
       
-      // Adjust last payment for rounding
-      const adjustedPrincipal = i === config.numberOfInstallments 
-        ? remainingBalance 
-        : principalAmount;
+      // For the last installment, adjust for any rounding differences
+      if (i === config.numberOfInstallments) {
+        principalAmount = remainingBalance;
+        monthlyPayment = principalAmount + interestAmount;
+      }
       
-      const totalAmount = adjustedPrincipal + interestAmount;
+      // Round amounts to cents
+      principalAmount = Math.round(principalAmount * 100) / 100;
+      const finalTotalAmount = Math.round((principalAmount + interestAmount) * 100) / 100;
       
       installments.push({
         installmentNumber: i,
         dueDate: new Date(Date.now() + (i * 30 * 24 * 60 * 60 * 1000)), // 30 days apart
-        principalAmount: adjustedPrincipal,
+        principalAmount,
         interestAmount,
-        totalAmount
+        totalAmount: finalTotalAmount
       });
       
-      remainingBalance -= adjustedPrincipal;
+      remainingBalance = Math.round((remainingBalance - principalAmount) * 100) / 100;
+      totalPaid += finalTotalAmount;
     }
     
-    const totalWithInterest = downPayment + installments.reduce((sum, inst) => sum + inst.totalAmount, 0);
-    const totalInterest = totalWithInterest - config.totalAmount;
+    const totalWithInterest = Math.round((downPayment + totalPaid) * 100) / 100;
+    const totalInterest = Math.round((totalWithInterest - config.totalAmount) * 100) / 100;
     
     return {
       installments,

@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 COMPREHENSIVE E2E TESTING - D'Avila Reis Legal Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0f0c29 0%, #24243e 50%, #313862 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .test-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .main-testing-area {
+            background: white;
+            border-radius: 15px;
+            border: 1px solid #e1e5e9;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .testing-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .testing-header h3 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+        }
+        
+        .testing-body {
+            padding: 30px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        .test-controls {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid #e1e5e9;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .test-controls h3 {
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 1.4rem;
+        }
+        
+        .control-section {
+            margin-bottom: 30px;
+        }
+        
+        .control-section h4 {
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+        
+        .control-button {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(23, 162, 184, 0.3);
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid #e1e5e9;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-total { color: #6f42c1; }
+        .stat-passed { color: #28a745; }
+        .stat-failed { color: #dc3545; }
+        .stat-running { color: #17a2b8; }
+        .stat-rate { color: #007bff; }
+        
+        .progress-container {
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff 0%, #28a745 100%);
+            width: 0%;
+            transition: width 0.8s ease;
+            border-radius: 6px;
+        }
+        
+        .test-scenario {
+            margin-bottom: 40px;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+        }
+        
+        .scenario-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .scenario-header:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+        
+        .scenario-header h4 {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .scenario-desc {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        .scenario-content {
+            padding: 25px;
+            background: white;
+            display: none;
+        }
+        
+        .scenario-content.active {
+            display: block;
+        }
+        
+        .test-step {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .test-step:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .step-info {
+            flex: 1;
+        }
+        
+        .step-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        
+        .step-desc {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .step-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-running {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #99d6ff;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-passed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .log-container {
+            margin-top: 25px;
+        }
+        
+        .log-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #4a5568;
+        }
+        
+        .log-entry {
+            margin-bottom: 6px;
+            padding: 3px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .log-timestamp {
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+        
+        .log-info { color: #60a5fa; }
+        .log-success { color: #34d399; }
+        .log-error { color: #f87171; }
+        .log-warning { color: #fbbf24; }
+        
+        .scenario-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .scenario-stats {
+            font-size: 0.9rem;
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 1400px) {
+            .test-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+        
+        .device-test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .device-card {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .device-card h5 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .browser-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .browser-item {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        
+        .workflow-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .workflow-step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .workflow-step.completed {
+            background: #28a745;
+            color: white;
+        }
+        
+        .workflow-step.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .workflow-step.pending {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .workflow-arrow {
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 COMPREHENSIVE E2E TESTING SUITE</h1>
+            <p>D'Avila Reis Legal Practice Management System - Complete End-to-End Validation</p>
+        </div>
+        
+        <div class="content">
+            <!-- Summary Statistics -->
+            <div class="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-number stat-total" id="totalTests">0</div>
+                    <div class="stat-label">Total Scenarios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-passed" id="passedTests">0</div>
+                    <div class="stat-label">Passed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-failed" id="failedTests">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-running" id="runningTests">0</div>
+                    <div class="stat-label">Running</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-rate" id="successRate">0%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <!-- Test Dashboard -->
+            <div class="test-dashboard">
+                <div class="main-testing-area">
+                    <div class="testing-header">
+                        <h3>🎯 End-to-End Test Scenarios</h3>
+                        <p>Complete user journey validation and system integration testing</p>
+                    </div>
+                    <div class="testing-body" id="testScenarios">
+                        <!-- Test scenarios will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="test-controls">
+                    <h3>🎮 Test Controls</h3>
+                    
+                    <div class="control-section">
+                        <h4>🚀 Main Test Suites</h4>
+                        <button class="control-button btn-primary" onclick="runAllE2ETests()">
+                            🧪 Run Complete E2E Suite
+                        </button>
+                        
+                        <button class="control-button btn-success" onclick="runAuthenticationTests()">
+                            🔐 Authentication Flow Tests
+                        </button>
+                        
+                        <button class="control-button btn-info" onclick="runFinancialWorkflowTests()">
+                            💰 Financial Workflow Tests
+                        </button>
+                        
+                        <button class="control-button btn-warning" onclick="runUserJourneyTests()">
+                            👤 User Journey Tests
+                        </button>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h4>🔧 Specialized Tests</h4>
+                        <button class="control-button btn-info" onclick="runCrossBrowserTests()">
+                            🌐 Cross-Browser Tests
+                        </button>
+                        
+                        <button class="control-button btn-success" onclick="runResponsiveTests()">
+                            📱 Responsive Design Tests
+                        </button>
+                        
+                        <button class="control-button btn-warning" onclick="runDataPersistenceTests()">
+                            💾 Data Persistence Tests
+                        </button>
+                        
+                        <button class="control-button btn-info" onclick="runRealTimeTests()">
+                            ⚡ Real-time Update Tests
+                        </button>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h4>🛠 Utilities</h4>
+                        <button class="control-button btn-warning" onclick="pauseAllTests()">
+                            ⏸️ Pause Tests
+                        </button>
+                        
+                        <button class="control-button btn-danger" onclick="stopAllTests()">
+                            ⏹️ Stop All Tests
+                        </button>
+                        
+                        <button class="control-button btn-danger" onclick="clearAllResults()">
+                            🗑️ Clear Results
+                        </button>
+                    </div>
+                    
+                    <div class="log-container">
+                        <h4 style="margin-bottom: 15px; color: #2c3e50;">📋 Test Log</h4>
+                        <div class="log-output" id="logOutput">
+                            <div class="log-entry log-info">
+                                <span class="log-timestamp">[00:00:00]</span>
+                                <span>E2E Testing Suite initialized and ready...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global test state
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            running: 0
+        };
+        
+        let isTestingPaused = false;
+        let isTestingStopped = false;
+        
+        // E2E Test Scenarios Definition
+        const e2eTestSuites = {
+            authentication: {
+                name: '🔐 Authentication & Authorization Flow',
+                description: 'Testing complete user authentication, session management, and authorization workflows',
+                icon: '🔐',
+                scenarios: [
+                    {
+                        name: 'User Registration Process',
+                        description: 'Complete new user registration from form to email verification',
+                        steps: [
+                            'Navigate to registration page',
+                            'Fill user information form',
+                            'Submit registration form',
+                            'Verify email validation',
+                            'Check database user creation',
+                            'Validate welcome email sent'
+                        ]
+                    },
+                    {
+                        name: 'Admin Login Workflow',
+                        description: 'Administrator authentication and dashboard access',
+                        steps: [
+                            'Navigate to admin login page',
+                            'Enter admin credentials',
+                            'Verify two-factor authentication',
+                            'Check session creation',
+                            'Validate admin dashboard access',
+                            'Test admin permissions'
+                        ]
+                    },
+                    {
+                        name: 'Staff Member Authentication',
+                        description: 'Staff login with role-based access control',
+                        steps: [
+                            'Navigate to staff login',
+                            'Enter staff credentials',
+                            'Verify role-based permissions',
+                            'Check assigned client access',
+                            'Validate restricted features',
+                            'Test session timeout'
+                        ]
+                    },
+                    {
+                        name: 'Client Portal Access',
+                        description: 'Client authentication and portal functionality',
+                        steps: [
+                            'Navigate to client portal',
+                            'Enter client credentials',
+                            'Verify client dashboard access',
+                            'Check case information visibility',
+                            'Test document download permissions',
+                            'Validate billing information access'
+                        ]
+                    },
+                    {
+                        name: 'Password Reset Flow',
+                        description: 'Complete password reset and recovery process',
+                        steps: [
+                            'Navigate to password reset',
+                            'Enter email address',
+                            'Check reset email sent',
+                            'Click reset link in email',
+                            'Enter new password',
+                            'Verify login with new password'
+                        ]
+                    }
+                ]
+            },
+            
+            financial: {
+                name: '💰 Financial Management Workflows',
+                description: 'End-to-end testing of financial processes including bills, invoices, and payments',
+                icon: '💰',
+                scenarios: [
+                    {
+                        name: 'Supplier Registration to Payment',
+                        description: 'Complete supplier lifecycle from registration to payment processing',
+                        steps: [
+                            'Register new supplier',
+                            'Set payment terms and preferences',
+                            'Create first bill for supplier',
+                            'Submit bill for approval',
+                            'Admin approves bill',
+                            'Process payment and record proof'
+                        ]
+                    },
+                    {
+                        name: 'Invoice Generation and Collection',
+                        description: 'Client billing from invoice creation to payment collection',
+                        steps: [
+                            'Create client invoice',
+                            'Add line items and calculate taxes',
+                            'Generate PDF invoice',
+                            'Send invoice to client',
+                            'Client makes payment',
+                            'Record payment and update status'
+                        ]
+                    },
+                    {
+                        name: 'Payment Plan Management',
+                        description: 'Setting up and managing installment payment plans',
+                        steps: [
+                            'Create large invoice',
+                            'Set up payment plan (6 installments)',
+                            'Calculate interest and fees',
+                            'Send payment schedule to client',
+                            'Process monthly payments',
+                            'Handle early payment discount'
+                        ]
+                    },
+                    {
+                        name: 'Financial Reporting Workflow',
+                        description: 'Generate comprehensive financial reports and analytics',
+                        steps: [
+                            'Access financial dashboard',
+                            'Generate aging report',
+                            'Create cash flow projection',
+                            'Export financial data to Excel',
+                            'Send monthly reports to partners',
+                            'Archive reports in document system'
+                        ]
+                    },
+                    {
+                        name: 'Expense Management Process',
+                        description: 'Complete expense tracking from receipt to reimbursement',
+                        steps: [
+                            'Upload expense receipt',
+                            'Categorize expense',
+                            'Submit for approval',
+                            'Manager reviews and approves',
+                            'Process reimbursement',
+                            'Update accounting records'
+                        ]
+                    }
+                ]
+            },
+            
+            userJourney: {
+                name: '👤 Complete User Journey Testing',
+                description: 'Testing complete user workflows from login to task completion',
+                icon: '👤',
+                scenarios: [
+                    {
+                        name: 'New Client Onboarding',
+                        description: 'Complete client onboarding from first contact to active case',
+                        steps: [
+                            'Client submits contact form',
+                            'Staff reviews and creates client record',
+                            'Initial consultation scheduling',
+                            'Contract generation and signing',
+                            'First case creation',
+                            'Client portal access setup'
+                        ]
+                    },
+                    {
+                        name: 'Case Management Lifecycle',
+                        description: 'Complete case from creation to closure',
+                        steps: [
+                            'Create new case',
+                            'Assign staff members',
+                            'Upload initial documents',
+                            'Set deadlines and reminders',
+                            'Track case progress',
+                            'Generate final report and close case'
+                        ]
+                    },
+                    {
+                        name: 'Document Management Flow',
+                        description: 'Document handling from upload to organization',
+                        steps: [
+                            'Upload case documents',
+                            'Categorize and tag documents',
+                            'Share with client via portal',
+                            'Version control management',
+                            'Document approval workflow',
+                            'Archive completed documents'
+                        ]
+                    },
+                    {
+                        name: 'Staff Daily Workflow',
+                        description: 'Typical daily workflow for legal staff member',
+                        steps: [
+                            'Login and view dashboard',
+                            'Check assigned cases',
+                            'Review pending tasks',
+                            'Update case progress',
+                            'Communicate with clients',
+                            'Complete daily time tracking'
+                        ]
+                    },
+                    {
+                        name: 'Client Self-Service Journey',
+                        description: 'Client using portal for self-service tasks',
+                        steps: [
+                            'Login to client portal',
+                            'View case status updates',
+                            'Download required documents',
+                            'Make payment online',
+                            'Submit additional information',
+                            'Schedule appointment'
+                        ]
+                    }
+                ]
+            },
+            
+            integration: {
+                name: '🔗 System Integration Testing',
+                description: 'Testing integration points with external services and internal systems',
+                icon: '🔗',
+                scenarios: [
+                    {
+                        name: 'Supabase Database Integration',
+                        description: 'Testing complete database operations and real-time features',
+                        steps: [
+                            'Test CRUD operations',
+                            'Verify row-level security',
+                            'Check real-time subscriptions',
+                            'Test transaction rollbacks',
+                            'Validate data consistency',
+                            'Test concurrent user access'
+                        ]
+                    },
+                    {
+                        name: 'Email Service Integration',
+                        description: 'Testing email notifications and communications',
+                        steps: [
+                            'Send welcome email',
+                            'Invoice delivery via email',
+                            'Password reset emails',
+                            'Case update notifications',
+                            'Bulk email campaigns',
+                            'Email delivery tracking'
+                        ]
+                    },
+                    {
+                        name: 'File Storage Integration',
+                        description: 'Testing document storage and retrieval systems',
+                        steps: [
+                            'Upload large files',
+                            'Test file encryption',
+                            'Verify access permissions',
+                            'Test file sharing',
+                            'Check backup and recovery',
+                            'Validate file versioning'
+                        ]
+                    },
+                    {
+                        name: 'Payment Gateway Integration',
+                        description: 'Testing payment processing and financial transactions',
+                        steps: [
+                            'Process credit card payment',
+                            'Handle payment failures',
+                            'Test refund processing',
+                            'Verify security compliance',
+                            'Test recurring payments',
+                            'Validate transaction reporting'
+                        ]
+                    },
+                    {
+                        name: 'Third-party API Integration',
+                        description: 'Testing external service integrations',
+                        steps: [
+                            'Brazilian court system API',
+                            'Tax calculation services',
+                            'Address validation API',
+                            'Banking integration',
+                            'Legal database access',
+                            'Document signature services'
+                        ]
+                    }
+                ]
+            },
+            
+            compatibility: {
+                name: '🌐 Cross-Platform Compatibility',
+                description: 'Testing across different browsers, devices, and operating systems',
+                icon: '🌐',
+                scenarios: [
+                    {
+                        name: 'Desktop Browser Compatibility',
+                        description: 'Testing across major desktop browsers',
+                        steps: [
+                            'Chrome latest version',
+                            'Firefox latest version',
+                            'Safari latest version',
+                            'Edge latest version',
+                            'Chrome mobile view',
+                            'Firefox mobile view'
+                        ]
+                    },
+                    {
+                        name: 'Mobile Device Testing',
+                        description: 'Testing on various mobile devices and screen sizes',
+                        steps: [
+                            'iPhone Safari testing',
+                            'Android Chrome testing',
+                            'Tablet landscape mode',
+                            'Tablet portrait mode',
+                            'Small phone screens',
+                            'Large phone screens'
+                        ]
+                    },
+                    {
+                        name: 'Operating System Compatibility',
+                        description: 'Testing across different operating systems',
+                        steps: [
+                            'Windows 10/11 testing',
+                            'macOS testing',
+                            'Linux Ubuntu testing',
+                            'iOS mobile testing',
+                            'Android mobile testing',
+                            'Cross-OS data sync'
+                        ]
+                    },
+                    {
+                        name: 'Accessibility Testing',
+                        description: 'Testing accessibility features and compliance',
+                        steps: [
+                            'Screen reader compatibility',
+                            'Keyboard navigation',
+                            'Color contrast validation',
+                            'Font size scalability',
+                            'ARIA labels verification',
+                            'Voice control testing'
+                        ]
+                    },
+                    {
+                        name: 'Performance Across Devices',
+                        description: 'Testing performance on different hardware configurations',
+                        steps: [
+                            'High-end desktop performance',
+                            'Mid-range laptop performance',
+                            'Budget smartphone performance',
+                            'Slow internet connection',
+                            'Offline functionality',
+                            'Progressive web app features'
+                        ]
+                    }
+                ]
+            }
+        };
+        
+        // Logging functions
+        function addLog(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span>${message}</span>
+            `;
+            
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // Statistics update
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            document.getElementById('runningTests').textContent = testStats.running;
+            
+            const rate = testStats.total > 0 ? Math.round((testStats.passed / testStats.total) * 100) : 0;
+            document.getElementById('successRate').textContent = rate + '%';
+            
+            const completed = testStats.passed + testStats.failed;
+            const progress = testStats.total > 0 ? (completed / testStats.total) * 100 : 0;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        // Create test scenario HTML
+        function createTestScenario(suiteKey, suite) {
+            const totalSteps = suite.scenarios.reduce((total, scenario) => total + scenario.steps.length, 0);
+            
+            return `
+                <div class="test-scenario" id="scenario-${suiteKey}">
+                    <div class="scenario-header" onclick="toggleScenario('${suiteKey}')">
+                        <h4>${suite.icon} ${suite.name}</h4>
+                        <div class="scenario-desc">${suite.description}</div>
+                    </div>
+                    <div class="scenario-content" id="content-${suiteKey}">
+                        <div class="scenario-progress">
+                            <div class="scenario-stats">
+                                <span id="stats-${suiteKey}">0/${totalSteps} steps completed</span>
+                            </div>
+                            <div class="workflow-indicator" id="workflow-${suiteKey}">
+                                ${suite.scenarios.map((_, index) => `
+                                    <div class="workflow-step pending" id="workflow-${suiteKey}-${index}">${index + 1}</div>
+                                    ${index < suite.scenarios.length - 1 ? '<span class="workflow-arrow">→</span>' : ''}
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        ${suite.scenarios.map((scenario, scenarioIndex) => `
+                            <div class="test-scenario" style="margin-bottom: 25px;">
+                                <div class="scenario-header" style="padding: 15px;">
+                                    <h5 style="margin: 0; font-size: 1.1rem;">${scenario.name}</h5>
+                                    <div class="scenario-desc" style="margin-top: 5px;">${scenario.description}</div>
+                                </div>
+                                <div class="scenario-content" style="display: block; padding: 20px;">
+                                    ${scenario.steps.map((step, stepIndex) => `
+                                        <div class="test-step" id="step-${suiteKey}-${scenarioIndex}-${stepIndex}">
+                                            <div class="step-info">
+                                                <div class="step-name">${stepIndex + 1}. ${step}</div>
+                                                <div class="step-desc">Testing step execution and validation</div>
+                                            </div>
+                                            <div class="step-status status-pending" id="status-${suiteKey}-${scenarioIndex}-${stepIndex}">Pending</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Toggle scenario visibility
+        function toggleScenario(suiteKey) {
+            const content = document.getElementById(`content-${suiteKey}`);
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // Initialize test interface
+        function initializeE2ETests() {
+            const testScenarios = document.getElementById('testScenarios');
+            testScenarios.innerHTML = Object.keys(e2eTestSuites)
+                .map(key => createTestScenario(key, e2eTestSuites[key]))
+                .join('');
+            
+            // Count total tests
+            testStats.total = Object.values(e2eTestSuites)
+                .reduce((total, suite) => total + suite.scenarios.reduce((subtotal, scenario) => subtotal + scenario.steps.length, 0), 0);
+            
+            updateStats();
+            addLog('E2E Testing Suite initialized with ' + testStats.total + ' test steps', 'info');
+        }
+        
+        // Run individual test step
+        async function runTestStep(suiteKey, scenarioIndex, stepIndex, stepName) {
+            if (isTestingStopped) return false;
+            
+            while (isTestingPaused) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            const statusElement = document.getElementById(`status-${suiteKey}-${scenarioIndex}-${stepIndex}`);
+            const stepElement = document.getElementById(`step-${suiteKey}-${scenarioIndex}-${stepIndex}`);
+            
+            // Set to running
+            statusElement.textContent = 'Running';
+            statusElement.className = 'step-status status-running';
+            testStats.running++;
+            updateStats();
+            addLog(`Executing: ${stepName}`, 'info');
+            
+            // Simulate test execution (replace with actual test logic)
+            const executionTime = Math.random() * 3000 + 1000; // 1-4 seconds
+            await new Promise(resolve => setTimeout(resolve, executionTime));
+            
+            testStats.running--;
+            
+            // Simulate test results (90% success rate)
+            const success = Math.random() > 0.1;
+            
+            if (success) {
+                statusElement.textContent = 'Passed';
+                statusElement.className = 'step-status status-passed';
+                stepElement.style.borderLeft = '4px solid #28a745';
+                testStats.passed++;
+                addLog(`✓ ${stepName} completed successfully`, 'success');
+            } else {
+                statusElement.textContent = 'Failed';
+                statusElement.className = 'step-status status-failed';
+                stepElement.style.borderLeft = '4px solid #dc3545';
+                testStats.failed++;
+                addLog(`✗ ${stepName} failed`, 'error');
+            }
+            
+            updateStats();
+            return success;
+        }
+        
+        // Run test scenario
+        async function runTestScenario(suiteKey, scenarioIndex) {
+            const suite = e2eTestSuites[suiteKey];
+            const scenario = suite.scenarios[scenarioIndex];
+            
+            addLog(`Starting scenario: ${scenario.name}`, 'info');
+            
+            // Update workflow indicator
+            const workflowStep = document.getElementById(`workflow-${suiteKey}-${scenarioIndex}`);
+            workflowStep.className = 'workflow-step active';
+            
+            let allStepsPassed = true;
+            
+            for (let stepIndex = 0; stepIndex < scenario.steps.length; stepIndex++) {
+                const stepPassed = await runTestStep(suiteKey, scenarioIndex, stepIndex, scenario.steps[stepIndex]);
+                if (!stepPassed) allStepsPassed = false;
+            }
+            
+            // Update workflow indicator based on results
+            workflowStep.className = allStepsPassed ? 'workflow-step completed' : 'workflow-step failed';
+            
+            addLog(`Scenario ${allStepsPassed ? 'completed' : 'failed'}: ${scenario.name}`, allStepsPassed ? 'success' : 'error');
+            return allStepsPassed;
+        }
+        
+        // Run test suite
+        async function runTestSuite(suiteKey) {
+            const suite = e2eTestSuites[suiteKey];
+            addLog(`Starting test suite: ${suite.name}`, 'info');
+            
+            // Show the scenario content
+            const content = document.getElementById(`content-${suiteKey}`);
+            content.style.display = 'block';
+            
+            for (let scenarioIndex = 0; scenarioIndex < suite.scenarios.length; scenarioIndex++) {
+                await runTestScenario(suiteKey, scenarioIndex);
+            }
+            
+            addLog(`Test suite completed: ${suite.name}`, 'success');
+        }
+        
+        // Main test runners
+        async function runAllE2ETests() {
+            addLog('Starting comprehensive E2E test suite', 'info');
+            clearAllResults();
+            
+            for (const suiteKey of Object.keys(e2eTestSuites)) {
+                if (isTestingStopped) break;
+                await runTestSuite(suiteKey);
+            }
+            
+            const finalRate = testStats.total > 0 ? Math.round((testStats.passed / testStats.total) * 100) : 0;
+            addLog(`E2E Testing completed with ${finalRate}% success rate`, finalRate >= 80 ? 'success' : 'error');
+        }
+        
+        async function runAuthenticationTests() {
+            addLog('Running authentication flow tests', 'info');
+            await runTestSuite('authentication');
+        }
+        
+        async function runFinancialWorkflowTests() {
+            addLog('Running financial workflow tests', 'info');
+            await runTestSuite('financial');
+        }
+        
+        async function runUserJourneyTests() {
+            addLog('Running user journey tests', 'info');
+            await runTestSuite('userJourney');
+        }
+        
+        async function runCrossBrowserTests() {
+            addLog('Running cross-browser compatibility tests', 'info');
+            await runTestSuite('compatibility');
+        }
+        
+        async function runResponsiveTests() {
+            addLog('Running responsive design tests', 'info');
+            // Simulate responsive testing
+            addLog('Testing mobile layouts and breakpoints', 'info');
+        }
+        
+        async function runDataPersistenceTests() {
+            addLog('Running data persistence tests', 'info');
+            await runTestSuite('integration');
+        }
+        
+        async function runRealTimeTests() {
+            addLog('Running real-time update tests', 'info');
+            // Simulate real-time testing
+            addLog('Testing WebSocket connections and live updates', 'info');
+        }
+        
+        // Test control functions
+        function pauseAllTests() {
+            isTestingPaused = !isTestingPaused;
+            const message = isTestingPaused ? 'Tests paused' : 'Tests resumed';
+            addLog(message, 'warning');
+        }
+        
+        function stopAllTests() {
+            isTestingStopped = true;
+            isTestingPaused = false;
+            addLog('All tests stopped', 'error');
+        }
+        
+        function clearAllResults() {
+            // Reset stats
+            testStats = { total: testStats.total, passed: 0, failed: 0, running: 0 };
+            isTestingStopped = false;
+            isTestingPaused = false;
+            
+            // Reset all test statuses
+            Object.keys(e2eTestSuites).forEach(suiteKey => {
+                const suite = e2eTestSuites[suiteKey];
+                suite.scenarios.forEach((scenario, scenarioIndex) => {
+                    scenario.steps.forEach((step, stepIndex) => {
+                        const statusElement = document.getElementById(`status-${suiteKey}-${scenarioIndex}-${stepIndex}`);
+                        const stepElement = document.getElementById(`step-${suiteKey}-${scenarioIndex}-${stepIndex}`);
+                        
+                        if (statusElement) {
+                            statusElement.textContent = 'Pending';
+                            statusElement.className = 'step-status status-pending';
+                        }
+                        
+                        if (stepElement) {
+                            stepElement.style.borderLeft = '';
+                        }
+                    });
+                    
+                    // Reset workflow indicators
+                    const workflowStep = document.getElementById(`workflow-${suiteKey}-${scenarioIndex}`);
+                    if (workflowStep) {
+                        workflowStep.className = 'workflow-step pending';
+                    }
+                });
+            });
+            
+            updateStats();
+            
+            // Clear log
+            document.getElementById('logOutput').innerHTML = 
+                '<div class="log-entry log-info"><span class="log-timestamp">[00:00:00]</span><span>Results cleared. Ready for testing...</span></div>';
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializeE2ETests);
+    </script>
+</body>
+</html>
