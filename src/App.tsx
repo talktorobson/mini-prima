@@ -9,6 +9,9 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import MockHome from "./pages/MockHome";
+import MockHome1 from "./pages/MockHome1";
+import MockHome2 from "./pages/MockHome2";
+import MockHome3 from "./pages/MockHome3";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
 import PortalCases from "./pages/PortalCases";
@@ -122,8 +125,11 @@ const AppRoutes: React.FC = () => (
     {/* Unified login route with both auth contexts */}
     <Route path="/login" element={<UnifiedLogin />} />
 
-    {/* Mock marketing homepage */}
+    {/* Mock marketing homepages */}
     <Route path="/mock" element={<MockHome />} />
+    <Route path="/mock1" element={<MockHome1 />} />
+    <Route path="/mock2" element={<MockHome2 />} />
+    <Route path="/mock3" element={<MockHome3 />} />
 
     {/* Admin Routes */}
     <Route path="/admin/*" element={<AdminRoutes />} />
