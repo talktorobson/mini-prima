@@ -14,7 +14,8 @@ import {
   UserPlus,
   Briefcase,
   Archive,
-  Repeat
+  Repeat,
+  TrendingUp
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import {
@@ -104,6 +105,18 @@ const AdminSidebar = () => {
               >
                 <Repeat className="h-4 w-4" />
                 Assinaturas
+              </Link>
+
+              <Link
+                to="/admin/analytics"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/analytics') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                Analytics
               </Link>
 
               <Link
