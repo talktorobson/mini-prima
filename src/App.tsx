@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
+import MockHome from "./pages/MockHome";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
 import PortalCases from "./pages/PortalCases";
@@ -94,7 +95,7 @@ const ClientRoutes: React.FC = () => (
   <AuthProvider>
     <Routes>
       <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
-      
+
       {/* Protected Portal Routes */}
       <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
       <Route path="/portal/cases" element={<ProtectedRoute><PortalCases /></ProtectedRoute>} />
@@ -120,12 +121,15 @@ const AppRoutes: React.FC = () => (
   <Routes>
     {/* Unified login route with both auth contexts */}
     <Route path="/login" element={<UnifiedLogin />} />
-    
-    {/* Client Routes */}
-    <Route path="/*" element={<ClientRoutes />} />
-    
+
+    {/* Mock marketing homepage */}
+    <Route path="/mock" element={<MockHome />} />
+
     {/* Admin Routes */}
     <Route path="/admin/*" element={<AdminRoutes />} />
+
+    {/* Client Routes */}
+    <Route path="/*" element={<ClientRoutes />} />
     
     {/* Catch-all 404 route */}
     <Route path="*" element={<NotFound />} />
