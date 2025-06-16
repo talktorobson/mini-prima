@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core CRUD Systems Test - Minimal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">🏗️ Core CRUD Systems Test - Minimal Version</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <button onclick="testCreateDocument()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                📎 Test Document Creation
+            </button>
+            <button onclick="testCreateCase()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                ⚖️ Test Case Creation
+            </button>
+            <button onclick="testUpdateClient()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                👤 Test Client Update
+            </button>
+        </div>
+        
+        <div class="border rounded-lg p-4 bg-white">
+            <h3 class="font-semibold mb-3">📋 Test Results</h3>
+            <div id="test-log" class="h-64 overflow-y-auto bg-gray-900 text-green-400 font-mono text-sm p-4">
+                <div class="text-blue-400">[System] Core CRUD Test initialized</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const colors = {
+                'info': 'text-blue-400',
+                'success': 'text-green-400',
+                'error': 'text-red-400',
+                'warning': 'text-yellow-400'
+            };
+            
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const logLine = `<div class="${colors[type] || 'text-gray-400'}">[${timestamp}] ${message}</div>`;
+            logElement.innerHTML += logLine;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Mock Services
+        const mockDocumentService = {
+            async uploadDocument(documentData) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return {
+                    id: 'doc_' + Date.now(),
+                    document_name: documentData.document_name,
+                    document_type: documentData.document_type,
+                    created_at: new Date().toISOString()
+                };
+            }
+        };
+
+        const mockCaseService = {
+            async createCase(caseData) {
+                await new Promise(resolve => setTimeout(resolve, 800));
+                return {
+                    id: 'case_' + Date.now(),
+                    case_number: 'CASE-' + Date.now().toString().slice(-6),
+                    case_title: caseData.case_title,
+                    created_at: new Date().toISOString()
+                };
+            }
+        };
+
+        const mockClientService = {
+            async updateRegistrationStatus(clientId, statusData) {
+                await new Promise(resolve => setTimeout(resolve, 600));
+                return {
+                    id: clientId,
+                    registration_status: statusData.status,
+                    updated_at: new Date().toISOString()
+                };
+            }
+        };
+
+        // Test Functions
+        async function testCreateDocument() {
+            log('📎 Testing document creation...', 'info');
+            
+            try {
+                const documentData = {
+                    document_name: 'Test Document.pdf',
+                    document_type: 'contract',
+                    client_id: 'test_client_123'
+                };
+                
+                const result = await mockDocumentService.uploadDocument(documentData);
+                
+                if (result.id && result.document_name === documentData.document_name) {
+                    log(`✅ Document created successfully: ${result.id}`, 'success');
+                } else {
+                    throw new Error('Invalid document creation response');
+                }
+                
+            } catch (error) {
+                log(`❌ Document creation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateCase() {
+            log('⚖️ Testing case creation...', 'info');
+            
+            try {
+                const caseData = {
+                    client_id: 'client_test_789',
+                    case_title: 'Test Legal Case - CRUD Validation',
+                    service_type: 'corporate_law',
+                    priority: 'Medium',
+                    estimated_value: 25000
+                };
+                
+                const result = await mockCaseService.createCase(caseData);
+                
+                if (result.id && result.case_number && result.case_title === caseData.case_title) {
+                    log(`✅ Case created: ${result.case_number} (${result.id})`, 'success');
+                } else {
+                    throw new Error('Invalid case creation response');
+                }
+                
+            } catch (error) {
+                log(`❌ Case creation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUpdateClient() {
+            log('👤 Testing client registration status update...', 'info');
+            
+            try {
+                const clientId = 'client_test_registration_123';
+                const statusData = {
+                    status: 'approved',
+                    reason: 'All documents validated successfully',
+                    portal_access: true
+                };
+                
+                const result = await mockClientService.updateRegistrationStatus(clientId, statusData);
+                
+                if (result.id === clientId && result.registration_status === statusData.status) {
+                    log(`✅ Client status updated: ${clientId} → ${statusData.status}`, 'success');
+                } else {
+                    throw new Error('Client status update failed');
+                }
+                
+            } catch (error) {
+                log(`❌ Client status update failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Core CRUD Systems Test initialized', 'success');
+            log('Ready to test Document Management, Case Management, and Client Registration', 'info');
+        });
+    </script>
+</body>
+</html>
