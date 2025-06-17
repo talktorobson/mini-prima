@@ -10,6 +10,14 @@ import AdminStaffBilling from '@/pages/AdminStaffBilling';
 import AdminSubscriptions from '@/pages/AdminSubscriptions';
 import AdminBusinessIntelligence from '@/pages/AdminBusinessIntelligence';
 import RegistrationManagement from '@/components/admin/RegistrationManagement';
+import TimeTracking from '@/pages/TimeTracking';
+import Calendar from '@/pages/Calendar';
+import BusinessSettings from '@/pages/BusinessSettings';
+import DocumentTemplates from '@/pages/DocumentTemplates';
+import DocumentGeneration from '@/pages/DocumentGeneration';
+import StripeSettings from '@/pages/StripeSettings';
+import PaymentAnalytics from '@/pages/PaymentAnalytics';
+import WebhookLogs from '@/pages/WebhookLogs';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
@@ -67,6 +75,14 @@ const AdminDashboard = () => {
             <Route path="documents" element={<div className="p-6"><h1>Gestão de Documentos (Em desenvolvimento)</h1></div>} />
             <Route path="financial" element={<div className="p-6"><h1>Gestão Financeira (Em desenvolvimento)</h1></div>} />
             <Route path="messages" element={<div className="p-6"><h1>Gestão de Mensagens (Em desenvolvimento)</h1></div>} />
+            <Route path="time-tracking" element={<TimeTracking />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="business-settings" element={<BusinessSettings />} />
+            <Route path="document-templates" element={<DocumentTemplates />} />
+            <Route path="document-generation" element={<DocumentGeneration />} />
+            <Route path="stripe-settings" element={<StripeSettings />} />
+            <Route path="payment-analytics" element={<PaymentAnalytics />} />
+            <Route path="webhook-logs" element={<WebhookLogs />} />
             <Route path="settings" element={<div className="p-6"><h1>Configurações do Sistema (Em desenvolvimento)</h1></div>} />
           </>
         )}
@@ -78,6 +94,9 @@ const AdminDashboard = () => {
             <Route path="staff/documents" element={<AdminStaffDocuments />} />
             <Route path="staff/messages" element={<AdminStaffMessages />} />
             <Route path="staff/billing" element={<AdminStaffBilling />} />
+            <Route path="staff/time-tracking" element={<TimeTracking />} />
+            <Route path="staff/calendar" element={<Calendar />} />
+            <Route path="staff/document-generation" element={<DocumentGeneration />} />
             <Route path="staff/clients/:clientId" element={<div className="p-6"><h1>Detalhes do Cliente (Em desenvolvimento)</h1></div>} />
             <Route path="staff/cases/new" element={<div className="p-6"><h1>Novo Caso (Em desenvolvimento)</h1></div>} />
             <Route path="staff/cases/:caseId" element={<div className="p-6"><h1>Detalhes do Caso (Em desenvolvimento)</h1></div>} />

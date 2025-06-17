@@ -8,6 +8,7 @@ import {
   MessageSquare, 
   CreditCard,
   Settings,
+  Clock,
   Shield,
   Building,
   DollarSign,
@@ -15,7 +16,12 @@ import {
   Briefcase,
   Archive,
   Repeat,
-  TrendingUp
+  TrendingUp,
+  Calendar,
+  FolderOpen,
+  Download,
+  BarChart3,
+  Webhook
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import {
@@ -180,6 +186,114 @@ const AdminSidebar = () => {
               </Link>
 
               <Link
+                to="/admin/time-tracking"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/time-tracking') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Clock className="h-4 w-4" />
+                Controle de Tempo
+              </Link>
+
+              <Link
+                to="/admin/calendar"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/calendar') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                Calendário e Prazos
+              </Link>
+
+              <div className="pt-4 pb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Sistema PDF e Documentos
+                </p>
+              </div>
+
+              <Link
+                to="/admin/document-generation"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/document-generation') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Download className="h-4 w-4" />
+                Gerar Documentos
+              </Link>
+
+              <Link
+                to="/admin/document-templates"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/document-templates') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FolderOpen className="h-4 w-4" />
+                Templates
+              </Link>
+
+              <Link
+                to="/admin/business-settings"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/business-settings') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Settings className="h-4 w-4" />
+                Configurações Empresariais
+              </Link>
+
+              <div className="pt-4 pb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Pagamentos e Cobrança
+                </p>
+              </div>
+
+              <Link
+                to="/admin/stripe-settings"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/stripe-settings') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <CreditCard className="h-4 w-4" />
+                Configurações Stripe
+              </Link>
+
+              <Link
+                to="/admin/payment-analytics"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/payment-analytics') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Analytics de Pagamentos
+              </Link>
+
+              <Link
+                to="/admin/webhook-logs"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/webhook-logs') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Webhook className="h-4 w-4" />
+                Logs de Webhooks
+              </Link>
+
+              <Link
                 to="/admin/settings"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/admin/settings') 
@@ -188,7 +302,7 @@ const AdminSidebar = () => {
                 }`}
               >
                 <Settings className="h-4 w-4" />
-                Configurações
+                Configurações do Sistema
               </Link>
             </>
           )}
@@ -248,6 +362,42 @@ const AdminSidebar = () => {
               >
                 <CreditCard className="h-4 w-4" />
                 Cobrança
+              </Link>
+
+              <Link
+                to="/admin/staff/time-tracking"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/time-tracking') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Clock className="h-4 w-4" />
+                Controle de Tempo
+              </Link>
+
+              <Link
+                to="/admin/staff/calendar"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/calendar') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                Calendário e Prazos
+              </Link>
+
+              <Link
+                to="/admin/staff/document-generation"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/admin/staff/document-generation') 
+                    ? 'bg-red-50 text-red-600' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Download className="h-4 w-4" />
+                Gerar Documentos
               </Link>
             </>
           )}

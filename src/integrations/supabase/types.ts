@@ -1273,6 +1273,352 @@ export type Database = {
         }
         Relationships: []
       }
+      active_timers: {
+        Row: {
+          case_id: string | null
+          client_id: string | null
+          description: string
+          hourly_rate: number
+          id: string
+          last_activity: string | null
+          staff_id: string
+          started_at: string
+          task_type: string
+        }
+        Insert: {
+          case_id?: string | null
+          client_id?: string | null
+          description: string
+          hourly_rate: number
+          id?: string
+          last_activity?: string | null
+          staff_id: string
+          started_at?: string
+          task_type: string
+        }
+        Update: {
+          case_id?: string | null
+          client_id?: string | null
+          description?: string
+          hourly_rate?: number
+          id?: string
+          last_activity?: string | null
+          staff_id?: string
+          started_at?: string
+          task_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_timers_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_timers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "active_timers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_timers_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: true
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_rates: {
+        Row: {
+          client_id: string | null
+          client_rate: number | null
+          created_at: string | null
+          custom_rate: number | null
+          default_hourly_rate: number
+          effective_from: string
+          effective_until: string | null
+          id: string
+          is_active: boolean | null
+          staff_id: string
+          task_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          client_rate?: number | null
+          created_at?: string | null
+          custom_rate?: number | null
+          default_hourly_rate: number
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean | null
+          staff_id: string
+          task_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          client_rate?: number | null
+          created_at?: string | null
+          custom_rate?: number | null
+          default_hourly_rate?: number
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean | null
+          staff_id?: string
+          task_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_rates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "billing_rates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_rates_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_entries: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approval_notes: string | null
+          billable_amount: number | null
+          billable_minutes: number | null
+          billed_at: string | null
+          case_id: string | null
+          client_id: string | null
+          created_at: string | null
+          description: string
+          duration_minutes: number | null
+          end_time: string | null
+          hourly_rate: number
+          id: string
+          invoice_id: string | null
+          is_billable: boolean | null
+          staff_id: string
+          start_time: string
+          status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          task_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approval_notes?: string | null
+          billable_amount?: number | null
+          billable_minutes?: number | null
+          billed_at?: string | null
+          case_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          description: string
+          duration_minutes?: number | null
+          end_time?: string | null
+          hourly_rate: number
+          id?: string
+          invoice_id?: string | null
+          is_billable?: boolean | null
+          staff_id: string
+          start_time: string
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          task_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approval_notes?: string | null
+          billable_amount?: number | null
+          billable_minutes?: number | null
+          billed_at?: string | null
+          case_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          description?: string
+          duration_minutes?: number | null
+          end_time?: string | null
+          hourly_rate?: number
+          id?: string
+          invoice_id?: string | null
+          is_billable?: boolean | null
+          staff_id?: string
+          start_time?: string
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          task_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "time_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_tracking_summaries: {
+        Row: {
+          approved_entries: number | null
+          billed_amount: number | null
+          billable_hours: number | null
+          case_id: string | null
+          client_id: string | null
+          draft_entries: number | null
+          generated_at: string | null
+          id: string
+          period_end: string
+          period_start: string
+          period_type: string
+          staff_id: string | null
+          submitted_entries: number | null
+          total_amount: number | null
+          total_entries: number | null
+          total_hours: number | null
+        }
+        Insert: {
+          approved_entries?: number | null
+          billed_amount?: number | null
+          billable_hours?: number | null
+          case_id?: string | null
+          client_id?: string | null
+          draft_entries?: number | null
+          generated_at?: string | null
+          id?: string
+          period_end: string
+          period_start: string
+          period_type: string
+          staff_id?: string | null
+          submitted_entries?: number | null
+          total_amount?: number | null
+          total_entries?: number | null
+          total_hours?: number | null
+        }
+        Update: {
+          approved_entries?: number | null
+          billed_amount?: number | null
+          billable_hours?: number | null
+          case_id?: string | null
+          client_id?: string | null
+          draft_entries?: number | null
+          generated_at?: string | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          staff_id?: string | null
+          submitted_entries?: number | null
+          total_amount?: number | null
+          total_entries?: number | null
+          total_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_tracking_summaries_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_tracking_summaries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_dashboard_summary"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "time_tracking_summaries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_tracking_summaries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       client_dashboard_summary: {

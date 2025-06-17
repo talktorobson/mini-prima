@@ -22,6 +22,8 @@ import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientRegistration from "./pages/ClientRegistration";
+import ClientSubscriptions from "./pages/ClientSubscriptions";
+import PaymentCheckout from "./pages/PaymentCheckout";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +107,8 @@ const ClientRoutes: React.FC = () => (
       <Route path="/portal/documents" element={<ProtectedRoute><PortalDocuments /></ProtectedRoute>} />
       <Route path="/portal/messages" element={<ProtectedRoute><PortalMessages /></ProtectedRoute>} />
       <Route path="/portal/financial" element={<ProtectedRoute><PortalFinancial /></ProtectedRoute>} />
+      <Route path="/portal/subscriptions" element={<ProtectedRoute><ClientSubscriptions /></ProtectedRoute>} />
+      <Route path="/portal/payment" element={<ProtectedRoute><PaymentCheckout paymentType="one_time" /></ProtectedRoute>} />
       <Route path="/portal/notifications" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
     </Routes>
   </AuthProvider>

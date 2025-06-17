@@ -7,7 +7,7 @@ This migration creates the complete Legal-as-a-Service subscription management s
 
 1. **Open Supabase Dashboard**
    - Go to https://supabase.com/dashboard
-   - Navigate to your project: `direito-moderno-brasil`
+   - Navigate to your project: `mini-prima`
    - Go to SQL Editor
 
 2. **Run the Migration**

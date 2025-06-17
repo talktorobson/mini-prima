@@ -15,7 +15,9 @@ import {
   ArrowRight,
   Eye,
   Download,
-  Bell
+  Bell,
+  Crown,
+  Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -328,11 +330,45 @@ const Portal = () => {
           )}
         </div>
 
+        {/* Quick Access Card for Subscriptions */}
+        {!isMobile && (
+          <Card className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-purple-400/30 backdrop-blur-sm mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Crown className="h-8 w-8 text-yellow-400" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Planos e Assinaturas</h3>
+                    <p className="text-purple-200 text-sm">Gerencie seus planos jurídicos ou contrate novos serviços</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => navigate('/portal/subscriptions')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Minhas Assinaturas
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/portal/payment')}
+                    className="border-purple-400 text-purple-300 hover:bg-purple-400/20"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Contratar Serviço
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Optimized Grid Layout with ScrollArea */}
         <div className={`grid gap-6 ${
           isMobile 
             ? 'grid-cols-1 space-y-4' 
-            : 'grid-cols-2 auto-rows-fr h-[calc(100vh-180px)]'
+            : 'grid-cols-2 auto-rows-fr h-[calc(100vh-200px)]'
         }`}>
           
           {/* Cases Card */}
