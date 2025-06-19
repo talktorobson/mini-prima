@@ -18,6 +18,7 @@ import DocumentGeneration from '@/pages/DocumentGeneration';
 import StripeSettings from '@/pages/StripeSettings';
 import PaymentAnalytics from '@/pages/PaymentAnalytics';
 import WebhookLogs from '@/pages/WebhookLogs';
+import BrazilianLegalCompliance from '@/pages/BrazilianLegalCompliance';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
@@ -83,6 +84,7 @@ const AdminDashboard = () => {
             <Route path="stripe-settings" element={<StripeSettings />} />
             <Route path="payment-analytics" element={<PaymentAnalytics />} />
             <Route path="webhook-logs" element={<WebhookLogs />} />
+            <Route path="legal-compliance" element={<BrazilianLegalCompliance />} />
             <Route path="settings" element={<div className="p-6"><h1>Configurações do Sistema (Em desenvolvimento)</h1></div>} />
           </>
         )}
