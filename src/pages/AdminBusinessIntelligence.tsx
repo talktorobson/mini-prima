@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -17,7 +19,10 @@ import {
   Download,
   RefreshCw,
   PieChart,
-  Activity
+  Activity,
+  Search,
+  Filter,
+  Eye
 } from 'lucide-react';
 import { analyticsService, subscriptionService } from '@/lib/subscriptionService';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +34,14 @@ const AdminBusinessIntelligence: React.FC = () => {
   const [revenueProjections, setRevenueProjections] = useState<any>(null);
   const [churnAnalysis, setChurnAnalysis] = useState<any>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('30');
+  
+  // Analytics search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [metricFilter, setMetricFilter] = useState('');
+  const [clientFilter, setClientFilter] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -107,6 +120,262 @@ const AdminBusinessIntelligence: React.FC = () => {
     };
   };
 
+  // Mock analytics data for search functionality
+  const mockAnalyticsData = [
+    {
+      id: 'client_001',
+      client_name: 'Empresa ABC Ltda',
+      mrr: 1200.00,
+      clv: 28500.00,
+      subscription_plan: 'Professional',
+      churn_risk: 'Low',
+      last_payment: '2024-06-15',
+      metrics: {
+        total_cases: 15,
+        avg_case_value: 2500.00,
+        litigation_conversion: '45%'
+      }
+    },
+    {
+      id: 'client_002',
+      client_name: 'Consultoria XYZ S.A.',
+      mrr: 2500.00,
+      clv: 67500.00,
+      subscription_plan: 'Enterprise',
+      churn_risk: 'Low',
+      last_payment: '2024-06-14',
+      metrics: {
+        total_cases: 8,
+        avg_case_value: 5200.00,
+        litigation_conversion: '62%'
+      }
+    },
+    {
+      id: 'client_003',
+      client_name: 'Startup DEF Tech',
+      mrr: 600.00,
+      clv: 8400.00,
+      subscription_plan: 'Basic',
+      churn_risk: 'High',
+      last_payment: '2024-06-01',
+      metrics: {
+        total_cases: 3,
+        avg_case_value: 800.00,
+        litigation_conversion: '15%'
+      }
+    },
+    {
+      id: 'client_004',
+      client_name: 'Indústria GHI Ltda',
+      mrr: 1800.00,
+      clv: 42300.00,
+      subscription_plan: 'Professional',
+      churn_risk: 'Medium',
+      last_payment: '2024-06-10',
+      metrics: {
+        total_cases: 22,
+        avg_case_value: 3100.00,
+        litigation_conversion: '38%'
+      }
+    },
+    {
+      id: 'client_005',
+      client_name: 'Comércio JKL S.A.',
+      mrr: 3200.00,
+      clv: 89600.00,
+      subscription_plan: 'Enterprise',
+      churn_risk: 'Low',
+      last_payment: '2024-06-13',
+      metrics: {
+        total_cases: 35,
+        avg_case_value: 4200.00,
+        litigation_conversion: '68%'
+      }
+    }
+  ];
+
+  // Advanced analytics search function
+  const handleAnalyticsSearch = async () => {
+    setIsSearching(true);
+    
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      let filtered = mockAnalyticsData;
+      
+      // Apply search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(item => 
+          item.client_name.toLowerCase().includes(query) ||
+          item.subscription_plan.toLowerCase().includes(query) ||
+          item.id.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply metric filter
+      if (metricFilter) {
+        switch (metricFilter) {
+          case 'high_mrr':
+            filtered = filtered.filter(item => item.mrr >= 2000);
+            break;
+          case 'high_clv':
+            filtered = filtered.filter(item => item.clv >= 50000);
+            break;
+          case 'high_churn_risk':
+            filtered = filtered.filter(item => item.churn_risk === 'High');
+            break;
+          case 'high_conversion':
+            filtered = filtered.filter(item => parseInt(item.metrics.litigation_conversion) >= 50);
+            break;
+        }
+      }
+      
+      // Apply client filter
+      if (clientFilter) {
+        filtered = filtered.filter(item => item.subscription_plan === clientFilter);
+      }
+      
+      setSearchResults(filtered);
+      
+      toast({
+        title: 'Busca concluída',
+        description: `${filtered.length} clientes encontrados.`,
+      });
+      
+    } catch (error) {
+      console.error('Error searching analytics:', error);
+      toast({
+        title: 'Erro na busca',
+        description: 'Erro ao pesquisar analytics. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Clear search filters
+  const clearAnalyticsFilters = () => {
+    setSearchQuery('');
+    setMetricFilter('');
+    setClientFilter('');
+    setSearchResults([]);
+  };
+
+  // Export analytics data function
+  const handleExportAnalytics = () => {
+    try {
+      // Create comprehensive analytics data for export
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        period: selectedPeriod,
+        metrics: {
+          mrr: mrrData,
+          cross_sell: crossSellData,
+          revenue_projections: revenueProjections,
+          churn_analysis: churnAnalysis
+        }
+      };
+
+      // Convert to JSON string
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `analytics-export-${new Date().toISOString().split('T')[0]}.json`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Exportação concluída',
+        description: 'Dados de analytics exportados com sucesso.',
+      });
+    } catch (error) {
+      console.error('Error exporting analytics:', error);
+      toast({
+        title: 'Erro na exportação',
+        description: 'Erro ao exportar dados de analytics.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Export search results function
+  const handleExportSearchResults = () => {
+    try {
+      if (searchResults.length === 0) {
+        toast({
+          title: 'Nenhum resultado',
+          description: 'Não há resultados de busca para exportar.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Create CSV content
+      const headers = ['ID', 'Cliente', 'Plano', 'MRR', 'CLV', 'Risco de Churn', 'Conversão'];
+      const csvContent = [
+        headers.join(','),
+        ...searchResults.map(client => [
+          client.id,
+          `"${client.client_name}"`,
+          client.subscription_plan,
+          client.mrr,
+          client.clv,
+          client.churn_risk,
+          client.metrics.litigation_conversion + '%'
+        ].join(','))
+      ].join('\n');
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `analytics-search-results-${new Date().toISOString().split('T')[0]}.csv`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Exportação concluída',
+        description: `${searchResults.length} resultados exportados com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Error exporting search results:', error);
+      toast({
+        title: 'Erro na exportação',
+        description: 'Erro ao exportar resultados da busca.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Get churn risk badge
+  const getChurnRiskBadge = (risk: string) => {
+    switch (risk) {
+      case 'Low':
+        return <Badge className="bg-green-100 text-green-800">Baixo Risco</Badge>;
+      case 'Medium':
+        return <Badge className="bg-yellow-100 text-yellow-800">Médio Risco</Badge>;
+      case 'High':
+        return <Badge className="bg-red-100 text-red-800">Alto Risco</Badge>;
+      default:
+        return <Badge variant="outline">{risk}</Badge>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -141,7 +410,7 @@ const AdminBusinessIntelligence: React.FC = () => {
             Atualizar
           </Button>
           
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportAnalytics}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
@@ -153,6 +422,7 @@ const AdminBusinessIntelligence: React.FC = () => {
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="revenue">Receita</TabsTrigger>
           <TabsTrigger value="customers">Clientes</TabsTrigger>
+          <TabsTrigger value="search">Buscar Analytics</TabsTrigger>
           <TabsTrigger value="projections">Projeções</TabsTrigger>
         </TabsList>
 
@@ -384,6 +654,173 @@ const AdminBusinessIntelligence: React.FC = () => {
               </Alert>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Analytics Search */}
+        <TabsContent value="search" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                Busca Avançada de Analytics
+              </CardTitle>
+              <CardDescription>
+                Pesquise e filtre dados de clientes, receita e métricas de negócio
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="analytics_search_query">Buscar Cliente</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="analytics_search_query"
+                      placeholder="Nome do cliente, ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="metric_filter">Filtro por Métrica</Label>
+                  <Select value={metricFilter} onValueChange={setMetricFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas as métricas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todas as métricas</SelectItem>
+                      <SelectItem value="high_mrr">MRR Alto (≥R$2.000)</SelectItem>
+                      <SelectItem value="high_clv">CLV Alto (≥R$50.000)</SelectItem>
+                      <SelectItem value="high_churn_risk">Alto Risco de Churn</SelectItem>
+                      <SelectItem value="high_conversion">Alta Conversão (≥50%)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="client_filter">Plano de Assinatura</Label>
+                  <Select value={clientFilter} onValueChange={setClientFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os planos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos os planos</SelectItem>
+                      <SelectItem value="Basic">Básico</SelectItem>
+                      <SelectItem value="Professional">Professional</SelectItem>
+                      <SelectItem value="Enterprise">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-end gap-2">
+                  <Button onClick={handleAnalyticsSearch} disabled={isSearching}>
+                    <Search className="h-4 w-4 mr-2" />
+                    {isSearching ? 'Buscando...' : 'Buscar'}
+                  </Button>
+                  <Button variant="outline" onClick={clearAnalyticsFilters}>
+                    <Filter className="h-4 w-4 mr-2" />
+                    Limpar
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Resultados da Análise ({searchResults.length})</CardTitle>
+                <CardDescription>
+                  Dados dos clientes encontrados com base nos filtros aplicados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {searchResults.map((client) => (
+                    <div
+                      key={client.id}
+                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-medium text-lg">{client.client_name}</h3>
+                          <p className="text-sm text-gray-500">ID: {client.id}</p>
+                          <Badge className="mt-1" variant="outline">{client.subscription_plan}</Badge>
+                        </div>
+                        <div className="text-right">
+                          {getChurnRiskBadge(client.churn_risk)}
+                          <p className="text-xs text-gray-500 mt-1">
+                            Último pagamento: {new Date(client.last_payment).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium text-green-600">MRR</p>
+                          <p className="text-lg font-bold">{formatCurrency(client.mrr)}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-600">CLV</p>
+                          <p className="text-lg font-bold">{formatCurrency(client.clv)}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-purple-600">Total de Casos</p>
+                          <p className="text-lg font-bold">{client.metrics.total_cases}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-orange-600">Conversão</p>
+                          <p className="text-lg font-bold">{client.metrics.litigation_conversion}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t text-xs text-gray-600">
+                        <div className="flex justify-between">
+                          <span><strong>Valor Médio por Caso:</strong> {formatCurrency(client.metrics.avg_case_value)}</span>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-3 w-3 mr-1" />
+                            Ver Detalhes
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {searchResults.length > 3 && (
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" size="sm" onClick={handleExportSearchResults}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar Análise
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Empty State */}
+          {searchResults.length === 0 && (searchQuery || metricFilter || clientFilter) && !isSearching && (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Nenhum dado encontrado
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Tente ajustar os filtros de busca ou usar critérios diferentes
+                </p>
+                <Button variant="outline" onClick={clearAnalyticsFilters}>
+                  Limpar Filtros
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

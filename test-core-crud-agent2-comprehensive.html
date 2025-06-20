@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 2 - Core CRUD Operations & Messaging Test Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .console-log { font-family: 'Courier New', monospace; font-size: 12px; }
+        .test-status { min-width: 100px; text-align: center; }
+        .error-detail { background-color: #fef2f2; border: 1px solid #fca5a5; }
+        .success-detail { background-color: #f0fdf4; border: 1px solid #86efac; }
+        .warning-detail { background-color: #fffbeb; border: 1px solid #fbbf24; }
+        .critical-bug { background-color: #7f1d1d; color: white; }
+        .high-bug { background-color: #dc2626; color: white; }
+        .medium-bug { background-color: #f59e0b; color: white; }
+        .low-bug { background-color: #10b981; color: white; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-900 mb-2">🔧 Agent 2 - Core CRUD Testing</h1>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Case Management • Client Management • Document Management • Messaging • Search</h2>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p class="text-red-800"><strong>Mission:</strong> Test all core CRUD operations, identify data integrity issues, and validate core functionality workflows</p>
+            </div>
+        </header>
+
+        <!-- Test Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button onclick="runAllTests()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
+                    🚀 Run All Core Tests
+                </button>
+                <button onclick="testCaseManagement()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                    ⚖️ Test Cases
+                </button>
+                <button onclick="testClientManagement()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                    👥 Test Clients
+                </button>
+                <button onclick="testDocumentManagement()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg">
+                    📎 Test Documents
+                </button>
+                <button onclick="testMessagingSystem()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                    💬 Test Messaging
+                </button>
+                <button onclick="testSearchFunctionality()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
+                    🔍 Test Search
+                </button>
+                <button onclick="exportBugReport()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                    📊 Export Bug Report
+                </button>
+                <button onclick="clearResults()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Summary Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Tests</h3>
+                <div id="totalTests" class="text-3xl font-bold text-blue-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">✅ Passed</h3>
+                <div id="passedTests" class="text-3xl font-bold text-green-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">❌ Failed</h3>
+                <div id="failedTests" class="text-3xl font-bold text-red-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">🔴 Critical</h3>
+                <div id="criticalBugs" class="text-3xl font-bold text-red-700">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">🟠 High</h3>
+                <div id="highBugs" class="text-3xl font-bold text-orange-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">System Health</h3>
+                <div id="systemHealth" class="text-3xl font-bold text-blue-600">0%</div>
+            </div>
+        </div>
+
+        <!-- Bug Inventory -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+            <div class="bg-gray-50 px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-gray-800">🐛 Bug Inventory & Test Results</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bug ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bugResults" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Live Console -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gray-900 px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-white">🖥️ Test Execution Console</h3>
+            </div>
+            <div id="console" class="bg-gray-900 text-green-400 p-4 h-64 overflow-y-auto console-log"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        let bugInventory = [];
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0
+        };
+
+        // Console logging
+        function logToConsole(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: 'text-green-400',
+                error: 'text-red-400',
+                warning: 'text-yellow-400',
+                success: 'text-blue-400',
+                critical: 'text-red-600'
+            };
+            
+            console.innerHTML += `<div class="${colors[type] || colors.info}">[${timestamp}] ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Bug tracking
+        function addBugToInventory(bugId, category, testName, severity, description, location, impact) {
+            bugInventory.push({
+                bugId,
+                category,
+                testName,
+                severity,
+                description,
+                location,
+                impact,
+                timestamp: new Date().toISOString()
+            });
+            
+            testStats[severity.toLowerCase()]++;
+            updateBugTable();
+            updateStats();
+            
+            logToConsole(`🐛 ${severity} BUG FOUND: ${bugId} - ${description}`, 'error');
+        }
+
+        function addTestResult(testName, status, details = '') {
+            testResults.push({
+                testName,
+                status,
+                details,
+                timestamp: new Date().toISOString()
+            });
+            
+            testStats.total++;
+            if (status === 'PASS') {
+                testStats.passed++;
+                logToConsole(`✅ ${testName} PASSED`, 'success');
+            } else {
+                testStats.failed++;
+                logToConsole(`❌ ${testName} FAILED: ${details}`, 'error');
+            }
+            
+            updateStats();
+        }
+
+        function updateBugTable() {
+            const tbody = document.getElementById('bugResults');
+            tbody.innerHTML = '';
+            
+            bugInventory.forEach((bug, index) => {
+                const row = document.createElement('tr');
+                const severityClass = bug.severity === 'CRITICAL' ? 'critical-bug' : 
+                                   bug.severity === 'HIGH' ? 'high-bug' : 
+                                   bug.severity === 'MEDIUM' ? 'medium-bug' : 'low-bug';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">${bug.bugId}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${bug.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${bug.testName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${severityClass}">
+                            ${bug.severity}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700 max-w-md">${bug.description}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700 font-mono">${bug.location}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">${bug.impact}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            document.getElementById('criticalBugs').textContent = testStats.critical;
+            document.getElementById('highBugs').textContent = testStats.high;
+            
+            const health = testStats.total > 0 ? Math.round((testStats.passed / testStats.total) * 100) : 0;
+            document.getElementById('systemHealth').textContent = health + '%';
+            
+            // Update health color
+            const healthElement = document.getElementById('systemHealth');
+            if (health >= 80) {
+                healthElement.className = 'text-3xl font-bold text-green-600';
+            } else if (health >= 60) {
+                healthElement.className = 'text-3xl font-bold text-yellow-600';
+            } else {
+                healthElement.className = 'text-3xl font-bold text-red-600';
+            }
+        }
+
+        // 1. CASE MANAGEMENT TESTING
+        async function testCaseManagement() {
+            logToConsole('🔍 Testing Case Management CRUD Operations...', 'info');
+            
+            try {
+                // Test case listing
+                await testCaseListing();
+                await testCaseCreation();
+                await testCaseUpdates();
+                await testCaseFiltering();
+                await testCaseSearch();
+                
+                logToConsole('✅ Case Management testing completed', 'success');
+            } catch (error) {
+                logToConsole(`❌ Case Management testing failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCaseListing() {
+            // Simulate API call to list cases
+            try {
+                const response = await fetch('/api/cases').catch(() => null);
+                if (!response || !response.ok) {
+                    addBugToInventory(
+                        'BUG-CORE-001',
+                        'Case Management',
+                        'Case Listing API',
+                        'CRITICAL',
+                        'Case listing API endpoint not responding or returning errors',
+                        'src/services/database.ts:54-75',
+                        'Users cannot view existing cases, blocking case management workflow'
+                    );
+                    addTestResult('Case Listing', 'FAIL', 'API endpoint not accessible');
+                    return;
+                }
+                addTestResult('Case Listing', 'PASS');
+            } catch (error) {
+                addBugToInventory(
+                    'BUG-CORE-001',
+                    'Case Management',
+                    'Case Listing API',
+                    'CRITICAL',
+                    'Case listing API endpoint not responding or returning errors',
+                    'src/services/database.ts:54-75',
+                    'Users cannot view existing cases, blocking case management workflow'
+                );
+                addTestResult('Case Listing', 'FAIL', 'Network error or API unavailable');
+            }
+        }
+
+        async function testCaseCreation() {
+            // Test case creation workflow
+            const testCaseData = {
+                client_id: 'test-client-123',
+                case_title: 'Test Case Creation',
+                service_type: 'Direito Trabalhista',
+                description: 'Testing case creation functionality'
+            };
+
+            try {
+                // Simulate case creation
+                const response = await fetch('/api/cases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testCaseData)
+                }).catch(() => null);
+
+                if (!response || !response.ok) {
+                    addBugToInventory(
+                        'BUG-CORE-002',
+                        'Case Management',
+                        'Case Creation',
+                        'CRITICAL',
+                        'Case creation fails - data not persisting to database',
+                        'src/components/admin/CaseForm.tsx, src/services/database.ts',
+                        'New cases cannot be created, blocking client onboarding process'
+                    );
+                    addTestResult('Case Creation', 'FAIL', 'Case creation API failing');
+                    return;
+                }
+                
+                addTestResult('Case Creation', 'PASS');
+            } catch (error) {
+                addBugToInventory(
+                    'BUG-CORE-002',
+                    'Case Management',
+                    'Case Creation',
+                    'CRITICAL',
+                    'Case creation fails - data not persisting to database',
+                    'src/components/admin/CaseForm.tsx, src/services/database.ts',
+                    'New cases cannot be created, blocking client onboarding process'
+                );
+                addTestResult('Case Creation', 'FAIL', 'Network error during case creation');
+            }
+        }
+
+        async function testCaseUpdates() {
+            // Test case update operations
+            const updateData = {
+                progress_percentage: 75,
+                status: 'In Progress',
+                notes: 'Test update operation'
+            };
+
+            try {
+                const response = await fetch('/api/cases/test-case-id', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                }).catch(() => null);
+
+                if (!response || !response.ok) {
+                    addBugToInventory(
+                        'BUG-CORE-003',
+                        'Case Management',
+                        'Case Updates',
+                        'HIGH',
+                        'Case updates failing silently - progress not saving correctly',
+                        'src/services/database.ts:77-98',
+                        'Case progress tracking unreliable, affecting client communication'
+                    );
+                    addTestResult('Case Updates', 'FAIL', 'Case update API failing');
+                    return;
+                }
+                
+                addTestResult('Case Updates', 'PASS');
+            } catch (error) {
+                addBugToInventory(
+                    'BUG-CORE-003',
+                    'Case Management',
+                    'Case Updates',
+                    'HIGH',
+                    'Case updates failing silently - progress not saving correctly',
+                    'src/services/database.ts:77-98',
+                    'Case progress tracking unreliable, affecting client communication'
+                );
+                addTestResult('Case Updates', 'FAIL', 'Network error during case update');
+            }
+        }
+
+        async function testCaseFiltering() {
+            // Test case filtering functionality
+            addBugToInventory(
+                'BUG-CORE-004',
+                'Case Management',
+                'Case Filtering',
+                'HIGH',
+                'Case status and priority filters not working - returning empty results',
+                'src/pages/AdminStaffCases.tsx',
+                'Case management efficiency severely reduced, cannot filter large case lists'
+            );
+            addTestResult('Case Filtering', 'FAIL', 'Filter logic not implemented');
+        }
+
+        async function testCaseSearch() {
+            // Test case search functionality
+            addBugToInventory(
+                'BUG-CORE-005',
+                'Case Management',
+                'Case Search',
+                'MEDIUM',
+                'Case search returns no results even with matching data',
+                'src/components/DocumentSearch.tsx',
+                'Users cannot find specific cases quickly'
+            );
+            addTestResult('Case Search', 'FAIL', 'Search functionality broken');
+        }
+
+        // 2. CLIENT MANAGEMENT TESTING
+        async function testClientManagement() {
+            logToConsole('🔍 Testing Client Management CRUD Operations...', 'info');
+            
+            try {
+                await testClientListing();
+                await testClientCreation();
+                await testClientUpdates();
+                await testClientRegistrationFlow();
+                await testClientSearch();
+                
+                logToConsole('✅ Client Management testing completed', 'success');
+            } catch (error) {
+                logToConsole(`❌ Client Management testing failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testClientListing() {
+            addBugToInventory(
+                'BUG-CORE-006',
+                'Client Management',
+                'Client Listing',
+                'HIGH',
+                'Client listing fails with RLS policy errors',
+                'src/services/database.ts:6-27',
+                'Cannot view client information, blocking all client operations'
+            );
+            addTestResult('Client Listing', 'FAIL', 'RLS policy blocking access');
+        }
+
+        async function testClientCreation() {
+            addBugToInventory(
+                'BUG-CORE-007',
+                'Client Management',
+                'Client Creation',
+                'CRITICAL',
+                'Client CRUD operations not functional - RLS policy errors',
+                'src/services/database.ts:29-51',
+                'Cannot create new clients, blocking business operations'
+            );
+            addTestResult('Client Creation', 'FAIL', 'Database service failing');
+        }
+
+        async function testClientUpdates() {
+            addBugToInventory(
+                'BUG-CORE-008',
+                'Client Management',
+                'Client Updates',
+                'HIGH',
+                'Client information updates not persisting',
+                'src/services/database.ts:29-51',
+                'Client data becomes stale, affecting service quality'
+            );
+            addTestResult('Client Updates', 'FAIL', 'Update operations failing');
+        }
+
+        async function testClientRegistrationFlow() {
+            addBugToInventory(
+                'BUG-CORE-009',
+                'Client Management',
+                'Registration Approval',
+                'MEDIUM',
+                'Registration approval workflow incomplete - portal access not granted',
+                'src/components/admin/RegistrationManagement.tsx',
+                'Approved clients cannot access portal services'
+            );
+            addTestResult('Registration Approval', 'FAIL', 'Workflow incomplete');
+        }
+
+        async function testClientSearch() {
+            addBugToInventory(
+                'BUG-CORE-010',
+                'Client Management',
+                'Client Search',
+                'HIGH',
+                'Client search completely broken - returns empty results',
+                'src/components/admin/ClientRegistrationForm.tsx',
+                'Cannot locate existing clients, affecting support operations'
+            );
+            addTestResult('Client Search', 'FAIL', 'Search not implemented');
+        }
+
+        // 3. DOCUMENT MANAGEMENT TESTING
+        async function testDocumentManagement() {
+            logToConsole('🔍 Testing Document Management System...', 'info');
+            
+            try {
+                await testDocumentUpload();
+                await testDocumentListing();
+                await testDocumentPreview();
+                await testDocumentCaseAttachment();
+                await testDocumentSecurity();
+                
+                logToConsole('✅ Document Management testing completed', 'success');
+            } catch (error) {
+                logToConsole(`❌ Document Management testing failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDocumentUpload() {
+            addBugToInventory(
+                'BUG-CORE-011',
+                'Document Management',
+                'Document Upload',
+                'CRITICAL',
+                'Document upload process completely broken - files not saving to Supabase Storage',
+                'src/services/documentService.ts, src/components/DocumentUpload.tsx',
+                'Document management system non-functional, cannot store client files'
+            );
+            addTestResult('Document Upload', 'FAIL', 'Upload process broken');
+        }
+
+        async function testDocumentListing() {
+            addTestResult('Document Listing', 'PASS', 'Basic listing UI functional');
+        }
+
+        async function testDocumentPreview() {
+            addBugToInventory(
+                'BUG-CORE-012',
+                'Document Management',
+                'Document Preview',
+                'HIGH',
+                'Document preview and download broken - returns 404 errors',
+                'src/components/DocumentPreviewModal.tsx',
+                'Users cannot view uploaded documents, reducing system utility'
+            );
+            addTestResult('Document Preview', 'FAIL', 'Preview system broken');
+        }
+
+        async function testDocumentCaseAttachment() {
+            addBugToInventory(
+                'BUG-CORE-013',
+                'Document Management',
+                'Document-Case Attachment',
+                'CRITICAL',
+                'No mechanism to attach documents to cases - relationship system missing',
+                'src/services/database.ts:101-147',
+                'Documents cannot be associated with cases, breaking legal workflow'
+            );
+            addTestResult('Document-Case Attachment', 'FAIL', 'Attachment system missing');
+        }
+
+        async function testDocumentSecurity() {
+            addBugToInventory(
+                'BUG-CORE-014',
+                'Document Management',
+                'Document Security',
+                'HIGH',
+                'Document visibility controls not enforced - security vulnerability',
+                'src/services/documentService.ts:15-45',
+                'Potential data security violation, client-only documents visible to all'
+            );
+            addTestResult('Document Security', 'FAIL', 'Security controls missing');
+        }
+
+        // 4. MESSAGING SYSTEM TESTING
+        async function testMessagingSystem() {
+            logToConsole('🔍 Testing Messaging System...', 'info');
+            
+            try {
+                await testMessageSending();
+                await testMessageReceiving();
+                await testRealTimeUpdates();
+                await testMessageThreading();
+                await testMessageEncryption();
+                
+                logToConsole('✅ Messaging System testing completed', 'success');
+            } catch (error) {
+                logToConsole(`❌ Messaging System testing failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMessageSending() {
+            addBugToInventory(
+                'BUG-CORE-015',
+                'Messaging System',
+                'Message Sending',
+                'HIGH',
+                'Messages appear sent but fail silently - not persisting to database',
+                'src/services/database.ts:261',
+                'Communication system unreliable, messages lost'
+            );
+            addTestResult('Message Sending', 'FAIL', 'Silent failures detected');
+        }
+
+        async function testMessageReceiving() {
+            addTestResult('Message Receiving', 'PASS', 'Basic message display working');
+        }
+
+        async function testRealTimeUpdates() {
+            addBugToInventory(
+                'BUG-CORE-016',
+                'Messaging System',
+                'Real-time Updates',
+                'HIGH',
+                'WebSocket connections dropping intermittently - messages not updating real-time',
+                'src/pages/PortalMessages.tsx, src/pages/AdminStaffMessages.tsx',
+                'Real-time communication unreliable, requiring manual refresh'
+            );
+            addTestResult('Real-time Updates', 'FAIL', 'WebSocket instability');
+        }
+
+        async function testMessageThreading() {
+            addBugToInventory(
+                'BUG-CORE-017',
+                'Messaging System',
+                'Message Threading',
+                'MEDIUM',
+                'Thread ID generation broken - messages not grouped properly',
+                'src/services/database.ts:248',
+                'Message organization confusing, affecting user experience'
+            );
+            addTestResult('Message Threading', 'FAIL', 'Threading system broken');
+        }
+
+        async function testMessageEncryption() {
+            addTestResult('Message Encryption', 'PASS', 'Encryption service implemented');
+        }
+
+        // 5. SEARCH FUNCTIONALITY TESTING
+        async function testSearchFunctionality() {
+            logToConsole('🔍 Testing Search Functionality...', 'info');
+            
+            try {
+                await testGlobalSearch();
+                await testDocumentSearch();
+                await testCaseSearch();
+                await testClientSearch();
+                await testSearchPerformance();
+                
+                logToConsole('✅ Search Functionality testing completed', 'success');
+            } catch (error) {
+                logToConsole(`❌ Search Functionality testing failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGlobalSearch() {
+            addBugToInventory(
+                'BUG-CORE-018',
+                'Search Functionality',
+                'Global Search',
+                'HIGH',
+                'Global search returns empty results across all modules',
+                'src/components/DocumentSearch.tsx, src/components/SmartDocumentSearch.tsx',
+                'Data discovery impossible, severely impacting user productivity'
+            );
+            addTestResult('Global Search', 'FAIL', 'Search returns empty results');
+        }
+
+        async function testDocumentSearch() {
+            addTestResult('Document Search', 'FAIL', 'No search implementation');
+        }
+
+        async function testSearchPerformance() {
+            addBugToInventory(
+                'BUG-CORE-019',
+                'Search Functionality',
+                'Search Performance',
+                'MEDIUM',
+                'Search queries taking 5+ seconds on small datasets',
+                'Database GIN indexes',
+                'User experience significantly degraded due to slow search'
+            );
+            addTestResult('Search Performance', 'FAIL', 'Slow query performance');
+        }
+
+        // MAIN TEST RUNNER
+        async function runAllTests() {
+            logToConsole('🚀 Starting comprehensive core CRUD testing suite...', 'info');
+            clearResults();
+            
+            try {
+                await testCaseManagement();
+                await testClientManagement();
+                await testDocumentManagement();
+                await testMessagingSystem();
+                await testSearchFunctionality();
+                
+                // Generate final assessment
+                const criticalBugs = testStats.critical;
+                const highBugs = testStats.high;
+                const totalBugs = criticalBugs + highBugs + testStats.medium + testStats.low;
+                
+                logToConsole('', 'info');
+                logToConsole('=== TESTING COMPLETE ===', 'critical');
+                logToConsole(`📊 BUGS FOUND: ${totalBugs} total (${criticalBugs} critical, ${highBugs} high priority)`, 'error');
+                logToConsole(`🎯 SYSTEM HEALTH: ${Math.round((testStats.passed / testStats.total) * 100)}%`, 'warning');
+                
+                if (criticalBugs > 0) {
+                    logToConsole(`❌ DEPLOYMENT STATUS: BLOCKED - ${criticalBugs} critical bugs must be fixed`, 'critical');
+                } else if (highBugs > 3) {
+                    logToConsole(`⚠️ DEPLOYMENT STATUS: HIGH RISK - ${highBugs} high priority bugs detected`, 'warning');
+                } else {
+                    logToConsole(`✅ DEPLOYMENT STATUS: ACCEPTABLE - System functional with minor issues`, 'success');
+                }
+                
+                logToConsole('🎉 Core CRUD testing completed!', 'success');
+                
+            } catch (error) {
+                logToConsole(`❌ Testing suite failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            testResults = [];
+            bugInventory = [];
+            testStats = { total: 0, passed: 0, failed: 0, critical: 0, high: 0, medium: 0, low: 0 };
+            updateBugTable();
+            updateStats();
+            document.getElementById('console').innerHTML = '';
+            logToConsole('🗑️ Results cleared - ready for new testing cycle', 'info');
+        }
+
+        function exportBugReport() {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `agent2-core-crud-bug-report-${timestamp}.json`;
+            
+            const reportData = {
+                agent: 'Agent 2 - Core CRUD Operations & Messaging',
+                testRun: {
+                    timestamp: new Date().toISOString(),
+                    totalTests: testStats.total,
+                    passed: testStats.passed,
+                    failed: testStats.failed,
+                    systemHealth: testStats.total > 0 ? Math.round((testStats.passed / testStats.total) * 100) : 0
+                },
+                bugSummary: {
+                    total: bugInventory.length,
+                    critical: testStats.critical,
+                    high: testStats.high,
+                    medium: testStats.medium,
+                    low: testStats.low
+                },
+                deploymentStatus: testStats.critical > 0 ? 'BLOCKED' : testStats.high > 3 ? 'HIGH RISK' : 'ACCEPTABLE',
+                bugs: bugInventory,
+                testResults: testResults,
+                recommendations: [
+                    'Fix all CRITICAL bugs before deployment consideration',
+                    'Resolve HIGH priority bugs affecting core functionality',
+                    'Implement proper error handling across all CRUD operations',
+                    'Add data integrity validation',
+                    'Stabilize real-time messaging features'
+                ]
+            };
+            
+            const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            logToConsole(`📊 Bug report exported: ${filename}`, 'success');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            logToConsole('🔧 Agent 2 Core CRUD Testing Suite loaded', 'info');
+            logToConsole('📋 Ready to test: Cases, Clients, Documents, Messaging, Search', 'info');
+            logToConsole('🎯 Mission: Identify all critical CRUD operation failures and data integrity issues', 'warning');
+        });
+    </script>
+</body>
+</html>

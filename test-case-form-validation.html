@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Form Validation Testing - Mini Prima</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1f2937;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #374151;
+            margin-top: 0;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+        .test-case h4 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+        .test-case p {
+            margin: 5px 0;
+            color: #6b7280;
+        }
+        .expected {
+            background-color: #ecfdf5;
+            border-left-color: #10b981;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .expected strong {
+            color: #065f46;
+        }
+        .bug-info {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .bug-info h4 {
+            color: #dc2626;
+            margin-top: 0;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .implementation-details {
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .implementation-details h4 {
+            color: #1d4ed8;
+            margin-top: 0;
+        }
+        .code-example {
+            background-color: #1f2937;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐛 Case Form Validation Testing</h1>
+            <p>Mini Prima Legal Practice Management System</p>
+            <p><strong>DEV-1 Bug Fix Package:</strong> BUG-CRUD-004 & BUG-CRUD-005</p>
+        </div>
+
+        <div class="bug-info">
+            <h4>🎯 Bug Fixes Implemented</h4>
+            <p><strong>BUG-CRUD-004:</strong> Enhanced Form Validation with comprehensive business logic</p>
+            <p><strong>BUG-CRUD-005:</strong> Staff Integration Display (Names instead of raw IDs)</p>
+            <p><strong>Target File:</strong> src/components/admin/CaseForm.tsx</p>
+            <p><strong>Estimated Time:</strong> 9 hours (6h + 3h)</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 BUG-CRUD-004: Enhanced Form Validation Tests</h3>
+            
+            <div class="test-case">
+                <h4>Test 1: Required Field Validation</h4>
+                <p>Test that required fields (Client, Case Title, Service Type) show validation errors when empty</p>
+                <div class="expected">
+                    <strong>Expected:</strong> 
+                    <ul>
+                        <li>Red border on empty required fields</li>
+                        <li>Specific error messages in Portuguese</li>
+                        <li>Validation summary at top of form</li>
+                        <li>Submit button disabled until valid</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>Test 2: Date Validation Logic</h4>
+                <p>Test date field validation with business rules</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>Due date must be after start date</li>
+                        <li>Expected close date must be after start date</li>
+                        <li>Dates cannot be more than 10 years in future</li>
+                        <li>Real-time validation feedback</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>Test 3: Financial Validation</h4>
+                <p>Test financial field validation with realistic business constraints</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>No negative amounts allowed</li>
+                        <li>Hourly rate max R$ 10,000/hour</li>
+                        <li>Fixed fee max R$ 10,000,000</li>
+                        <li>Hours worked vs budgeted validation</li>
+                        <li>Helpful placeholder text</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>Test 4: Brazilian Court Process Number Format</h4>
+                <p>Test Brazilian legal process number format validation</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>Format: NNNNNNN-DD.AAAA.J.TR.OOOO</li>
+                        <li>Alternative: 20 sequential digits</li>
+                        <li>Format help text below field</li>
+                        <li>Real-time validation feedback</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>Test 5: Progress & Satisfaction Validation</h4>
+                <p>Test progress percentage and client satisfaction constraints</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>Progress: 0-100% only</li>
+                        <li>Client satisfaction: 1-5 scale</li>
+                        <li>Clear placeholder text</li>
+                        <li>Immediate error feedback</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>👥 BUG-CRUD-005: Staff Integration Display Tests</h3>
+            
+            <div class="test-case">
+                <h4>Test 6: Assigned Lawyer Display</h4>
+                <p>Test that assigned lawyer shows name and position instead of raw ID</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>Selected lawyer displays with name and position badge</li>
+                        <li>Green check icon for valid selection</li>
+                        <li>Warning for inactive/missing lawyers</li>
+                        <li>Truncated ID display for invalid selections</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>Test 7: Supporting Staff Selection</h4>
+                <p>Test supporting staff checkbox list with names and positions</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>Checkbox list shows full name and position</li>
+                        <li>Selected staff summary with badges</li>
+                        <li>Inactive staff marked with warning badges</li>
+                        <li>Clean visual organization</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>Test 8: Staff Data Handling</h4>
+                <p>Test edge cases with missing or inactive staff members</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul>
+                        <li>Handle missing staff gracefully</li>
+                        <li>Show warning for inactive staff</li>
+                        <li>Preserve data integrity</li>
+                        <li>Clear visual feedback</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="implementation-details">
+            <h4>🔧 Technical Implementation Details</h4>
+            <p><strong>Enhanced Validation Function:</strong></p>
+            <div class="code-example">
+const validateForm = (): boolean => {
+  const errors: Record<string, string> = {};
+  
+  // Required field validation
+  if (!formData.client_id) errors.client_id = 'Cliente é obrigatório';
+  if (!formData.case_title) errors.case_title = 'Título do caso é obrigatório';
+  
+  // Date validation with business logic
+  if (formData.start_date && formData.due_date) {
+    const startDate = new Date(formData.start_date);
+    const dueDate = new Date(formData.due_date);
+    if (startDate >= dueDate) {
+      errors.due_date = 'Data de prazo deve ser posterior à data de início';
+    }
+  }
+  
+  // Financial validation with realistic constraints
+  if (formData.hourly_rate && parseFloat(formData.hourly_rate) > 10000) {
+    errors.hourly_rate = 'Taxa por hora parece excessivamente alta';
+  }
+  
+  // Brazilian court process number validation
+  const processNumberPattern = /^\d{7}-\d{2}\.\d{4}\.[\d]\.[\d]{2}\.\d{4}$|^\d{20}$/;
+  
+  setValidationErrors(errors);
+  return Object.keys(errors).length === 0;
+};
+            </div>
+            
+            <p><strong>Staff Display Enhancement:</strong></p>
+            <div class="code-example">
+// Display selected supporting staff with names and positions
+{formData.supporting_staff.map(staffId => {
+  const staffMember = staff.find(s => s.id === staffId);
+  return staffMember ? (
+    &lt;Badge key={staffId} variant="secondary"&gt;
+      {staffMember.full_name} - {staffMember.position}
+    &lt;/Badge&gt;
+  ) : (
+    &lt;Badge key={staffId} variant="destructive"&gt;
+      Membro Inativo (ID: {staffId.substring(0, 8)}...)
+    &lt;/Badge&gt;
+  );
+})}
+            </div>
+        </div>
+
+        <div class="success">
+            <h4>✅ DEV-1 COMPLETED</h4>
+            <p><strong>Status:</strong> Case Form Enhancement Package delivered</p>
+            <p><strong>Files Modified:</strong> src/components/admin/CaseForm.tsx</p>
+            <p><strong>Build Status:</strong> ✅ Successful (no TypeScript errors)</p>
+            <p><strong>Ready for:</strong> QA-1 testing and validation</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 QA Testing Checklist</h3>
+            <div class="test-case">
+                <h4>Manual Testing Steps for QA-1:</h4>
+                <ol>
+                    <li>Navigate to Case Form (Create or Edit mode)</li>
+                    <li>Test required field validation by leaving fields empty</li>
+                    <li>Test date validation with invalid date combinations</li>
+                    <li>Test financial validation with negative and excessive values</li>
+                    <li>Test court process number format validation</li>
+                    <li>Test progress percentage and satisfaction constraints</li>
+                    <li>Test assigned lawyer display with names and positions</li>
+                    <li>Test supporting staff selection and display</li>
+                    <li>Verify Portuguese error messages</li>
+                    <li>Verify submit button is disabled with validation errors</li>
+                    <li>Verify existing functionality is not broken</li>
+                    <li>Test edge cases with missing or inactive staff</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

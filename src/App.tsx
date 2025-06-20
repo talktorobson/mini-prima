@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider, useAdminAuth } from "./contexts/AdminAuthContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import SessionTimeoutWarning from "./components/SessionTimeoutWarning";
 import Index from "./pages/Index";
 import MockHome from "./pages/MockHome";
 import MockHome1 from "./pages/MockHome1";
@@ -27,44 +29,145 @@ import PaymentCheckout from "./pages/PaymentCheckout";
 
 const queryClient = new QueryClient();
 
-// Protected Route Component for client portal
+// Enhanced Protected Route Component for client portal
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, error, isSessionExpired, connectionStatus } = useAuth();
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm">Carregando portal do cliente...</p>
+          {connectionStatus === 'offline' && (
+            <p className="text-red-500 text-xs mt-2">Verificando conexão...</p>
+          )}
+        </div>
       </div>
     );
   }
   
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
+  // Handle session expiration
+  if (isSessionExpired) {
+    return <Navigate to="/login" replace state={{ message: 'Sua sessão expirou. Faça login novamente.' }} />;
+  }
+  
+  // Handle connection errors
+  if (error && connectionStatus === 'offline') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-500 text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro de Conexão</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  return user ? (
+    <>
+      <SessionTimeoutWarning />
+      {children}
+    </>
+  ) : <Navigate to="/login" replace />;
 };
 
-// Protected Route Component for admin panel
+// Enhanced Protected Route Component for admin panel
 const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, adminUser, loading } = useAdminAuth();
+  const { user, adminUser, loading, error, isSessionExpired, connectionStatus } = useAdminAuth();
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm">Carregando painel administrativo...</p>
+          {connectionStatus === 'offline' && (
+            <p className="text-red-500 text-xs mt-2">Verificando conexão...</p>
+          )}
+        </div>
       </div>
     );
   }
   
-  return user && adminUser ? <>{children}</> : <Navigate to="/login" replace />;
+  // Handle session expiration
+  if (isSessionExpired) {
+    return <Navigate to="/login" replace state={{ message: 'Sua sessão administrativa expirou. Faça login novamente.' }} />;
+  }
+  
+  // Handle connection errors
+  if (error && connectionStatus === 'offline') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-500 text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro de Conexão Administrativa</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle permission errors
+  if (user && !adminUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-yellow-500 text-2xl">🔒</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Acesso Não Autorizado</h2>
+          <p className="text-gray-600 mb-4">Você não possui permissões para acessar o painel administrativo.</p>
+          <button 
+            onClick={() => window.location.href = '/login'} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            Fazer Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  return user && adminUser ? (
+    <>
+      <SessionTimeoutWarning />
+      {children}
+    </>
+  ) : <Navigate to="/login" replace />;
 };
 
-// Public Route Component (redirect to portal if already logged in)
+// Enhanced Public Route Component (redirect to portal if already logged in)
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, connectionStatus } = useAuth();
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm">Verificando autenticação...</p>
+          {connectionStatus === 'offline' && (
+            <p className="text-red-500 text-xs mt-2">Sem conexão com o servidor</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -72,14 +175,20 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return !user ? <>{children}</> : <Navigate to="/portal" replace />;
 };
 
-// Admin Public Route Component (redirect to admin dashboard if already logged in)
+// Enhanced Admin Public Route Component (redirect to admin dashboard if already logged in)
 const AdminPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, adminUser, loading } = useAdminAuth();
+  const { user, adminUser, loading, connectionStatus } = useAdminAuth();
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm">Verificando autenticação administrativa...</p>
+          {connectionStatus === 'offline' && (
+            <p className="text-red-500 text-xs mt-2">Sem conexão com o servidor</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -148,15 +257,17 @@ const AppRoutes: React.FC = () => (
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AppRoutes />
-        </TooltipProvider>
-      </Router>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppRoutes />
+          </TooltipProvider>
+        </Router>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

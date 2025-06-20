@@ -31,6 +31,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { caseService, CreateCaseRequest, UpdateCaseRequest } from '@/services/caseService';
+import { financialValidationService } from '@/services/financialValidationService';
 
 interface Client {
   id: string;
@@ -102,6 +103,7 @@ export const CaseForm: React.FC<CaseFormProps> = ({
   const [clients, setClients] = useState<Client[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [existingCase, setExistingCase] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Service type options
   const serviceTypes = [
@@ -231,11 +233,151 @@ export const CaseForm: React.FC<CaseFormProps> = ({
     }
   };
 
+  // Comprehensive validation function
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    // Required field validation
+    if (!formData.client_id) {
+      errors.client_id = 'Cliente é obrigatório';
+    }
+    if (!formData.case_title) {
+      errors.case_title = 'Título do caso é obrigatório';
+    }
+    if (!formData.service_type) {
+      errors.service_type = 'Tipo de serviço é obrigatório';
+    }
+    
+    // Date validation
+    if (formData.start_date && formData.due_date) {
+      const startDate = new Date(formData.start_date);
+      const dueDate = new Date(formData.due_date);
+      if (startDate >= dueDate) {
+        errors.due_date = 'Data de prazo deve ser posterior à data de início';
+      }
+    }
+    
+    if (formData.start_date && formData.expected_close_date) {
+      const startDate = new Date(formData.start_date);
+      const expectedClose = new Date(formData.expected_close_date);
+      if (startDate >= expectedClose) {
+        errors.expected_close_date = 'Data prevista de encerramento deve ser posterior à data de início';
+      }
+    }
+    
+    // Date range validation (not more than 10 years in the future)
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 10);
+    
+    if (formData.due_date && new Date(formData.due_date) > maxDate) {
+      errors.due_date = 'Data de prazo não pode ser superior a 10 anos no futuro';
+    }
+    
+    if (formData.expected_close_date && new Date(formData.expected_close_date) > maxDate) {
+      errors.expected_close_date = 'Data prevista não pode ser superior a 10 anos no futuro';
+    }
+    
+    // Financial validation
+    if (formData.hourly_rate) {
+      const hourlyRate = parseFloat(formData.hourly_rate);
+      if (hourlyRate < 0) {
+        errors.hourly_rate = 'Taxa por hora não pode ser negativa';
+      }
+      if (hourlyRate > 10000) {
+        errors.hourly_rate = 'Taxa por hora parece excessivamente alta (máximo R$ 10.000/h)';
+      }
+    }
+    
+    if (formData.fixed_fee) {
+      const fixedFee = parseFloat(formData.fixed_fee);
+      if (fixedFee < 0) {
+        errors.fixed_fee = 'Honorários fixos não podem ser negativos';
+      }
+      if (fixedFee > 10000000) {
+        errors.fixed_fee = 'Honorários fixos parecem excessivamente altos (máximo R$ 10.000.000)';
+      }
+    }
+    
+    if (formData.total_value) {
+      const totalValue = parseFloat(formData.total_value);
+      if (totalValue < 0) {
+        errors.total_value = 'Valor total não pode ser negativo';
+      }
+    }
+    
+    if (formData.case_risk_value) {
+      const riskValue = parseFloat(formData.case_risk_value);
+      if (riskValue < 0) {
+        errors.case_risk_value = 'Valor da causa não pode ser negativo';
+      }
+    }
+    
+    if (formData.hours_budgeted) {
+      const hoursBudgeted = parseFloat(formData.hours_budgeted);
+      if (hoursBudgeted < 0) {
+        errors.hours_budgeted = 'Horas orçadas não podem ser negativas';
+      }
+      if (hoursBudgeted > 10000) {
+        errors.hours_budgeted = 'Horas orçadas parecem excessivamente altas (máximo 10.000h)';
+      }
+    }
+    
+    if (formData.hours_worked) {
+      const hoursWorked = parseFloat(formData.hours_worked);
+      if (hoursWorked < 0) {
+        errors.hours_worked = 'Horas trabalhadas não podem ser negativas';
+      }
+      // Check if hours worked exceed budgeted hours by more than 200%
+      if (formData.hours_budgeted && hoursWorked > parseFloat(formData.hours_budgeted) * 3) {
+        errors.hours_worked = 'Horas trabalhadas excedem significativamente o orçado. Verifique os valores.';
+      }
+    }
+    
+    // Progress validation
+    if (formData.progress_percentage < 0 || formData.progress_percentage > 100) {
+      errors.progress_percentage = 'Progresso deve estar entre 0% e 100%';
+    }
+    
+    // Client satisfaction validation
+    if (formData.client_satisfaction) {
+      const satisfaction = parseInt(formData.client_satisfaction);
+      if (satisfaction < 1 || satisfaction > 5) {
+        errors.client_satisfaction = 'Satisfação do cliente deve estar entre 1 e 5';
+      }
+    }
+    
+    // Court process number format validation (Brazilian format)
+    if (formData.court_process_number) {
+      // Brazilian process number format: NNNNNNN-DD.AAAA.J.TR.OOOO
+      const processNumberPattern = /^\d{7}-\d{2}\.\d{4}\.[\d]\.[\d]{2}\.\d{4}$|^\d{20}$/;
+      if (!processNumberPattern.test(formData.court_process_number.replace(/\s/g, ''))) {
+        errors.court_process_number = 'Formato inválido. Use: NNNNNNN-DD.AAAA.J.TR.OOOO ou 20 dígitos sequenciais';
+      }
+    }
+    
+    // Case title length validation
+    if (formData.case_title && formData.case_title.length > 200) {
+      errors.case_title = 'Título do caso não pode exceder 200 caracteres';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.client_id || !formData.case_title || !formData.service_type) {
-      setError('Cliente, título do caso e tipo de serviço são obrigatórios');
+    console.log('Form submission started');
+    console.log('Form data:', formData);
+    
+    // Clear previous errors
+    setError(null);
+    setValidationErrors({});
+    
+    // Validate form
+    if (!validateForm()) {
+      setError('Por favor, corrija os erros indicados nos campos');
+      console.log('Form validation failed:', validationErrors);
       return;
     }
 
@@ -243,25 +385,96 @@ export const CaseForm: React.FC<CaseFormProps> = ({
     setError(null);
 
     try {
+      // Verify user authentication
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
+      }
+
+      console.log('User authenticated:', user.id);
+
+      // Prepare data with proper type conversion and validation
+      const preparedData = {
+        client_id: formData.client_id.trim(),
+        case_title: formData.case_title.trim(),
+        service_type: formData.service_type,
+        description: formData.description?.trim() || null,
+        assigned_lawyer: formData.assigned_lawyer || null,
+        priority: formData.priority,
+        status: formData.status,
+        start_date: formData.start_date,
+        due_date: formData.due_date || null,
+        expected_close_date: formData.expected_close_date || null,
+        opposing_party: formData.opposing_party?.trim() || null,
+        counterparty_name: formData.counterparty_name?.trim() || null,
+        court_agency: formData.court_agency?.trim() || null,
+        court_process_number: formData.court_process_number?.trim() || null,
+        case_number_external: formData.case_number_external?.trim() || null,
+        notes: formData.notes?.trim() || null,
+        risk_level: formData.risk_level,
+        // Financial fields with proper validation
+        hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : null,
+        fixed_fee: formData.fixed_fee ? parseFloat(formData.fixed_fee) : null,
+        total_value: formData.total_value ? parseFloat(formData.total_value) : null,
+        case_risk_value: formData.case_risk_value ? parseFloat(formData.case_risk_value) : null,
+        hours_budgeted: formData.hours_budgeted ? parseFloat(formData.hours_budgeted) : null,
+        // Supporting staff with proper array handling
+        supporting_staff: formData.supporting_staff.length > 0 ? formData.supporting_staff : []
+      };
+
+      console.log('Prepared data:', preparedData);
+
+      // Validate client exists
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('id, company_name')
+        .eq('id', preparedData.client_id)
+        .single();
+
+      if (clientError || !clientData) {
+        throw new Error('Cliente selecionado não encontrado no sistema');
+      }
+
+      console.log('Client verified:', clientData.company_name);
+
+      // Validate assigned lawyer if provided
+      if (preparedData.assigned_lawyer) {
+        const { data: lawyerData, error: lawyerError } = await supabase
+          .from('staff')
+          .select('id, full_name')
+          .eq('id', preparedData.assigned_lawyer)
+          .single();
+
+        if (lawyerError || !lawyerData) {
+          throw new Error('Advogado selecionado não encontrado no sistema');
+        }
+
+        console.log('Assigned lawyer verified:', lawyerData.full_name);
+      }
+
       if (isEditing && caseId) {
         // Update existing case
         const updateRequest: UpdateCaseRequest = {
           id: caseId,
-          ...formData,
-          hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : undefined,
-          fixed_fee: formData.fixed_fee ? parseFloat(formData.fixed_fee) : undefined,
-          total_value: formData.total_value ? parseFloat(formData.total_value) : undefined,
-          case_risk_value: formData.case_risk_value ? parseFloat(formData.case_risk_value) : undefined,
-          hours_budgeted: formData.hours_budgeted ? parseFloat(formData.hours_budgeted) : undefined,
+          ...preparedData,
           hours_worked: formData.hours_worked ? parseFloat(formData.hours_worked) : undefined,
-          client_satisfaction: formData.client_satisfaction ? parseInt(formData.client_satisfaction) : undefined
+          client_satisfaction: formData.client_satisfaction ? parseInt(formData.client_satisfaction) : undefined,
+          progress_percentage: formData.progress_percentage,
+          next_steps: formData.next_steps?.trim() || null,
+          key_dates: formData.key_dates?.trim() || null,
+          outcome: formData.outcome?.trim() || null
         };
+
+        console.log('Updating case with data:', updateRequest);
 
         const updatedCase = await caseService.updateCase(updateRequest);
         
+        console.log('Case updated successfully:', updatedCase.id);
+
         toast({
           title: "Sucesso",
-          description: "Caso atualizado com sucesso"
+          description: "Caso atualizado com sucesso",
+          variant: "success"
         });
 
         if (onSuccess) {
@@ -271,20 +484,18 @@ export const CaseForm: React.FC<CaseFormProps> = ({
         }
       } else {
         // Create new case
-        const createRequest: CreateCaseRequest = {
-          ...formData,
-          hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : undefined,
-          fixed_fee: formData.fixed_fee ? parseFloat(formData.fixed_fee) : undefined,
-          total_value: formData.total_value ? parseFloat(formData.total_value) : undefined,
-          case_risk_value: formData.case_risk_value ? parseFloat(formData.case_risk_value) : undefined,
-          hours_budgeted: formData.hours_budgeted ? parseFloat(formData.hours_budgeted) : undefined
-        };
+        const createRequest: CreateCaseRequest = preparedData;
+
+        console.log('Creating new case with data:', createRequest);
 
         const newCase = await caseService.createCase(createRequest);
         
+        console.log('Case created successfully:', newCase.id);
+
         toast({
           title: "Sucesso",
-          description: "Caso criado com sucesso"
+          description: `Caso "${newCase.case_title}" criado com sucesso!`,
+          variant: "success"
         });
 
         if (onSuccess) {
@@ -295,7 +506,35 @@ export const CaseForm: React.FC<CaseFormProps> = ({
       }
     } catch (error: any) {
       console.error('Error saving case:', error);
-      setError(error.message || 'Erro ao salvar caso');
+      
+      // Provide specific error messages
+      let errorMessage = 'Erro inesperado ao salvar caso';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.code) {
+        switch (error.code) {
+          case '23505': // Unique violation
+            errorMessage = 'Já existe um caso com essas informações';
+            break;
+          case '23503': // Foreign key violation
+            errorMessage = 'Dados relacionados não encontrados. Verifique cliente e advogado selecionados.';
+            break;
+          case '23502': // Not null violation
+            errorMessage = 'Campos obrigatórios não preenchidos corretamente';
+            break;
+          default:
+            errorMessage = `Erro no banco de dados: ${error.code}`;
+        }
+      }
+      
+      setError(errorMessage);
+      
+      toast({
+        title: "Erro ao Salvar",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsSaving(false);
     }
@@ -316,6 +555,21 @@ export const CaseForm: React.FC<CaseFormProps> = ({
         ? [...prev.supporting_staff, staffId]
         : prev.supporting_staff.filter(id => id !== staffId)
     }));
+  };
+
+  // Utility function to get staff member name by ID
+  const getStaffMemberById = (staffId: string) => {
+    return staff.find(s => s.id === staffId);
+  };
+
+  // Real-time validation on field change
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   if (isLoading) {
@@ -368,6 +622,23 @@ export const CaseForm: React.FC<CaseFormProps> = ({
         </Alert>
       )}
 
+      {/* Validation Summary */}
+      {Object.keys(validationErrors).length > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-1">
+              <p className="font-medium">Corrija os seguintes erros:</p>
+              <ul className="list-disc list-inside text-sm space-y-1">
+                {Object.entries(validationErrors).map(([field, message]) => (
+                  message && <li key={field}>{message}</li>
+                ))}
+              </ul>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <Card>
@@ -383,9 +654,15 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                 <Label htmlFor="client_id">Cliente *</Label>
                 <Select
                   value={formData.client_id}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, client_id: value }))}
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, client_id: value }));
+                    // Clear validation error when field is corrected
+                    if (validationErrors.client_id) {
+                      setValidationErrors(prev => ({ ...prev, client_id: '' }));
+                    }
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={validationErrors.client_id ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Selecione um cliente" />
                   </SelectTrigger>
                   <SelectContent>
@@ -396,15 +673,26 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+                {validationErrors.client_id && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.client_id}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="service_type">Tipo de Serviço *</Label>
                 <Select
                   value={formData.service_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, service_type: value }))}
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, service_type: value }));
+                    if (validationErrors.service_type) {
+                      setValidationErrors(prev => ({ ...prev, service_type: '' }));
+                    }
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={validationErrors.service_type ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Selecione o tipo de serviço" />
                   </SelectTrigger>
                   <SelectContent>
@@ -415,6 +703,12 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+                {validationErrors.service_type && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.service_type}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -423,9 +717,27 @@ export const CaseForm: React.FC<CaseFormProps> = ({
               <Input
                 id="case_title"
                 value={formData.case_title}
-                onChange={(e) => setFormData(prev => ({ ...prev, case_title: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, case_title: e.target.value }));
+                  if (validationErrors.case_title) {
+                    setValidationErrors(prev => ({ ...prev, case_title: '' }));
+                  }
+                }}
                 placeholder="Descreva brevemente o caso"
+                className={validationErrors.case_title ? 'border-red-500' : ''}
+                maxLength={200}
               />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>
+                  {validationErrors.case_title && (
+                    <span className="text-red-600 flex items-center">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {validationErrors.case_title}
+                    </span>
+                  )}
+                </span>
+                <span>{formData.case_title.length}/200</span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -468,6 +780,28 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {/* Display selected lawyer details */}
+                {formData.assigned_lawyer && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                    {(() => {
+                      const selectedLawyer = getStaffMemberById(formData.assigned_lawyer);
+                      return selectedLawyer ? (
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium">{selectedLawyer.full_name}</span>
+                          <Badge variant="outline" className="text-xs">{selectedLawyer.position}</Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <AlertCircle className="h-4 w-4 text-orange-500" />
+                          <span className="text-sm text-orange-600">Advogado não encontrado (ID: {formData.assigned_lawyer.substring(0, 8)}...)</span>
+                        </div>
+                      );
+                    })()
+                    }
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -520,10 +854,34 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                       onChange={(e) => handleSupportingStaffChange(member.id, e.target.checked)}
                       className="rounded"
                     />
-                    <span>{member.full_name}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{member.full_name}</span>
+                      <span className="text-xs text-gray-500">{member.position}</span>
+                    </div>
                   </label>
                 ))}
               </div>
+              
+              {/* Display selected supporting staff */}
+              {formData.supporting_staff.length > 0 && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                  <Label className="text-sm font-medium text-gray-700">Equipe Selecionada:</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.supporting_staff.map(staffId => {
+                      const staffMember = staff.find(s => s.id === staffId);
+                      return staffMember ? (
+                        <Badge key={staffId} variant="secondary" className="text-xs">
+                          {staffMember.full_name} - {staffMember.position}
+                        </Badge>
+                      ) : (
+                        <Badge key={staffId} variant="destructive" className="text-xs">
+                          Membro Inativo (ID: {staffId.substring(0, 8)}...)
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -554,8 +912,20 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   id="due_date"
                   type="date"
                   value={formData.due_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, due_date: e.target.value }));
+                    if (validationErrors.due_date) {
+                      setValidationErrors(prev => ({ ...prev, due_date: '' }));
+                    }
+                  }}
+                  className={validationErrors.due_date ? 'border-red-500' : ''}
                 />
+                {validationErrors.due_date && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.due_date}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -564,8 +934,20 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   id="expected_close_date"
                   type="date"
                   value={formData.expected_close_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expected_close_date: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, expected_close_date: e.target.value }));
+                    if (validationErrors.expected_close_date) {
+                      setValidationErrors(prev => ({ ...prev, expected_close_date: '' }));
+                    }
+                  }}
+                  className={validationErrors.expected_close_date ? 'border-red-500' : ''}
                 />
+                {validationErrors.expected_close_date && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.expected_close_date}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -579,8 +961,20 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                     min="0"
                     max="100"
                     value={formData.progress_percentage}
-                    onChange={(e) => setFormData(prev => ({ ...prev, progress_percentage: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, progress_percentage: parseInt(e.target.value) || 0 }));
+                      if (validationErrors.progress_percentage) {
+                        setValidationErrors(prev => ({ ...prev, progress_percentage: '' }));
+                      }
+                    }}
+                    className={validationErrors.progress_percentage ? 'border-red-500' : ''}
                   />
+                  {validationErrors.progress_percentage && (
+                    <p className="text-sm text-red-600 flex items-center mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {validationErrors.progress_percentage}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -591,8 +985,20 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                     step="0.5"
                     min="0"
                     value={formData.hours_worked}
-                    onChange={(e) => setFormData(prev => ({ ...prev, hours_worked: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, hours_worked: e.target.value }));
+                      if (validationErrors.hours_worked) {
+                        setValidationErrors(prev => ({ ...prev, hours_worked: '' }));
+                      }
+                    }}
+                    className={validationErrors.hours_worked ? 'border-red-500' : ''}
                   />
+                  {validationErrors.hours_worked && (
+                    <p className="text-sm text-red-600 flex items-center mt-1">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      {validationErrors.hours_worked}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -616,9 +1022,23 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   type="number"
                   step="0.01"
                   min="0"
+                  max="10000"
                   value={formData.hourly_rate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hourly_rate: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, hourly_rate: e.target.value }));
+                    if (validationErrors.hourly_rate) {
+                      setValidationErrors(prev => ({ ...prev, hourly_rate: '' }));
+                    }
+                  }}
+                  className={validationErrors.hourly_rate ? 'border-red-500' : ''}
+                  placeholder="Ex: 350.00"
                 />
+                {validationErrors.hourly_rate && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.hourly_rate}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -628,9 +1048,23 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   type="number"
                   step="0.01"
                   min="0"
+                  max="10000000"
                   value={formData.fixed_fee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, fixed_fee: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, fixed_fee: e.target.value }));
+                    if (validationErrors.fixed_fee) {
+                      setValidationErrors(prev => ({ ...prev, fixed_fee: '' }));
+                    }
+                  }}
+                  className={validationErrors.fixed_fee ? 'border-red-500' : ''}
+                  placeholder="Ex: 5000.00"
                 />
+                {validationErrors.fixed_fee && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.fixed_fee}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -641,8 +1075,21 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   step="0.01"
                   min="0"
                   value={formData.total_value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, total_value: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, total_value: e.target.value }));
+                    if (validationErrors.total_value) {
+                      setValidationErrors(prev => ({ ...prev, total_value: '' }));
+                    }
+                  }}
+                  className={validationErrors.total_value ? 'border-red-500' : ''}
+                  placeholder="Ex: 25000.00"
                 />
+                {validationErrors.total_value && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.total_value}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -654,9 +1101,23 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   type="number"
                   step="0.5"
                   min="0"
+                  max="10000"
                   value={formData.hours_budgeted}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hours_budgeted: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, hours_budgeted: e.target.value }));
+                    if (validationErrors.hours_budgeted) {
+                      setValidationErrors(prev => ({ ...prev, hours_budgeted: '' }));
+                    }
+                  }}
+                  className={validationErrors.hours_budgeted ? 'border-red-500' : ''}
+                  placeholder="Ex: 40.0"
                 />
+                {validationErrors.hours_budgeted && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.hours_budgeted}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -667,8 +1128,21 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                   step="0.01"
                   min="0"
                   value={formData.case_risk_value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, case_risk_value: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, case_risk_value: e.target.value }));
+                    if (validationErrors.case_risk_value) {
+                      setValidationErrors(prev => ({ ...prev, case_risk_value: '' }));
+                    }
+                  }}
+                  className={validationErrors.case_risk_value ? 'border-red-500' : ''}
+                  placeholder="Ex: 100000.00"
                 />
+                {validationErrors.case_risk_value && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.case_risk_value}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -728,9 +1202,22 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                 <Input
                   id="court_process_number"
                   value={formData.court_process_number}
-                  onChange={(e) => setFormData(prev => ({ ...prev, court_process_number: e.target.value }))}
-                  placeholder="Número do processo judicial"
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, court_process_number: e.target.value }));
+                    if (validationErrors.court_process_number) {
+                      setValidationErrors(prev => ({ ...prev, court_process_number: '' }));
+                    }
+                  }}
+                  placeholder="Ex: 1234567-89.2023.8.26.0001"
+                  className={validationErrors.court_process_number ? 'border-red-500' : ''}
                 />
+                {validationErrors.court_process_number && (
+                  <p className="text-sm text-red-600 flex items-center mt-1">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {validationErrors.court_process_number}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">Formato: NNNNNNN-DD.AAAA.J.TR.OOOO ou 20 dígitos</p>
               </div>
             </div>
 
@@ -811,8 +1298,21 @@ export const CaseForm: React.FC<CaseFormProps> = ({
                         min="1"
                         max="5"
                         value={formData.client_satisfaction}
-                        onChange={(e) => setFormData(prev => ({ ...prev, client_satisfaction: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, client_satisfaction: e.target.value }));
+                          if (validationErrors.client_satisfaction) {
+                            setValidationErrors(prev => ({ ...prev, client_satisfaction: '' }));
+                          }
+                        }}
+                        className={validationErrors.client_satisfaction ? 'border-red-500' : ''}
+                        placeholder="1 = Muito Insatisfeito, 5 = Muito Satisfeito"
                       />
+                      {validationErrors.client_satisfaction && (
+                        <p className="text-sm text-red-600 flex items-center mt-1">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          {validationErrors.client_satisfaction}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
@@ -833,10 +1333,18 @@ export const CaseForm: React.FC<CaseFormProps> = ({
           </Button>
 
           <div className="flex items-center space-x-2">
+            {/* Validation Status Indicator */}
+            {Object.keys(validationErrors).length === 0 && formData.client_id && formData.case_title && formData.service_type && (
+              <div className="flex items-center text-green-600 text-sm mr-4">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                <span>Formulário válido</span>
+              </div>
+            )}
+            
             <Button
               type="submit"
-              disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSaving || Object.keys(validationErrors).length > 0}
+              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
               {isSaving ? (
                 <>

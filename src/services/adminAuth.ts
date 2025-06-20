@@ -1,6 +1,27 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Enhanced error classification for admin auth
+const classifyAdminAuthError = (error: any) => {
+  if (error.message?.includes('fetch') || error.code === 'NETWORK_ERROR' || error.name === 'NetworkError') {
+    return { message: 'Problemas de conexão com o servidor administrativo' };
+  }
+  
+  if (error.message?.includes('Invalid login credentials')) {
+    return { message: 'Credenciais administrativas inválidas' };
+  }
+  
+  if (error.message?.includes('Email not confirmed')) {
+    return { message: 'Email administrativo não confirmado' };
+  }
+  
+  if (error.message?.includes('Too many requests')) {
+    return { message: 'Muitas tentativas de login administrativo. Aguarde alguns minutos.' };
+  }
+  
+  return { message: error.message || 'Erro inesperado no login administrativo' };
+};
+
 export const adminAuthService = {
   signIn: async (email: string, password: string) => {
     console.log('Admin sign in attempt for:', email);
@@ -38,7 +59,8 @@ export const adminAuthService = {
 
       if (signInError) {
         console.error('Admin sign in error:', signInError);
-        return { data: null, error: signInError };
+        const classifiedError = classifyAdminAuthError(signInError);
+        return { data: null, error: classifiedError };
       }
 
       if (data.user) {
@@ -53,13 +75,25 @@ export const adminAuthService = {
         if (adminError) {
           console.error('Error checking admin privileges:', adminError);
           await supabase.auth.signOut();
+          
+          // Classify the error for better user feedback
+          if (adminError.message?.includes('fetch') || adminError.code === 'PGRST301') {
+            return { data: null, error: { message: 'Erro de conexão ao verificar permissões administrativas.' } };
+          }
+          
           return { data: null, error: { message: 'Erro ao verificar permissões de acesso.' } };
         }
 
         if (!adminUser) {
           console.error('User does not have admin/staff privileges');
           await supabase.auth.signOut();
-          return { data: null, error: { message: 'Acesso não autorizado. Apenas administradores e equipe podem acessar.' } };
+          return { 
+            data: null, 
+            error: { 
+              message: 'Acesso não autorizado', 
+              details: 'Este usuário não possui permissões administrativas. Entre em contato com o administrador do sistema.' 
+            } 
+          };
         }
 
         console.log('Admin sign in successful:', { email: data.user.email, role: adminUser.role });
@@ -70,7 +104,8 @@ export const adminAuthService = {
 
     } catch (error: any) {
       console.error('Unexpected admin sign in error:', error);
-      return { data: null, error: { message: 'Erro inesperado. Tente novamente.' } };
+      const classifiedError = classifyAdminAuthError(error);
+      return { data: null, error: classifiedError };
     }
   },
 
@@ -95,7 +130,8 @@ export const adminAuthService = {
 
       if (authError) {
         console.error('Error creating auth user:', authError);
-        return { data: null, error: authError };
+        const classifiedError = classifyAdminAuthError(authError);
+        return { data: null, error: classifiedError };
       }
 
       if (authData.user) {
@@ -114,7 +150,17 @@ export const adminAuthService = {
 
         if (adminError) {
           console.error('Error creating admin user record:', adminError);
-          return { data: null, error: adminError };
+          
+          // Try to clean up the auth user if admin record creation failed
+          try {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+            console.log('Cleaned up auth user after admin record creation failure');
+          } catch (cleanupError) {
+            console.error('Failed to cleanup auth user:', cleanupError);
+          }
+          
+          const classifiedError = classifyAdminAuthError(adminError);
+          return { data: null, error: classifiedError };
         }
 
         console.log('Admin user created successfully:', adminUser);
@@ -125,7 +171,8 @@ export const adminAuthService = {
 
     } catch (error: any) {
       console.error('Unexpected error creating admin user:', error);
-      return { data: null, error: { message: 'Erro inesperado. Tente novamente.' } };
+      const classifiedError = classifyAdminAuthError(error);
+      return { data: null, error: classifiedError };
     }
   }
 };

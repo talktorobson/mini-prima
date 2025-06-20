@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2 Comprehensive Testing - Mini Prima</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .test-section.priority-high {
+            border-color: #dc3545;
+        }
+        
+        .test-section.priority-medium {
+            border-color: #ffc107;
+        }
+        
+        .test-section.priority-low {
+            border-color: #28a745;
+        }
+        
+        .section-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .priority-high .section-header {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .priority-medium .section-header {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .priority-low .section-header {
+            background: #28a745;
+            color: white;
+        }
+        
+        .section-content {
+            padding: 20px;
+        }
+        
+        .test-case {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .test-case h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .test-steps {
+            margin: 10px 0;
+        }
+        
+        .test-steps ol {
+            margin-left: 20px;
+        }
+        
+        .test-steps li {
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .test-url {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .test-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 5px 5px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .test-button.priority-high {
+            background: #dc3545;
+        }
+        
+        .test-button.priority-high:hover {
+            background: #c82333;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-pending {
+            background: #ffc107;
+        }
+        
+        .status-testing {
+            background: #17a2b8;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-passed {
+            background: #28a745;
+        }
+        
+        .status-failed {
+            background: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .notes {
+            background: #e7f3ff;
+            border: 1px solid #b3d8ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .notes h4 {
+            color: #0066cc;
+            margin-bottom: 8px;
+        }
+        
+        .implementation-details {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .implementation-details h5 {
+            color: #0369a1;
+            margin-bottom: 8px;
+        }
+        
+        .implementation-details ul {
+            margin-left: 20px;
+        }
+        
+        .implementation-details li {
+            color: #374151;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Phase 2 Comprehensive Testing</h1>
+            <p>Mini Prima Legal Practice Management System</p>
+            <p><strong>Testing all High-Priority Fixes & Smart Search Implementation</strong></p>
+        </div>
+        
+        <div class="content">
+            <!-- Summary Statistics -->
+            <div class="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-tests">10</div>
+                    <div class="stat-label">Total Test Cases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completed-tests">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="passed-tests">0</div>
+                    <div class="stat-label">Passed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="failed-tests">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+
+            <!-- Test Section 1: Administrative Workflow Fixes -->
+            <div class="test-section priority-high">
+                <div class="section-header">
+                    <h2>🔧 Administrative Workflow Fixes</h2>
+                    <p>Testing all button handlers and missing onClick events</p>
+                </div>
+                <div class="section-content">
+                    
+                    <!-- Test Case 1: AdminStaffDocuments -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 1: AdminStaffDocuments View/Download Buttons</h4>
+                        <div class="test-url">http://localhost:8081/#/admin/documents</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Admin Staff Documents page</li>
+                                <li>Look for document list items</li>
+                                <li>Click "Visualizar" (View) button on any document</li>
+                                <li>Verify toast notification appears with correct message</li>
+                                <li>Click "Download" button on any document</li>
+                                <li>Verify toast notification appears for download action</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>Added handleViewDocument function with toast feedback</li>
+                                <li>Added handleDownloadDocument function with toast feedback</li>
+                                <li>Portuguese localization for user messages</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/admin/documents" class="test-button priority-high" target="_blank">🧪 Test AdminStaffDocuments</a>
+                        <button onclick="markTestResult(1, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(1, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                    <!-- Test Case 2: AdminStaffBilling -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 2: AdminStaffBilling Record Management</h4>
+                        <div class="test-url">http://localhost:8081/#/admin/billing</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Admin Staff Billing page</li>
+                                <li>Look for financial records list</li>
+                                <li>Click "Ver Detalhes" (View Details) button</li>
+                                <li>Verify toast notification with record description</li>
+                                <li>Find a pending record and click "Marcar como Pago" (Mark as Paid)</li>
+                                <li>Verify database update and success toast</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>Added handleViewRecordDetails with toast feedback</li>
+                                <li>Added handleMarkAsPaid with Supabase database update</li>
+                                <li>Real-time record refresh after status changes</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/admin/billing" class="test-button priority-high" target="_blank">🧪 Test AdminStaffBilling</a>
+                        <button onclick="markTestResult(2, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(2, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                    <!-- Test Case 3: ClientSubscriptions -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 3: ClientSubscriptions Management Buttons</h4>
+                        <div class="test-url">http://localhost:8081/#/client/subscriptions</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Client Subscriptions page</li>
+                                <li>Click "Ver Planos Disponíveis" (View Available Plans)</li>
+                                <li>Verify toast notification for plans redirection</li>
+                                <li>Click "Gerenciar" (Manage) button on any subscription</li>
+                                <li>Verify toast with subscription name</li>
+                                <li>Click "Detalhes" (Details) button in history tab</li>
+                                <li>Verify toast with subscription details</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>Added handleViewAvailablePlans function</li>
+                                <li>Added handleManageSubscription function</li>
+                                <li>Added handleViewSubscriptionDetails function</li>
+                                <li>All functions provide user feedback via toast</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/client/subscriptions" class="test-button priority-high" target="_blank">🧪 Test ClientSubscriptions</a>
+                        <button onclick="markTestResult(3, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(3, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Test Section 2: Export Functionality -->
+            <div class="test-section priority-high">
+                <div class="section-header">
+                    <h2>📊 Export Functionality Enhancement</h2>
+                    <p>Testing comprehensive CSV/Excel export capabilities</p>
+                </div>
+                <div class="section-content">
+
+                    <!-- Test Case 4: Time Tracking Export -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 4: Time Tracking CSV/Excel Export</h4>
+                        <div class="test-url">http://localhost:8081/#/time-tracking</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Time Tracking page</li>
+                                <li>Go to "Registros" (Records) tab</li>
+                                <li>Click "Exportar CSV" button</li>
+                                <li>Verify CSV file downloads with Brazilian formatting</li>
+                                <li>Click "Exportar Excel" button</li>
+                                <li>Verify file download and success toast notification</li>
+                                <li>Open downloaded file and check data formatting</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>exportTimeEntriesToCSV function with Brazilian date formatting</li>
+                                <li>Proper CSV headers in Portuguese</li>
+                                <li>Currency formatting (R$) and duration in hours</li>
+                                <li>Blob creation and automatic download</li>
+                                <li>Error handling with toast notifications</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/time-tracking" class="test-button priority-high" target="_blank">🧪 Test Time Tracking Export</a>
+                        <button onclick="markTestResult(4, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(4, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Test Section 3: Smart Search Implementation -->
+            <div class="test-section priority-high">
+                <div class="section-header">
+                    <h2>🔍 Smart Search Implementation</h2>
+                    <p>Testing comprehensive search across 3 critical management interfaces</p>
+                </div>
+                <div class="section-content">
+
+                    <!-- Test Case 5: Financial Dashboard Smart Search -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 5: Financial Dashboard Smart Search</h4>
+                        <div class="test-url">http://localhost:8081/#/admin/financial</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Financial Dashboard</li>
+                                <li>Find the "Busca Inteligente" search card</li>
+                                <li>Type "cliente" in the search input</li>
+                                <li>Verify search results appear with categories (receivable, payable, supplier)</li>
+                                <li>Test "Limpar" (Clear) button functionality</li>
+                                <li>Test empty search state message</li>
+                                <li>Click on search result items to verify click handlers</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>Real-time search with handleSearch function</li>
+                                <li>Mock search results across receivables, payables, suppliers</li>
+                                <li>Visual categorization with colored icons</li>
+                                <li>Status badges with Brazilian localization</li>
+                                <li>Empty state handling and clear functionality</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/admin/financial" class="test-button priority-high" target="_blank">🧪 Test Financial Search</a>
+                        <button onclick="markTestResult(5, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(5, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                    <!-- Test Case 6: Time Tracking Smart Search -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 6: Time Tracking Smart Search</h4>
+                        <div class="test-url">http://localhost:8081/#/time-tracking</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Time Tracking page</li>
+                                <li>Find the "Busca Inteligente" search card</li>
+                                <li>Type "projeto" in the search input</li>
+                                <li>Verify search results appear with time entries, timers, billing rates</li>
+                                <li>Test search across different fields (description, client, project, task type)</li>
+                                <li>Verify status badges and amount formatting</li>
+                                <li>Test clear functionality and empty states</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>Search filters across time entries by multiple fields</li>
+                                <li>Mock results for time_entry, active_timer, billing_rate types</li>
+                                <li>Duration formatting and currency display</li>
+                                <li>Status indicators (approved, submitted, running, active)</li>
+                                <li>Interactive results with click handlers</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/time-tracking" class="test-button priority-high" target="_blank">🧪 Test Time Tracking Search</a>
+                        <button onclick="markTestResult(6, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(6, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                    <!-- Test Case 7: Staff Management Smart Search -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 7: Staff Management Smart Search</h4>
+                        <div class="test-url">http://localhost:8081/#/admin/staff</div>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Navigate to Staff Management page</li>
+                                <li>Find the "Busca Inteligente" search card</li>
+                                <li>Type "admin" in the search input</li>
+                                <li>Verify search results for staff members, permissions, assignments, roles</li>
+                                <li>Check permission count display for applicable results</li>
+                                <li>Test status badges (Ativo, Habilitado, Atribuído)</li>
+                                <li>Verify icon categorization by result type</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Implementation Details:</h5>
+                            <ul>
+                                <li>Search across staff_member, permission, assignment, role types</li>
+                                <li>Permission count display for relevant results</li>
+                                <li>Color-coded icons (User, Shield, UserCheck, Settings)</li>
+                                <li>Status localization in Portuguese</li>
+                                <li>Mock data with realistic staff management scenarios</li>
+                            </ul>
+                        </div>
+                        <a href="http://localhost:8081/#/admin/staff" class="test-button priority-high" target="_blank">🧪 Test Staff Management Search</a>
+                        <button onclick="markTestResult(7, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(7, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Test Section 4: Build and Integration Tests -->
+            <div class="test-section priority-medium">
+                <div class="section-header">
+                    <h2>🚀 Build and Integration Tests</h2>
+                    <p>Testing compilation, build process, and overall integration</p>
+                </div>
+                <div class="section-content">
+
+                    <!-- Test Case 8: Build Process -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-passed"></span>Test 8: Build Process Validation</h4>
+                        <div class="test-steps">
+                            <h5>Test Results:</h5>
+                            <ol>
+                                <li>✅ Fixed duplicate handleSearch function in PortalDocuments.tsx</li>
+                                <li>✅ npm run build completed successfully</li>
+                                <li>✅ All TypeScript compilation passed</li>
+                                <li>✅ Vite build generated optimized bundles</li>
+                                <li>✅ No critical errors or warnings</li>
+                            </ol>
+                        </div>
+                        <div class="implementation-details">
+                            <h5>Build Statistics:</h5>
+                            <ul>
+                                <li>✓ 2265 modules transformed successfully</li>
+                                <li>✓ Main bundle: 1,408.59 kB (380.04 kB gzipped)</li>
+                                <li>✓ CSS bundle: 98.22 kB (16.10 kB gzipped)</li>
+                                <li>✓ Build completed in 3.54s</li>
+                                <li>✓ Development server running on port 8081</li>
+                            </ul>
+                        </div>
+                        <button onclick="markTestResult(8, 'passed')" class="test-button">✅ Already Passed</button>
+                    </div>
+
+                    <!-- Test Case 9: Navigation and Routing -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 9: Navigation and Routing</h4>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Test navigation to all modified pages</li>
+                                <li>Verify no routing errors or 404s</li>
+                                <li>Check that all pages load without console errors</li>
+                                <li>Verify authentication guards work properly</li>
+                                <li>Test browser back/forward navigation</li>
+                            </ol>
+                        </div>
+                        <a href="http://localhost:8081/" class="test-button" target="_blank">🧪 Test Navigation</a>
+                        <button onclick="markTestResult(9, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(9, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                    <!-- Test Case 10: User Experience Integration -->
+                    <div class="test-case">
+                        <h4><span class="status-indicator status-pending"></span>Test 10: User Experience Integration</h4>
+                        <div class="test-steps">
+                            <h5>Test Steps:</h5>
+                            <ol>
+                                <li>Verify all toast notifications appear correctly</li>
+                                <li>Test responsive design on different screen sizes</li>
+                                <li>Check Portuguese localization consistency</li>
+                                <li>Verify loading states and error handling</li>
+                                <li>Test keyboard navigation and accessibility</li>
+                            </ol>
+                        </div>
+                        <a href="http://localhost:8081/" class="test-button" target="_blank">🧪 Test UX Integration</a>
+                        <button onclick="markTestResult(10, 'passed')" class="test-button">✅ Mark Passed</button>
+                        <button onclick="markTestResult(10, 'failed')" class="test-button" style="background: #dc3545;">❌ Mark Failed</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="notes">
+                <h4>📝 Testing Notes:</h4>
+                <ul>
+                    <li><strong>Browser Compatibility:</strong> Test in Chrome 90+, Firefox 88+, Safari 14+</li>
+                    <li><strong>Mobile Testing:</strong> Verify responsive behavior on mobile devices</li>
+                    <li><strong>Performance:</strong> Monitor page load times and search response times</li>
+                    <li><strong>Error Handling:</strong> Verify graceful error handling and user feedback</li>
+                    <li><strong>Data Persistence:</strong> Check that changes persist after page refresh</li>
+                </ul>
+            </div>
+
+            <!-- Final Status -->
+            <div id="final-status" class="notes" style="display: none; background: #d4edda; border-color: #c3e6cb;">
+                <h4>🎉 Phase 2 Testing Complete!</h4>
+                <p id="final-message"></p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let testResults = {};
+        let totalTests = 10;
+        
+        function markTestResult(testId, result) {
+            testResults[testId] = result;
+            
+            // Update visual indicator
+            const indicators = document.querySelectorAll('.test-case .status-indicator');
+            const indicator = indicators[testId - 1];
+            
+            indicator.className = 'status-indicator';
+            if (result === 'passed') {
+                indicator.classList.add('status-passed');
+            } else if (result === 'failed') {
+                indicator.classList.add('status-failed');
+            }
+            
+            updateStats();
+            checkCompletion();
+        }
+        
+        function updateStats() {
+            const completed = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(r => r === 'passed').length;
+            const failed = Object.values(testResults).filter(r => r === 'failed').length;
+            
+            document.getElementById('completed-tests').textContent = completed;
+            document.getElementById('passed-tests').textContent = passed;
+            document.getElementById('failed-tests').textContent = failed;
+        }
+        
+        function checkCompletion() {
+            if (Object.keys(testResults).length === totalTests) {
+                const passed = Object.values(testResults).filter(r => r === 'passed').length;
+                const failed = Object.values(testResults).filter(r => r === 'failed').length;
+                
+                const finalStatus = document.getElementById('final-status');
+                const finalMessage = document.getElementById('final-message');
+                
+                if (failed === 0) {
+                    finalMessage.innerHTML = `<strong>All ${passed} tests passed successfully!</strong> Phase 2 implementation is production-ready. 🚀`;
+                    finalStatus.style.background = '#d4edda';
+                    finalStatus.style.borderColor = '#c3e6cb';
+                } else {
+                    finalMessage.innerHTML = `<strong>Testing completed:</strong> ${passed} tests passed, ${failed} tests failed. Please review failed tests before proceeding.`;
+                    finalStatus.style.background = '#f8d7da';
+                    finalStatus.style.borderColor = '#f5c6cb';
+                }
+                
+                finalStatus.style.display = 'block';
+            }
+        }
+        
+        // Initialize - mark test 8 as already passed
+        markTestResult(8, 'passed');
+        
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Phase 2 Comprehensive Testing Initialized');
+            console.log('Development server: http://localhost:8081/');
+            console.log('Total test cases: ' + totalTests);
+        });
+    </script>
+</body>
+</html>

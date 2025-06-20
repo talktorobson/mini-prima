@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema Checker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .table-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .present { background: #d4edda; border-color: #c3e6cb; }
+        .missing { background: #f8d7da; border-color: #f5c6cb; }
+        .checking { background: #fef3e2; border-color: #fdbf47; }
+        .table-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .table-item {
+            padding: 8px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .migration-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ Database Schema Checker</h1>
+            <p>Checking remote Supabase database against application requirements</p>
+        </div>
+
+        <button onclick="checkDatabaseSchema()">🔍 Check Database Schema</button>
+        <button onclick="checkPhase3Tables()">🇧🇷 Check Phase 3 Tables</button>
+        
+        <div id="results"></div>
+        
+        <div class="migration-info">
+            <h3>📋 Expected Tables by Phase:</h3>
+            <div id="expected-tables">
+                <h4>Core System Tables:</h4>
+                <div class="table-list" id="core-tables"></div>
+                
+                <h4>Phase 3 Brazilian Legal Compliance:</h4>
+                <div class="table-list" id="phase3-tables"></div>
+                
+                <h4>Financial & Banking:</h4>
+                <div class="table-list" id="financial-tables"></div>
+                
+                <h4>Time Tracking & Calendar:</h4>
+                <div class="table-list" id="time-tables"></div>
+                
+                <h4>Stripe Payment Integration:</h4>
+                <div class="table-list" id="stripe-tables"></div>
+            </div>
+        </div>
+        
+        <div id="migration-status" class="migration-info" style="display: none;">
+            <h3>⚠️ Migration Required</h3>
+            <p>Some tables are missing from the remote database. You may need to run database migrations.</p>
+            <p><strong>Command to run:</strong> <code>npx supabase db push</code> (requires Docker)</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+
+        const supabaseUrl = 'https://mxhwqijuobczchqrbxqr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14aHdxaWp1b2JjemNocXJieHFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTg0OTc2NzAsImV4cCI6MjAzNDA3MzY3MH0.oFxtM0u5FXbnSjgZpvwCAmEKvB2Sj2KaAgvRgHl7I_k';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Define expected tables by category
+        const expectedTablesByCategory = {
+            core: ['clients', 'cases', 'documents', 'staff', 'admin_users', 'staff_client_assignments', 'portal_messages', 'portal_notifications'],
+            phase3: ['case_deadlines', 'deadline_notifications', 'court_integrations', 'case_workflow_phases', 'oab_compliance_checks', 'legal_templates', 'brazilian_holidays'],
+            financial: ['suppliers', 'expense_categories', 'bills', 'invoices', 'payments', 'subscription_plans', 'client_subscriptions'],
+            time: ['time_entries', 'active_timers', 'billing_rates', 'time_tracking_summaries', 'court_dates', 'legal_deadlines', 'calendar_events'],
+            stripe: ['stripe_settings', 'stripe_products', 'stripe_customers', 'stripe_subscriptions', 'stripe_payments', 'stripe_webhook_events']
+        };
+
+        // Display expected tables
+        function displayExpectedTables() {
+            Object.entries(expectedTablesByCategory).forEach(([category, tables]) => {
+                const container = document.getElementById(`${category}-tables`);
+                if (container) {
+                    container.innerHTML = tables.map(table => 
+                        `<div class="table-item">${table}</div>`
+                    ).join('');
+                }
+            });
+        }
+
+        window.checkDatabaseSchema = async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="checking"><h3>🔍 Checking database schema...</h3></div>';
+
+            const allExpectedTables = Object.values(expectedTablesByCategory).flat();
+            const results = {
+                present: [],
+                missing: [],
+                errors: []
+            };
+
+            // Check each table by attempting to query it
+            for (const tableName of allExpectedTables) {
+                try {
+                    console.log(`Checking table: ${tableName}`);
+                    const { data, error } = await supabase
+                        .from(tableName)
+                        .select('count(*)', { count: 'exact', head: true });
+
+                    if (error) {
+                        if (error.message.includes('relation') && error.message.includes('does not exist')) {
+                            results.missing.push(tableName);
+                        } else {
+                            results.errors.push({ table: tableName, error: error.message });
+                        }
+                    } else {
+                        results.present.push(tableName);
+                    }
+                } catch (err) {
+                    results.errors.push({ table: tableName, error: err.message });
+                }
+            }
+
+            displayResults(results, allExpectedTables.length);
+        };
+
+        window.checkPhase3Tables = async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="checking"><h3>🇧🇷 Checking Phase 3 Brazilian Legal Compliance tables...</h3></div>';
+
+            const phase3Tables = expectedTablesByCategory.phase3;
+            const results = {
+                present: [],
+                missing: [],
+                errors: []
+            };
+
+            for (const tableName of phase3Tables) {
+                try {
+                    const { data, error } = await supabase
+                        .from(tableName)
+                        .select('count(*)', { count: 'exact', head: true });
+
+                    if (error) {
+                        if (error.message.includes('relation') && error.message.includes('does not exist')) {
+                            results.missing.push(tableName);
+                        } else {
+                            results.errors.push({ table: tableName, error: error.message });
+                        }
+                    } else {
+                        results.present.push(tableName);
+                    }
+                } catch (err) {
+                    results.errors.push({ table: tableName, error: err.message });
+                }
+            }
+
+            displayPhase3Results(results);
+        };
+
+        function displayResults(results, totalExpected) {
+            const resultsDiv = document.getElementById('results');
+            const migrationDiv = document.getElementById('migration-status');
+
+            let html = `
+                <div class="summary">
+                    <h3>📊 Database Schema Analysis Results</h3>
+                    <p><strong>Total Expected Tables:</strong> ${totalExpected}</p>
+                    <p><strong>✅ Present:</strong> ${results.present.length}</p>
+                    <p><strong>❌ Missing:</strong> ${results.missing.length}</p>
+                    <p><strong>⚠️ Errors:</strong> ${results.errors.length}</p>
+                </div>
+            `;
+
+            if (results.present.length > 0) {
+                html += `
+                    <div class="table-section present">
+                        <h3>✅ Tables Present (${results.present.length})</h3>
+                        <div class="table-list">
+                            ${results.present.map(table => `<div class="table-item">${table}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (results.missing.length > 0) {
+                html += `
+                    <div class="table-section missing">
+                        <h3>❌ Tables Missing (${results.missing.length})</h3>
+                        <div class="table-list">
+                            ${results.missing.map(table => `<div class="table-item">${table}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+                migrationDiv.style.display = 'block';
+            } else {
+                migrationDiv.style.display = 'none';
+            }
+
+            if (results.errors.length > 0) {
+                html += `
+                    <div class="table-section" style="background: #fff3cd; border-color: #ffeaa7;">
+                        <h3>⚠️ Tables with Query Errors (${results.errors.length})</h3>
+                        <div class="table-list">
+                            ${results.errors.map(({table, error}) => 
+                                `<div class="table-item">${table}: ${error.substring(0, 50)}...</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function displayPhase3Results(results) {
+            const resultsDiv = document.getElementById('results');
+            const phase3Tables = expectedTablesByCategory.phase3;
+
+            let html = `
+                <div class="summary">
+                    <h3>🇧🇷 Phase 3 Brazilian Legal Compliance Analysis</h3>
+                    <p><strong>Expected Phase 3 Tables:</strong> ${phase3Tables.length}</p>
+                    <p><strong>✅ Present:</strong> ${results.present.length}</p>
+                    <p><strong>❌ Missing:</strong> ${results.missing.length}</p>
+                </div>
+            `;
+
+            if (results.present.length > 0) {
+                html += `
+                    <div class="table-section present">
+                        <h3>✅ Phase 3 Tables Present</h3>
+                        <div class="table-list">
+                            ${results.present.map(table => `<div class="table-item">🇧🇷 ${table}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (results.missing.length > 0) {
+                html += `
+                    <div class="table-section missing">
+                        <h3>❌ Phase 3 Tables Missing</h3>
+                        <div class="table-list">
+                            ${results.missing.map(table => `<div class="table-item">🇧🇷 ${table}</div>`).join('')}
+                        </div>
+                        <p><strong>🚨 CRITICAL:</strong> Phase 3 Brazilian Legal Compliance migration has not been applied to the remote database!</p>
+                        <p><strong>Migration file:</strong> <code>20250619150000_brazilian_legal_compliance_system.sql</code></p>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="table-section present">
+                        <h3>🎉 Phase 3 Brazilian Legal Compliance is Complete!</h3>
+                        <p>All Brazilian Legal Compliance tables are present and accessible.</p>
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Initialize
+        displayExpectedTables();
+    </script>
+</body>
+</html>

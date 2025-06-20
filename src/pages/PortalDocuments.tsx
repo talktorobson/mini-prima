@@ -34,54 +34,29 @@ const PortalDocuments = () => {
     dateRange: ''
   });
 
-  // Mock documents for demo since the database might not have data
-  const mockDocuments = [
-    {
-      id: 1,
-      document_name: "Contrato de Prestação de Serviços.pdf",
-      document_type: "Contrato",
-      file_size: 2458112, // 2.4 MB
-      upload_date: "2024-06-15T12:00:00Z",
-      status: "Final",
-      original_filename: "Contrato de Prestação de Serviços.pdf"
-    },
-    {
-      id: 2,
-      document_name: "Procuração Judicial.pdf",
-      document_type: "Procuração",
-      file_size: 1887436, // 1.8 MB
-      upload_date: "2024-06-12T10:30:00Z",
-      status: "Draft",
-      original_filename: "Procuração Judicial.pdf"
-    },
-    {
-      id: 3,
-      document_name: "Relatório Parecer Técnico.pdf",
-      document_type: "Relatório",
-      file_size: 3355443, // 3.2 MB
-      upload_date: "2024-06-10T14:15:00Z",
-      status: "Final",
-      original_filename: "Relatório Parecer Técnico.pdf"
-    },
-    {
-      id: 4,
-      document_name: "Documentos Identificação.zip",
-      document_type: "Identificação",
-      file_size: 5368709, // 5.1 MB
-      upload_date: "2024-06-08T09:45:00Z",
-      status: "Final",
-      original_filename: "Documentos Identificação.zip"
-    }
-  ];
+  const handleSearch = (filters: SearchFilters) => {
+    setSearchFilters(filters);
+  };
 
-  // Use real documents if available, otherwise use mock data
-  const allDocuments = documents.length > 0 ? documents : mockDocuments;
+  // Ensure we always use the real documents from the database
+  const allDocuments = documents || [];
+  
+  // Debug logging to track data sources
+  console.log('PortalDocuments - Raw documents from hook:', documents?.length || 0);
+  console.log('PortalDocuments - Processing documents:', allDocuments?.length || 0);
 
   // Helper functions defined before they are used
   function getStatusFromDocument(doc: any) {
-    if (doc.status === 'Final') return 'Finalizado';
-    if (doc.status === 'Draft') return 'Pendente Assinatura';
-    return 'Processando';
+    const status = doc.status || 'unknown';
+    
+    // Handle database status values
+    if (status === 'Approved' || status === 'Final') return 'Finalizado';
+    if (status === 'Draft' || status === 'Review') return 'Pendente Assinatura';
+    if (status === 'Rejected') return 'Rejeitado';
+    if (status === 'Processing') return 'Processando';
+    
+    // Default fallback
+    return 'Em Análise';
   }
 
   function checkDateRange(uploadDate: string, range: string) {
@@ -103,29 +78,68 @@ const PortalDocuments = () => {
     }
   }
 
-  // Helper function to get display label for document type
-  function getDocumentTypeDisplayLabel(docType: string) {
+  // Helper function to get display label for document type (override imported version)
+  function getLocalDocumentTypeDisplayLabel(docType: string) {
     if (docType === 'General Document') return 'Documento Escritório';
     if (docType === 'Case Document') return 'Documento Processo';
     return docType; // Return original type for other cases
   }
 
-  // Filter documents based on search criteria
+  // Filter documents based on search criteria - consistent data source usage
   const filteredDocuments = useMemo(() => {
+    if (!allDocuments || allDocuments.length === 0) {
+      return [];
+    }
+
+    console.log('Filtering documents, total count:', allDocuments.length);
+    console.log('Current search filters:', searchFilters);
+
     return allDocuments.filter(doc => {
+      // Use consistent field names from database
+      const docName = doc.document_name || doc.original_filename || '';
+      const docType = doc.document_type || doc.document_category || '';
+      const docStatus = doc.status || 'unknown';
+      const uploadDate = doc.upload_date || doc.created_at || '';
+
+      // Query search - comprehensive search across all relevant fields
+      const searchQuery = searchFilters.query.toLowerCase().trim();
       const matchesQuery = searchFilters.query === '' || 
-        doc.document_name.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
-        doc.document_type.toLowerCase().includes(searchFilters.query.toLowerCase());
+        docName.toLowerCase().includes(searchQuery) ||
+        docType.toLowerCase().includes(searchQuery) ||
+        (doc.case?.case_title || '').toLowerCase().includes(searchQuery) ||
+        (doc.case?.case_number || '').toLowerCase().includes(searchQuery) ||
+        (doc.case?.counterparty_name || '').toLowerCase().includes(searchQuery) ||
+        (doc.client?.company_name || '').toLowerCase().includes(searchQuery) ||
+        (doc.client?.contact_person || '').toLowerCase().includes(searchQuery) ||
+        (doc.description || '').toLowerCase().includes(searchQuery);
 
-      const matchesType = searchFilters.type === '' || doc.document_type === searchFilters.type;
+      // Type filter
+      const matchesType = searchFilters.type === '' || docType === searchFilters.type;
 
-      const docStatus = getStatusFromDocument(doc);
-      const matchesStatus = searchFilters.status === '' || docStatus === searchFilters.status;
+      // Status filter - handle both database and legacy status formats
+      const normalizedStatus = getStatusFromDocument(doc);
+      const matchesStatus = searchFilters.status === '' || normalizedStatus === searchFilters.status;
 
-      const matchesDate = searchFilters.dateRange === '' || checkDateRange(doc.upload_date, searchFilters.dateRange);
+      // Date range filter
+      const matchesDate = searchFilters.dateRange === '' || checkDateRange(uploadDate, searchFilters.dateRange);
 
-      return matchesQuery && matchesType && matchesStatus && matchesDate;
+      const matches = matchesQuery && matchesType && matchesStatus && matchesDate;
+      
+      // Debug individual document filtering
+      if (searchFilters.query && !matches) {
+        console.log('Document filtered out:', {
+          name: docName,
+          type: docType,
+          status: normalizedStatus,
+          searchFilters
+        });
+      }
+      
+      return matches;
     });
+    
+    console.log('Filtered documents count:', filtered.length);
+    return filtered;
   }, [allDocuments, searchFilters]);
 
   const formatFileSize = (bytes: number) => {
@@ -177,10 +191,6 @@ const PortalDocuments = () => {
     }
   };
 
-  const handleSearch = (filters: SearchFilters) => {
-    setSearchFilters(filters);
-  };
-
   const handleBulkDownload = () => {
     toast({
       title: 'Download em lote iniciado',
@@ -213,6 +223,27 @@ const PortalDocuments = () => {
 
   if (error) {
     console.error('Error loading documents:', error);
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <FileText className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Erro ao carregar documentos
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Ocorreu um erro ao buscar seus documentos. Tente novamente.
+            </p>
+            <Button 
+              onClick={() => refetch()}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -251,27 +282,34 @@ const PortalDocuments = () => {
       </header>
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-        <DocumentSearch onSearch={setSearchFilters} />
+        <DocumentSearch onSearch={handleSearch} />
         
-        {documents.length === 0 ? (
+        {filteredDocuments.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Nenhum documento disponível
+                {allDocuments.length === 0 ? "Nenhum documento disponível" : "Nenhum documento encontrado"}
               </h3>
               <p className="text-gray-600 mb-4">
-                Seus documentos aparecerão aqui quando estiverem disponíveis.
+                {allDocuments.length === 0 
+                  ? "Seus documentos aparecerão aqui quando forem adicionados aos seus casos pelo escritório."
+                  : "Tente ajustar os filtros de busca para encontrar os documentos desejados."}
               </p>
-              <Button onClick={() => setIsUploadOpen(true)}>
-                <Upload className="h-4 w-4 mr-2" />
-                Adicionar Documentos
-              </Button>
+              {allDocuments.length === 0 && (
+                <Button 
+                  onClick={() => setIsUploadOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Solicitar Upload de Documentos
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-3">
-            {documents.map((doc) => (
+            {filteredDocuments.map((doc) => (
               <Card key={doc.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
@@ -280,18 +318,28 @@ const PortalDocuments = () => {
                         <FileText className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-gray-900 text-xs sm:text-sm break-words leading-tight">{doc.document_name}</h3>
+                        <h3 className="font-medium text-gray-900 text-xs sm:text-sm break-words leading-tight">
+                          {doc.document_name || doc.original_filename || 'Documento sem nome'}
+                        </h3>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs text-gray-600 mt-1 space-y-1 sm:space-y-0">
-                          <span>{getDocumentTypeDisplayLabel(doc.document_type)}</span>
+                          <span>{getLocalDocumentTypeDisplayLabel(doc.document_type || doc.document_category || 'Documento')}</span>
                           <span className="hidden sm:inline">•</span>
                           <span>{doc.file_size ? `${Math.round(doc.file_size / 1024)} KB` : 'N/A'}</span>
                           <span className="hidden sm:inline">•</span>
-                          <span>{new Date(doc.upload_date).toLocaleDateString('pt-BR')}</span>
+                          <span>{new Date(doc.upload_date || doc.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
                           {doc.case && (
                             <>
                               <span className="hidden sm:inline">•</span>
                               <span className="font-medium text-blue-600">
-                                {doc.case.case_title || doc.case.counterparty_name}
+                                {doc.case.case_title || doc.case.counterparty_name || `Caso ${doc.case.case_number}`}
+                              </span>
+                            </>
+                          )}
+                          {doc.client && (
+                            <>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="font-medium text-purple-600">
+                                {doc.client.company_name || doc.client.contact_person}
                               </span>
                             </>
                           )}
@@ -301,11 +349,13 @@ const PortalDocuments = () => {
                     
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium text-center ${
-                        doc.status === 'Approved' 
+                        getStatusFromDocument(doc) === 'Finalizado' 
                           ? 'bg-green-100 text-green-800' 
+                          : getStatusFromDocument(doc) === 'Rejeitado'
+                          ? 'bg-red-100 text-red-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {doc.status === 'Approved' ? 'Aprovado' : 'Em Análise'}
+                        {getStatusFromDocument(doc)}
                       </span>
                       
                       <div className="flex space-x-2">

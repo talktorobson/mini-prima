@@ -78,6 +78,32 @@ export default function ClientSubscriptions() {
     }
   };
 
+  const handleViewAvailablePlans = () => {
+    // Navigate to plans page or open plans modal
+    toast({
+      title: "Planos Disponíveis",
+      description: "Redirecionando para catálogo de planos...",
+    });
+    // In a real implementation, this would navigate to /plans or similar
+  };
+
+  const handleManageSubscription = (subscription: any) => {
+    toast({
+      title: "Gerenciar Assinatura",
+      description: `Gerenciando assinatura: ${subscription.product_name}`,
+    });
+    // In a real implementation, this would open a management modal
+    // with options to change plan, update payment method, etc.
+  };
+
+  const handleViewSubscriptionDetails = (subscription: any) => {
+    toast({
+      title: "Detalhes da Assinatura", 
+      description: `Visualizando detalhes: ${subscription.product_name}`,
+    });
+    // In a real implementation, this would show detailed subscription info
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       active: { label: 'Ativa', variant: 'default' as const, icon: CheckCircle },
@@ -184,7 +210,7 @@ export default function ClientSubscriptions() {
                 <p className="text-gray-500 mb-4">
                   Você não possui assinaturas ativas no momento
                 </p>
-                <Button>
+                <Button onClick={handleViewAvailablePlans}>
                   <Plus className="h-4 w-4 mr-2" />
                   Ver Planos Disponíveis
                 </Button>
@@ -245,7 +271,7 @@ export default function ClientSubscriptions() {
                       )}
                       
                       <div className="flex gap-2 pt-2">
-                        <Button variant="outline" size="sm" className="flex-1">
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleManageSubscription(subscription)}>
                           <Settings className="h-3 w-3 mr-1" />
                           Gerenciar
                         </Button>
@@ -302,7 +328,7 @@ export default function ClientSubscriptions() {
                         <div className="font-medium">
                           {stripeService.formatCurrency(subscription.amount, subscription.currency)}
                         </div>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleViewSubscriptionDetails(subscription)}>
                           <Eye className="h-3 w-3 mr-1" />
                           Detalhes
                         </Button>

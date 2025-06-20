@@ -479,4 +479,132 @@ export const timeTrackingService = {
       currency: 'BRL',
     }).format(amount);
   },
+
+  // Search functionality
+  async searchTimeTrackingData(query: string, filters?: {
+    date_from?: string;
+    date_to?: string;
+    status?: string;
+    client_id?: string;
+    task_type?: string;
+  }) {
+    console.log('Searching time tracking data:', { query, filters });
+    
+    try {
+      if (!query.trim()) {
+        return {
+          timeEntries: [],
+          activeTimers: [],
+          billingRates: [],
+          clients: [],
+          cases: []
+        };
+      }
+
+      const searchTerm = query.toLowerCase();
+      
+      // Search time entries
+      let timeEntriesQuery = supabase
+        .from('time_entries')
+        .select(`
+          *,
+          staff:staff_id (id, full_name, position),
+          case:case_id (id, case_number, case_title),
+          client:client_id (id, company_name)
+        `)
+        .or(`description.ilike.%${searchTerm}%,task_type.ilike.%${searchTerm}%,project_name.ilike.%${searchTerm}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      // Apply filters to time entries
+      if (filters?.date_from) {
+        timeEntriesQuery = timeEntriesQuery.gte('date', filters.date_from);
+      }
+      if (filters?.date_to) {
+        timeEntriesQuery = timeEntriesQuery.lte('date', filters.date_to);
+      }
+      if (filters?.status) {
+        timeEntriesQuery = timeEntriesQuery.eq('status', filters.status);
+      }
+      if (filters?.client_id) {
+        timeEntriesQuery = timeEntriesQuery.eq('client_id', filters.client_id);
+      }
+      if (filters?.task_type) {
+        timeEntriesQuery = timeEntriesQuery.eq('task_type', filters.task_type);
+      }
+
+      const { data: timeEntries, error: timeEntriesError } = await timeEntriesQuery;
+
+      if (timeEntriesError) {
+        console.error('Error searching time entries:', timeEntriesError);
+      }
+
+      // Search active timers
+      const { data: activeTimers, error: timersError } = await supabase
+        .from('active_timers')
+        .select(`
+          *,
+          staff:staff_id (id, full_name, position),
+          case:case_id (id, case_number, case_title),
+          client:client_id (id, company_name)
+        `)
+        .or(`description.ilike.%${searchTerm}%,task_type.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (timersError) {
+        console.error('Error searching active timers:', timersError);
+      }
+
+      // Search billing rates
+      const { data: billingRates, error: ratesError } = await supabase
+        .from('billing_rates')
+        .select(`
+          *,
+          staff:staff_id (id, full_name, position)
+        `)
+        .or(`task_type.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+        .eq('is_active', true)
+        .limit(10);
+
+      if (ratesError) {
+        console.error('Error searching billing rates:', ratesError);
+      }
+
+      // Search clients (if term matches company names)
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id, company_name, contact_person')
+        .or(`company_name.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (clientsError) {
+        console.error('Error searching clients:', clientsError);
+      }
+
+      // Search cases (if term matches case numbers or titles)
+      const { data: cases, error: casesError } = await supabase
+        .from('cases')
+        .select('id, case_number, case_title, client_id')
+        .or(`case_number.ilike.%${searchTerm}%,case_title.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (casesError) {
+        console.error('Error searching cases:', casesError);
+      }
+
+      const results = {
+        timeEntries: timeEntries || [],
+        activeTimers: activeTimers || [],
+        billingRates: billingRates || [],
+        clients: clients || [],
+        cases: cases || []
+      };
+
+      console.log('Time tracking search results:', results);
+      return results;
+    } catch (error) {
+      console.error('Time tracking search error:', error);
+      throw error;
+    }
+  },
 };

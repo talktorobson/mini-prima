@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Client CRUD - BUG-CORE-003</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { margin: 5px; padding: 10px 15px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Client CRUD Test - BUG-CORE-003</h1>
+    <p><strong>Purpose:</strong> Test client CRUD operations to identify RLS policy issues.</p>
+
+    <div id="testResults"></div>
+
+    <button class="btn-primary" onclick="testClientOperations()">Test Client CRUD Operations</button>
+    <button class="btn-danger" onclick="clearResults()">Clear Results</button>
+
+    <script>
+        const SUPABASE_URL = 'https://jzdtrcqmjhqeqcwhnihm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6ZHRyY3FtamhxZXFjd2huaWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MjQyNzEsImV4cCI6MjA1MDMwMDI3MX0.s_1d5JdLOOiKLqJa8k8dVCiX4Z8Z0Bn8gKyI5DRDfrc';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            document.getElementById('testResults').appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        // Client service implementation (copied from database.ts)
+        const clientService = {
+            getCurrentClient: async () => {
+                console.log('Testing getCurrentClient...');
+                addResult('Testing getCurrentClient() method...', 'info');
+                
+                try {
+                    const { data: client, error } = await supabase
+                        .from('clients')
+                        .select('*')
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching current client:', error);
+                        addResult(`❌ getCurrentClient failed: ${error.message}`, 'error');
+                        addResult(`<pre>Error details: ${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                        throw error;
+                    }
+
+                    console.log('Successfully fetched client:', client);
+                    addResult(`✅ getCurrentClient succeeded!`, 'success');
+                    addResult(`<pre>Client data: ${JSON.stringify(client, null, 2)}</pre>`, 'success');
+                    return client;
+                } catch (error) {
+                    console.error('Client service error:', error);
+                    addResult(`❌ Client service error: ${error.message}`, 'error');
+                    throw error;
+                }
+            },
+
+            // Test getting all clients (admin perspective)
+            getAllClients: async () => {
+                console.log('Testing getAllClients...');
+                addResult('Testing getAllClients() method...', 'info');
+                
+                try {
+                    const { data: clients, error } = await supabase
+                        .from('clients')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.error('Error fetching all clients:', error);
+                        addResult(`❌ getAllClients failed: ${error.message}`, 'error');
+                        addResult(`<pre>Error details: ${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                        throw error;
+                    }
+
+                    console.log('Successfully fetched clients:', clients);
+                    addResult(`✅ getAllClients succeeded! Found ${clients?.length || 0} clients`, 'success');
+                    addResult(`<pre>Clients preview: ${JSON.stringify(clients?.slice(0, 2), null, 2)}</pre>`, 'success');
+                    return clients;
+                } catch (error) {
+                    console.error('Client service error:', error);
+                    addResult(`❌ getAllClients error: ${error.message}`, 'error');
+                    throw error;
+                }
+            },
+
+            // Test creating a client
+            createClient: async (clientData) => {
+                console.log('Testing createClient...');
+                addResult('Testing createClient() method...', 'info');
+                
+                try {
+                    const { data: client, error } = await supabase
+                        .from('clients')
+                        .insert(clientData)
+                        .select()
+                        .single();
+
+                    if (error) {
+                        console.error('Error creating client:', error);
+                        addResult(`❌ createClient failed: ${error.message}`, 'error');
+                        addResult(`<pre>Error details: ${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                        throw error;
+                    }
+
+                    console.log('Successfully created client:', client);
+                    addResult(`✅ createClient succeeded!`, 'success');
+                    addResult(`<pre>Created client: ${JSON.stringify(client, null, 2)}</pre>`, 'success');
+                    return client;
+                } catch (error) {
+                    console.error('Client creation error:', error);
+                    addResult(`❌ createClient error: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+        };
+
+        async function checkAuthStatus() {
+            addResult('Checking authentication status...', 'info');
+            
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) {
+                addResult(`❌ Auth error: ${error.message}`, 'error');
+                return null;
+            }
+            
+            if (user) {
+                addResult(`✅ User authenticated: ${user.email}`, 'success');
+                addResult(`<pre>User ID: ${user.id}</pre>`, 'info');
+                return user;
+            } else {
+                addResult('❌ No authenticated user found', 'error');
+                return null;
+            }
+        }
+
+        async function testClientOperations() {
+            addResult('🔧 Starting Client CRUD Test for BUG-CORE-003', 'info');
+            addResult('=' * 50, 'info');
+            
+            try {
+                // 1. Check authentication
+                const user = await checkAuthStatus();
+                
+                // 2. Test getCurrentClient (this should fail with RLS)
+                try {
+                    await clientService.getCurrentClient();
+                } catch (error) {
+                    addResult(`Expected failure in getCurrentClient: ${error.message}`, 'info');
+                }
+                
+                // 3. Test getAllClients
+                try {
+                    await clientService.getAllClients();
+                } catch (error) {
+                    addResult(`getAllClients failed: ${error.message}`, 'error');
+                }
+                
+                // 4. Test createClient (if user is authenticated)
+                if (user) {
+                    try {
+                        const testClient = {
+                            company_name: 'Test Company CRUD',
+                            contact_person: 'Test Person',
+                            email: 'test@crud.com',
+                            phone: '(11) 99999-9999',
+                            registration_status: 'pending'
+                        };
+                        
+                        await clientService.createClient(testClient);
+                    } catch (error) {
+                        addResult(`createClient failed: ${error.message}`, 'error');
+                    }
+                } else {
+                    addResult('❌ Cannot test createClient - user not authenticated', 'error');
+                }
+                
+                addResult('🏁 Test completed!', 'success');
+                
+            } catch (error) {
+                addResult(`💥 Test suite failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            addResult('🚀 Client CRUD Test initialized', 'info');
+            addResult('Click "Test Client CRUD Operations" to start testing', 'info');
+        });
+    </script>
+</body>
+</html>

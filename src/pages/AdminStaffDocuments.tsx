@@ -21,6 +21,9 @@ import {
 import { useStaffData } from '@/hooks/useStaffData';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import DocumentUploadManager from '@/components/DocumentUploadManager';
+import SmartDocumentSearch from '@/components/SmartDocumentSearch';
+import useDocumentManagement from '@/hooks/useDocumentManagement';
 
 interface Document {
   id: string;
@@ -30,6 +33,8 @@ interface Document {
   status: string;
   upload_date: string;
   file_size: number;
+  file_path?: string;
+  original_filename?: string;
   client_id: string;
   case_id?: string;
   is_visible_to_client: boolean;
@@ -48,6 +53,7 @@ const AdminStaffDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const { assignedClients, staffInfo, isStaff, hasAssignedClients } = useStaffData();
   const { toast } = useToast();
 
@@ -67,6 +73,7 @@ const AdminStaffDocuments = () => {
         .from('documents')
         .select(`
           *,
+          file_path,
           client:clients (
             company_name,
             contact_person
@@ -119,6 +126,96 @@ const AdminStaffDocuments = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const handleViewDocument = async (document: Document) => {
+    try {
+      // Get the correct file path from the document record
+      const filePath = document.file_path || `${document.client_id}/${document.id}`;
+      const bucketName = document.file_path ? 'case-documents' : 'documents';
+      
+      console.log('Viewing document from bucket:', bucketName, 'path:', filePath);
+      
+      // Create a signed URL for viewing the document
+      const { data: signedData, error } = await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(filePath, 300); // 5 minutes expiry
+
+      if (error) {
+        throw error;
+      }
+
+      if (signedData?.signedUrl) {
+        // Open document in a new tab for viewing
+        window.open(signedData.signedUrl, '_blank');
+        
+        toast({
+          title: "Documento Aberto",
+          description: `${document.document_name} foi aberto em uma nova aba`,
+        });
+      } else {
+        throw new Error('Não foi possível gerar URL de visualização');
+      }
+    } catch (error) {
+      console.error('Error viewing document:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao visualizar documento. Verifique se o arquivo existe.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadDocument = async (document: Document) => {
+    try {
+      toast({
+        title: "Download Iniciado",
+        description: `Preparando download de: ${document.document_name}`,
+      });
+
+      // Get the correct file path from the document record
+      const filePath = document.file_path || `${document.client_id}/${document.id}`;
+      const bucketName = document.file_path ? 'case-documents' : 'documents';
+      
+      console.log('Downloading document from bucket:', bucketName, 'path:', filePath);
+
+      // Create a signed URL for downloading the document
+      const { data: signedData, error } = await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(filePath, 60); // 1 minute expiry for download
+
+      if (error) {
+        throw error;
+      }
+
+      if (signedData?.signedUrl) {
+        // Create a temporary download link
+        const link = document.createElement('a');
+        link.href = signedData.signedUrl;
+        // Use original filename if available, otherwise use document name
+        link.download = document.original_filename || document.document_name;
+        link.target = '_blank';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download Concluído",
+          description: "Documento baixado com sucesso",
+        });
+      } else {
+        throw new Error('Não foi possível gerar URL de download');
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao baixar documento. Verifique se o arquivo existe.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const uniqueCategories = [...new Set(documents.map(doc => doc.document_category))];
 
   if (!isStaff) {
@@ -143,7 +240,10 @@ const AdminStaffDocuments = () => {
                 Documentos dos clientes atribuídos a {staffInfo?.full_name}
               </p>
             </div>
-            <Button>
+            <Button 
+              onClick={() => setIsUploadOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Upload className="mr-2 h-4 w-4" />
               Upload Documento
             </Button>
@@ -271,7 +371,7 @@ const AdminStaffDocuments = () => {
                           ? 'Tente ajustar os filtros de busca.'
                           : 'Ainda não há documentos para os clientes atribuídos.'}
                       </p>
-                      <Button>
+                      <Button onClick={() => setIsUploadOpen(true)}>
                         <Upload className="mr-2 h-4 w-4" />
                         Upload Primeiro Documento
                       </Button>
@@ -322,10 +422,22 @@ const AdminStaffDocuments = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleViewDocument(document)}
+                              className="hover:bg-blue-50 hover:text-blue-600"
+                              title="Visualizar documento"
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDownloadDocument(document)}
+                              className="hover:bg-green-50 hover:text-green-600"
+                              title="Download documento"
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
                           </div>
@@ -339,6 +451,16 @@ const AdminStaffDocuments = () => {
           </>
         )}
       </main>
+
+      {/* Document Upload Manager */}
+      <DocumentUploadManager
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUploadComplete={() => {
+          fetchStaffDocuments();
+          setIsUploadOpen(false);
+        }}
+      />
     </div>
   );
 };

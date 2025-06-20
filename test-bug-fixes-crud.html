@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Fixes CRUD Testing - Agent 2</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .test-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .bug-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .severity-critical {
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-fixed {
+            background: #059669;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .test-instructions {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .test-checklist {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .test-checklist ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .test-checklist li {
+            margin: 8px 0;
+        }
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .changes-summary {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .browser-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .alert-success {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+            color: #15803d;
+        }
+        .file-changes {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .file-changes h4 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+        }
+        .change-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Agent 2 - CRUD Bug Fixes Testing</h1>
+        <p>Testing fixes for BUG-CORE-001 (Document Upload) and BUG-CORE-002 (Case Creation)</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Bug Fix Summary</h2>
+        <div class="test-grid">
+            <div class="test-card">
+                <div class="bug-header">
+                    <h3>BUG-CORE-001</h3>
+                    <span class="severity-critical">CRITICAL</span>
+                    <span class="status-fixed">FIXED</span>
+                </div>
+                <h4>Document Upload System Completely Broken</h4>
+                <p><strong>Issue:</strong> Files not saving to Supabase Storage</p>
+                <p><strong>Impact:</strong> Document upload functionality completely non-functional</p>
+                <div class="file-changes">
+                    <h4>Files Modified:</h4>
+                    <div class="change-item">
+                        <strong>/src/components/GeneralDocumentUpload.tsx</strong><br>
+                        <small>Complete rewrite of upload handler with error handling</small>
+                    </div>
+                    <div class="change-item">
+                        <strong>/src/components/DocumentUpload.tsx</strong><br>
+                        <small>Enhanced upload process with bucket validation</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <div class="bug-header">
+                    <h3>BUG-CORE-002</h3>
+                    <span class="severity-critical">CRITICAL</span>
+                    <span class="status-fixed">FIXED</span>
+                </div>
+                <h4>Case Creation Data Persistence Failures</h4>
+                <p><strong>Issue:</strong> Forms submit but data doesn't save to database</p>
+                <p><strong>Impact:</strong> Case management completely broken</p>
+                <div class="file-changes">
+                    <h4>Files Modified:</h4>
+                    <div class="change-item">
+                        <strong>/src/components/admin/CaseForm.tsx</strong><br>
+                        <small>Enhanced form submission with validation and error handling</small>
+                    </div>
+                    <div class="change-item">
+                        <strong>/src/services/caseService.ts</strong><br>
+                        <small>Improved createCase and updateCase methods with validation</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Launch Application for Testing</h2>
+        <div class="browser-buttons">
+            <a href="http://localhost:8084" target="_blank" class="btn btn-primary">
+                Open Application (Port 8084)
+            </a>
+            <a href="http://localhost:8081" target="_blank" class="btn btn-secondary">
+                Backup Port 8081
+            </a>
+            <a href="http://localhost:3000" target="_blank" class="btn btn-secondary">
+                Standard Port 3000
+            </a>
+        </div>
+        <div class="alert alert-info">
+            <strong>Note:</strong> Development server should be running on one of these ports. If not, run <code>npm run dev</code> in the project directory.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 BUG-CORE-001: Document Upload Testing</h2>
+        
+        <div class="changes-summary">
+            <h3>Key Improvements Made:</h3>
+            <ul>
+                <li>✅ Added storage bucket validation before upload attempts</li>
+                <li>✅ Implemented comprehensive user authentication checks</li>
+                <li>✅ Enhanced error handling with specific error messages</li>
+                <li>✅ Added file size validation (10MB limit)</li>
+                <li>✅ Improved file path structure for better organization</li>
+                <li>✅ Added retry mechanism for duplicate filename conflicts</li>
+                <li>✅ Implemented proper cleanup on database insertion failures</li>
+                <li>✅ Added admin user fallback for staff uploads</li>
+            </ul>
+        </div>
+
+        <div class="test-instructions">
+            <h3>🧪 Testing Steps - Document Upload:</h3>
+            <ol>
+                <li><strong>Login as Admin:</strong> Use admin credentials to access the system</li>
+                <li><strong>Navigate to Documents:</strong> Go to any document upload interface</li>
+                <li><strong>Test General Upload:</strong> Try uploading documents to general storage</li>
+                <li><strong>Test Case Upload:</strong> Try uploading documents to specific cases</li>
+                <li><strong>Test File Validation:</strong> Try uploading files larger than 10MB</li>
+                <li><strong>Verify Storage:</strong> Check that files actually appear in storage</li>
+                <li><strong>Test Error Handling:</strong> Disconnect internet and test error messages</li>
+            </ol>
+        </div>
+
+        <div class="test-checklist">
+            <h3>✅ Verification Checklist:</h3>
+            <ul>
+                <li>[ ] Files successfully upload to Supabase Storage</li>
+                <li>[ ] Document records are created in database</li>
+                <li>[ ] File paths are properly structured</li>
+                <li>[ ] Error messages are clear and helpful</li>
+                <li>[ ] File size validation works correctly</li>
+                <li>[ ] Upload progress indicators function properly</li>
+                <li>[ ] Both GeneralDocumentUpload and DocumentUpload work</li>
+                <li>[ ] Admin users can upload without client context</li>
+            </ul>
+        </div>
+
+        <div class="code-snippet">
+// Key Fix: Enhanced upload handler with bucket validation
+const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+if (bucketError) {
+  throw new Error('Erro ao acessar sistema de armazenamento');
+}
+
+const caseDocumentsBucket = buckets?.find(b => b.name === 'case-documents');
+if (!caseDocumentsBucket) {
+  throw new Error('Bucket de documentos não configurado');
+}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 BUG-CORE-002: Case Creation Testing</h2>
+        
+        <div class="changes-summary">
+            <h3>Key Improvements Made:</h3>
+            <ul>
+                <li>✅ Enhanced form validation with specific error messages</li>
+                <li>✅ Added user authentication verification before submission</li>
+                <li>✅ Implemented client and lawyer existence validation</li>
+                <li>✅ Improved data preparation with proper type conversion</li>
+                <li>✅ Fixed supporting_staff array handling and JSON serialization</li>
+                <li>✅ Added comprehensive database error handling with specific codes</li>
+                <li>✅ Enhanced case service with validation and error recovery</li>
+                <li>✅ Improved success and error feedback to users</li>
+            </ul>
+        </div>
+
+        <div class="test-instructions">
+            <h3>🧪 Testing Steps - Case Creation:</h3>
+            <ol>
+                <li><strong>Login as Admin:</strong> Access the admin panel</li>
+                <li><strong>Navigate to Cases:</strong> Go to case management section</li>
+                <li><strong>Create New Case:</strong> Click "New Case" or equivalent</li>
+                <li><strong>Fill Required Fields:</strong> Client, Title, Service Type</li>
+                <li><strong>Test Financial Fields:</strong> Add hourly rates, fees, values</li>
+                <li><strong>Select Supporting Staff:</strong> Test staff assignment</li>
+                <li><strong>Test Validation:</strong> Submit with missing required fields</li>
+                <li><strong>Create Valid Case:</strong> Complete form and submit</li>
+                <li><strong>Edit Existing Case:</strong> Test update functionality</li>
+            </ol>
+        </div>
+
+        <div class="test-checklist">
+            <h3>✅ Verification Checklist:</h3>
+            <ul>
+                <li>[ ] Case form loads without errors</li>
+                <li>[ ] Client dropdown populates correctly</li>
+                <li>[ ] Staff dropdown shows available lawyers</li>
+                <li>[ ] Form validation shows clear error messages</li>
+                <li>[ ] Supporting staff selection works properly</li>
+                <li>[ ] Financial fields accept and validate numeric values</li>
+                <li>[ ] Case creation succeeds and shows success message</li>
+                <li>[ ] Case appears in cases list after creation</li>
+                <li>[ ] Case editing loads existing data correctly</li>
+                <li>[ ] Case updates save successfully</li>
+            </ul>
+        </div>
+
+        <div class="code-snippet">
+// Key Fix: Enhanced case creation with validation
+// Verify client exists
+const { data: clientData, error: clientError } = await supabase
+  .from('clients')
+  .select('id, company_name')
+  .eq('id', preparedData.client_id)
+  .single();
+
+if (clientError || !clientData) {
+  throw new Error('Cliente selecionado não encontrado no sistema');
+}
+
+// Proper supporting_staff array handling
+supporting_staff: formData.supporting_staff.length > 0 
+  ? formData.supporting_staff 
+  : []
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Technical Testing Details</h2>
+        
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>Browser Console Testing</h3>
+                <p>Monitor browser console (F12) during testing for:</p>
+                <ul>
+                    <li>Error messages and stack traces</li>
+                    <li>Network request failures</li>
+                    <li>API response codes</li>
+                    <li>Authentication issues</li>
+                </ul>
+            </div>
+
+            <div class="test-card">
+                <h3>Network Tab Monitoring</h3>
+                <p>Check Network tab for:</p>
+                <ul>
+                    <li>Supabase API calls</li>
+                    <li>File upload requests</li>
+                    <li>Database insertion responses</li>
+                    <li>Storage bucket access</li>
+                </ul>
+            </div>
+
+            <div class="test-card">
+                <h3>Database Verification</h3>
+                <p>Verify data persistence:</p>
+                <ul>
+                    <li>Check documents table for new records</li>
+                    <li>Verify case records are created</li>
+                    <li>Confirm file_path URLs are valid</li>
+                    <li>Check supporting_staff JSON format</li>
+                </ul>
+            </div>
+
+            <div class="test-card">
+                <h3>Storage Verification</h3>
+                <p>Confirm file storage:</p>
+                <ul>
+                    <li>Files appear in case-documents bucket</li>
+                    <li>File paths match database records</li>
+                    <li>Files are accessible via signed URLs</li>
+                    <li>File organization by cases/general</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Expected Results</h2>
+        
+        <div class="alert alert-success">
+            <h3>🎉 Success Criteria:</h3>
+            <ul>
+                <li><strong>Document Upload:</strong> Files upload successfully to Supabase Storage and database records are created</li>
+                <li><strong>Case Creation:</strong> Cases are created and saved to database with all form data preserved</li>
+                <li><strong>Error Handling:</strong> Clear, helpful error messages appear for any failures</li>
+                <li><strong>User Experience:</strong> Loading states and success feedback work properly</li>
+                <li><strong>Data Integrity:</strong> No data loss or corruption during operations</li>
+                <li><strong>Multi-user Support:</strong> Both admin and client users can perform operations</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚨 Troubleshooting Guide</h2>
+        
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>Document Upload Issues</h3>
+                <ul>
+                    <li><strong>Bucket Error:</strong> Check Supabase Storage configuration</li>
+                    <li><strong>Auth Error:</strong> Verify user is properly logged in</li>
+                    <li><strong>File Size Error:</strong> Ensure files are under 10MB</li>
+                    <li><strong>Permission Error:</strong> Check RLS policies</li>
+                </ul>
+            </div>
+
+            <div class="test-card">
+                <h3>Case Creation Issues</h3>
+                <ul>
+                    <li><strong>Validation Error:</strong> Check required fields are filled</li>
+                    <li><strong>Client Error:</strong> Ensure client exists in database</li>
+                    <li><strong>Staff Error:</strong> Verify selected lawyer exists</li>
+                    <li><strong>Database Error:</strong> Check console for specific error codes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 Testing Report</h2>
+        <div class="alert alert-info">
+            <p><strong>Next Steps:</strong></p>
+            <ol>
+                <li>Complete testing of both bug fixes</li>
+                <li>Document any remaining issues found</li>
+                <li>Report testing results to coordination agent</li>
+                <li>Prepare for integration testing with other agent fixes</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity for testing
+        function testConnection() {
+            fetch('http://localhost:8084')
+                .then(response => {
+                    if (response.ok) {
+                        alert('✅ Development server is running on port 8084');
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Development server not found on port 8084. Please start the server.');
+                });
+        }
+
+        // Auto-check server status on page load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 1000);
+        });
+
+        // Add timestamp to page
+        document.addEventListener('DOMContentLoaded', function() {
+            const timestamp = new Date().toLocaleString('pt-BR');
+            const timestampElement = document.createElement('div');
+            timestampElement.style.textAlign = 'center';
+            timestampElement.style.marginTop = '20px';
+            timestampElement.style.color = '#64748b';
+            timestampElement.textContent = `Testing page generated: ${timestamp}`;
+            document.body.appendChild(timestampElement);
+        });
+    </script>
+</body>
+</html>

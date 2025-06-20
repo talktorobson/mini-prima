@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Validation Service Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        .test-section h2 {
+            color: #374151;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .test-case {
+            margin: 10px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #e5e5e5;
+        }
+        .test-case.pass {
+            border-left-color: #10b981;
+        }
+        .test-case.fail {
+            border-left-color: #ef4444;
+        }
+        .test-input {
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #1f2937;
+        }
+        .test-result {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .valid {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .invalid {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .error-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+        }
+        .error-list li {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .formatted-value {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        .stats {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+        .stats h3 {
+            margin: 0 0 10px 0;
+            color: #374151;
+        }
+        .pass-count {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .fail-count {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .demo-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 6px;
+            border: 1px solid #bae6fd;
+        }
+        .demo-input {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin: 5px;
+            font-size: 14px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇧🇷 Financial Validation Service Test Suite</h1>
+        <p style="text-align: center; color: #6b7280; margin-bottom: 30px;">
+            Comprehensive testing for Brazilian financial data validation
+        </p>
+
+        <button onclick="runAllTests()">🧪 Run All Tests</button>
+        <button onclick="clearResults()">🔄 Clear Results</button>
+
+        <div id="test-results"></div>
+
+        <div class="demo-section">
+            <h3>💡 Interactive Demo</h3>
+            <p>Test the validation service in real-time:</p>
+            
+            <div style="margin: 15px 0;">
+                <label><strong>Amount Validation:</strong></label><br>
+                <input type="text" id="demo-amount" class="demo-input" placeholder="Enter amount (e.g., 1234.56)" oninput="testAmount()">
+                <div id="amount-result"></div>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label><strong>CPF Validation:</strong></label><br>
+                <input type="text" id="demo-cpf" class="demo-input" placeholder="Enter CPF" oninput="testCPF()">
+                <div id="cpf-result"></div>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label><strong>CNPJ Validation:</strong></label><br>
+                <input type="text" id="demo-cnpj" class="demo-input" placeholder="Enter CNPJ" oninput="testCNPJ()">
+                <div id="cnpj-result"></div>
+            </div>
+        </div>
+
+        <div id="stats" class="stats" style="display: none;">
+            <h3>Test Results Summary</h3>
+            <p>
+                <span class="pass-count" id="pass-count">0</span> tests passed | 
+                <span class="fail-count" id="fail-count">0</span> tests failed | 
+                <strong id="total-count">0</strong> total tests
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Financial Validation Service Implementation
+        class FinancialValidationService {
+            constructor() {
+                this.DEFAULT_CONFIG = {
+                    minAmount: 0.01,
+                    maxAmount: 999999999.99,
+                    allowZero: false,
+                    currency: 'BRL',
+                    locale: 'pt-BR'
+                };
+            }
+
+            formatCurrency(amount, config = {}) {
+                const mergedConfig = { ...this.DEFAULT_CONFIG, ...config };
+                const numValue = typeof amount === 'string' ? parseFloat(amount) : amount;
+                
+                if (isNaN(numValue)) {
+                    return 'R$ 0,00';
+                }
+
+                return numValue.toLocaleString(mergedConfig.locale, {
+                    style: 'currency',
+                    currency: mergedConfig.currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            parseCurrency(value) {
+                if (!value) return 0;
+                
+                const cleaned = value.replace(/[R$\s]/g, '');
+                const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+                
+                const parsed = parseFloat(normalized);
+                return isNaN(parsed) ? 0 : parsed;
+            }
+
+            validateAmount(amount, config = {}) {
+                const mergedConfig = { ...this.DEFAULT_CONFIG, ...config };
+                const errors = [];
+                const warnings = [];
+                
+                const numValue = typeof amount === 'string' ? this.parseCurrency(amount) : amount;
+                
+                if (isNaN(numValue)) {
+                    errors.push('Valor deve ser um número válido');
+                    return { isValid: false, errors, warnings };
+                }
+
+                if (numValue < 0) {
+                    errors.push('Valor não pode ser negativo');
+                }
+
+                if (!mergedConfig.allowZero && numValue === 0) {
+                    errors.push('Valor deve ser maior que zero');
+                }
+
+                if (mergedConfig.minAmount && numValue < mergedConfig.minAmount) {
+                    errors.push(`Valor mínimo é ${this.formatCurrency(mergedConfig.minAmount)}`);
+                }
+
+                if (mergedConfig.maxAmount && numValue > mergedConfig.maxAmount) {
+                    errors.push(`Valor máximo é ${this.formatCurrency(mergedConfig.maxAmount)}`);
+                }
+
+                if (numValue > 1000000) {
+                    warnings.push('Valor muito alto - verifique se está correto');
+                }
+
+                if (numValue < 1 && numValue > 0) {
+                    warnings.push('Valor muito baixo - verifique se está correto');
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors,
+                    warnings
+                };
+            }
+
+            validateCPF(cpf) {
+                const errors = [];
+                
+                if (!cpf) {
+                    errors.push('CPF é obrigatório');
+                    return { isValid: false, errors };
+                }
+
+                const cleanCPF = cpf.replace(/[^\d]/g, '');
+                
+                if (cleanCPF.length !== 11) {
+                    errors.push('CPF deve conter 11 dígitos');
+                    return { isValid: false, errors };
+                }
+
+                if (/^(\d)\1+$/.test(cleanCPF)) {
+                    errors.push('CPF inválido');
+                    return { isValid: false, errors };
+                }
+
+                const digits = cleanCPF.split('').map(Number);
+                
+                // First check digit
+                let sum = 0;
+                for (let i = 0; i < 9; i++) {
+                    sum += digits[i] * (10 - i);
+                }
+                let checkDigit1 = 11 - (sum % 11);
+                if (checkDigit1 >= 10) checkDigit1 = 0;
+                
+                if (digits[9] !== checkDigit1) {
+                    errors.push('CPF inválido');
+                    return { isValid: false, errors };
+                }
+
+                // Second check digit
+                sum = 0;
+                for (let i = 0; i < 10; i++) {
+                    sum += digits[i] * (11 - i);
+                }
+                let checkDigit2 = 11 - (sum % 11);
+                if (checkDigit2 >= 10) checkDigit2 = 0;
+                
+                if (digits[10] !== checkDigit2) {
+                    errors.push('CPF inválido');
+                    return { isValid: false, errors };
+                }
+
+                return { isValid: true, errors };
+            }
+
+            validateCNPJ(cnpj) {
+                const errors = [];
+                
+                if (!cnpj) {
+                    errors.push('CNPJ é obrigatório');
+                    return { isValid: false, errors };
+                }
+
+                const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+                
+                if (cleanCNPJ.length !== 14) {
+                    errors.push('CNPJ deve conter 14 dígitos');
+                    return { isValid: false, errors };
+                }
+
+                if (/^(\d)\1+$/.test(cleanCNPJ)) {
+                    errors.push('CNPJ inválido');
+                    return { isValid: false, errors };
+                }
+
+                const digits = cleanCNPJ.split('').map(Number);
+                
+                // First check digit
+                const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+                let sum = 0;
+                for (let i = 0; i < 12; i++) {
+                    sum += digits[i] * weights1[i];
+                }
+                let checkDigit1 = 11 - (sum % 11);
+                if (checkDigit1 >= 10) checkDigit1 = 0;
+                
+                if (digits[12] !== checkDigit1) {
+                    errors.push('CNPJ inválido');
+                    return { isValid: false, errors };
+                }
+
+                // Second check digit
+                const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+                sum = 0;
+                for (let i = 0; i < 13; i++) {
+                    sum += digits[i] * weights2[i];
+                }
+                let checkDigit2 = 11 - (sum % 11);
+                if (checkDigit2 >= 10) checkDigit2 = 0;
+                
+                if (digits[13] !== checkDigit2) {
+                    errors.push('CNPJ inválido');
+                    return { isValid: false, errors };
+                }
+
+                return { isValid: true, errors };
+            }
+
+            formatCPF(cpf) {
+                const clean = cpf.replace(/[^\d]/g, '');
+                if (clean.length !== 11) return cpf;
+                return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+
+            formatCNPJ(cnpj) {
+                const clean = cnpj.replace(/[^\d]/g, '');
+                if (clean.length !== 14) return cnpj;
+                return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            }
+
+            validatePercentage(percentage, config = {}) {
+                const errors = [];
+                const warnings = [];
+                
+                const numValue = typeof percentage === 'string' ? parseFloat(percentage.replace(',', '.')) : percentage;
+                
+                if (isNaN(numValue)) {
+                    errors.push('Percentual deve ser um número válido');
+                    return { isValid: false, errors, warnings };
+                }
+
+                const minPercentage = config.min ?? 0;
+                const maxPercentage = config.max ?? 100;
+
+                if (numValue < minPercentage) {
+                    errors.push(`Percentual mínimo é ${minPercentage}%`);
+                }
+
+                if (numValue > maxPercentage) {
+                    errors.push(`Percentual máximo é ${maxPercentage}%`);
+                }
+
+                if (numValue > 50 && maxPercentage === 100) {
+                    warnings.push('Percentual alto - verifique se está correto');
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors,
+                    warnings
+                };
+            }
+
+            validateCEP(cep) {
+                const errors = [];
+                const clean = cep.replace(/[^\d]/g, '');
+                
+                if (clean.length !== 8) {
+                    errors.push('CEP deve conter 8 dígitos');
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors
+                };
+            }
+
+            formatCEP(cep) {
+                const clean = cep.replace(/[^\d]/g, '');
+                if (clean.length === 8) {
+                    return clean.replace(/(\d{5})(\d{3})/, '$1-$2');
+                }
+                return cep;
+            }
+        }
+
+        // Initialize the service
+        window.financialValidationService = new FinancialValidationService();
+
+        // Test data and cases
+        const testCases = {
+            amounts: [
+                { input: '1000', expected: true, description: 'Valid amount' },
+                { input: '0.01', expected: true, description: 'Minimum amount' },
+                { input: '0', expected: false, description: 'Zero amount (should fail)' },
+                { input: '-100', expected: false, description: 'Negative amount' },
+                { input: 'invalid', expected: false, description: 'Invalid number' },
+                { input: '1000000000', expected: false, description: 'Amount exceeds maximum' },
+                { input: '1234.56', expected: true, description: 'Decimal amount' }
+            ],
+            cpfs: [
+                { input: '11144477735', expected: true, description: 'Valid CPF' },
+                { input: '111.444.777-35', expected: true, description: 'Valid formatted CPF' },
+                { input: '11111111111', expected: false, description: 'All same digits' },
+                { input: '123456789', expected: false, description: 'Too short' },
+                { input: '12345678901', expected: false, description: 'Invalid check digits' },
+                { input: '', expected: false, description: 'Empty CPF' }
+            ],
+            cnpjs: [
+                { input: '11222333000181', expected: true, description: 'Valid CNPJ' },
+                { input: '11.222.333/0001-81', expected: true, description: 'Valid formatted CNPJ' },
+                { input: '11111111111111', expected: false, description: 'All same digits' },
+                { input: '123456789', expected: false, description: 'Too short' },
+                { input: '11222333000182', expected: false, description: 'Invalid check digits' },
+                { input: '', expected: false, description: 'Empty CNPJ' }
+            ],
+            percentages: [
+                { input: '10', expected: true, description: 'Valid percentage' },
+                { input: '0', expected: true, description: 'Zero percentage' },
+                { input: '100', expected: true, description: 'Maximum percentage' },
+                { input: '-5', expected: false, description: 'Negative percentage' },
+                { input: '150', expected: false, description: 'Over 100%' },
+                { input: 'invalid', expected: false, description: 'Invalid number' }
+            ],
+            ceps: [
+                { input: '01310-100', expected: true, description: 'Valid formatted CEP' },
+                { input: '01310100', expected: true, description: 'Valid unformatted CEP' },
+                { input: '0131010', expected: false, description: 'Too short' },
+                { input: '013101000', expected: false, description: 'Too long' },
+                { input: '', expected: false, description: 'Empty CEP' }
+            ]
+        };
+
+        let totalTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        function runTest(testFunction, input, expected, description, category) {
+            totalTests++;
+            const result = testFunction(input);
+            const passed = result.isValid === expected;
+            
+            if (passed) {
+                passedTests++;
+            } else {
+                failedTests++;
+            }
+
+            return {
+                passed,
+                input,
+                expected,
+                actual: result.isValid,
+                description,
+                category,
+                result,
+                formatted: category === 'amounts' ? financialValidationService.formatCurrency(input) :
+                          category === 'cpfs' ? financialValidationService.formatCPF(input) :
+                          category === 'cnpjs' ? financialValidationService.formatCNPJ(input) :
+                          category === 'ceps' ? financialValidationService.formatCEP(input) : null
+            };
+        }
+
+        function runAllTests() {
+            totalTests = 0;
+            passedTests = 0;
+            failedTests = 0;
+
+            const results = [];
+
+            // Test amounts
+            testCases.amounts.forEach(test => {
+                results.push(runTest(
+                    (input) => financialValidationService.validateAmount(input),
+                    test.input,
+                    test.expected,
+                    test.description,
+                    'amounts'
+                ));
+            });
+
+            // Test CPFs
+            testCases.cpfs.forEach(test => {
+                results.push(runTest(
+                    (input) => financialValidationService.validateCPF(input),
+                    test.input,
+                    test.expected,
+                    test.description,
+                    'cpfs'
+                ));
+            });
+
+            // Test CNPJs
+            testCases.cnpjs.forEach(test => {
+                results.push(runTest(
+                    (input) => financialValidationService.validateCNPJ(input),
+                    test.input,
+                    test.expected,
+                    test.description,
+                    'cnpjs'
+                ));
+            });
+
+            // Test percentages
+            testCases.percentages.forEach(test => {
+                results.push(runTest(
+                    (input) => financialValidationService.validatePercentage(input),
+                    test.input,
+                    test.expected,
+                    test.description,
+                    'percentages'
+                ));
+            });
+
+            // Test CEPs
+            testCases.ceps.forEach(test => {
+                results.push(runTest(
+                    (input) => financialValidationService.validateCEP(input),
+                    test.input,
+                    test.expected,
+                    test.description,
+                    'ceps'
+                ));
+            });
+
+            displayResults(results);
+            updateStats();
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('test-results');
+            
+            const categories = {
+                amounts: 'Currency Amount Validation',
+                cpfs: 'CPF Validation',
+                cnpjs: 'CNPJ Validation', 
+                percentages: 'Percentage Validation',
+                ceps: 'CEP Validation'
+            };
+
+            let html = '';
+
+            Object.keys(categories).forEach(category => {
+                const categoryResults = results.filter(r => r.category === category);
+                
+                html += `
+                    <div class="test-section">
+                        <h2>💰 ${categories[category]}</h2>
+                `;
+
+                categoryResults.forEach(result => {
+                    html += `
+                        <div class="test-case ${result.passed ? 'pass' : 'fail'}">
+                            <strong>${result.description}</strong><br>
+                            Input: <span class="test-input">${result.input}</span>
+                            <div class="test-result">
+                                Expected: <span class="${result.expected ? 'valid' : 'invalid'}">${result.expected ? 'Valid' : 'Invalid'}</span> | 
+                                Got: <span class="${result.actual ? 'valid' : 'invalid'}">${result.actual ? 'Valid' : 'Invalid'}</span>
+                                ${result.passed ? ' ✅' : ' ❌'}
+                            </div>
+                            ${result.formatted ? `<div class="formatted-value">Formatted: ${result.formatted}</div>` : ''}
+                            ${result.result.errors && result.result.errors.length > 0 ? `
+                                <ul class="error-list">
+                                    ${result.result.errors.map(error => `<li>${error}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            });
+
+            resultsContainer.innerHTML = html;
+        }
+
+        function updateStats() {
+            document.getElementById('pass-count').textContent = passedTests;
+            document.getElementById('fail-count').textContent = failedTests;
+            document.getElementById('total-count').textContent = totalTests;
+            document.getElementById('stats').style.display = 'block';
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('stats').style.display = 'none';
+            totalTests = 0;
+            passedTests = 0;
+            failedTests = 0;
+        }
+
+        // Interactive demo functions
+        window.testAmount = function() {
+            const input = document.getElementById('demo-amount').value;
+            const result = financialValidationService.validateAmount(input);
+            const formatted = financialValidationService.formatCurrency(input);
+            
+            document.getElementById('amount-result').innerHTML = `
+                <div style="margin-top: 8px;">
+                    <span class="${result.isValid ? 'valid' : 'invalid'}">
+                        ${result.isValid ? '✅ Valid' : '❌ Invalid'}
+                    </span>
+                    ${formatted !== 'R$ 0,00' ? `<div class="formatted-value">Formatted: ${formatted}</div>` : ''}
+                    ${result.errors.length > 0 ? `
+                        <ul class="error-list">
+                            ${result.errors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `;
+        };
+
+        window.testCPF = function() {
+            const input = document.getElementById('demo-cpf').value;
+            const result = financialValidationService.validateCPF(input);
+            const formatted = financialValidationService.formatCPF(input);
+            
+            document.getElementById('cpf-result').innerHTML = `
+                <div style="margin-top: 8px;">
+                    <span class="${result.isValid ? 'valid' : 'invalid'}">
+                        ${result.isValid ? '✅ Valid' : '❌ Invalid'}
+                    </span>
+                    ${formatted !== input ? `<div class="formatted-value">Formatted: ${formatted}</div>` : ''}
+                    ${result.errors.length > 0 ? `
+                        <ul class="error-list">
+                            ${result.errors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `;
+        };
+
+        window.testCNPJ = function() {
+            const input = document.getElementById('demo-cnpj').value;
+            const result = financialValidationService.validateCNPJ(input);
+            const formatted = financialValidationService.formatCNPJ(input);
+            
+            document.getElementById('cnpj-result').innerHTML = `
+                <div style="margin-top: 8px;">
+                    <span class="${result.isValid ? 'valid' : 'invalid'}">
+                        ${result.isValid ? '✅ Valid' : '❌ Invalid'}
+                    </span>
+                    ${formatted !== input ? `<div class="formatted-value">Formatted: ${formatted}</div>` : ''}
+                    ${result.errors.length > 0 ? `
+                        <ul class="error-list">
+                            ${result.errors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `;
+        };
+
+        // Make functions available globally
+        window.runAllTests = runAllTests;
+        window.clearResults = clearResults;
+
+        // Auto-run tests on page load
+        runAllTests();
+    </script>
+</body>
+</html>

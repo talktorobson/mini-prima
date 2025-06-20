@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   DollarSign, 
   Search, 
@@ -50,6 +53,15 @@ const AdminStaffBilling = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [showNewInvoiceDialog, setShowNewInvoiceDialog] = useState(false);
+  const [newInvoiceForm, setNewInvoiceForm] = useState({
+    client_id: '',
+    case_id: '',
+    description: '',
+    amount: '',
+    due_date: '',
+    notes: ''
+  });
   const { assignedClients, staffInfo, isStaff, hasAssignedClients } = useStaffData();
   const { toast } = useToast();
 
@@ -100,6 +112,100 @@ const AdminStaffBilling = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!newInvoiceForm.client_id || !newInvoiceForm.description || !newInvoiceForm.amount || !newInvoiceForm.due_date) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Generate invoice number
+      const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+      const { error } = await supabase
+        .from('financial_records')
+        .insert({
+          type: 'invoice',
+          description: newInvoiceForm.description,
+          amount: parseFloat(newInvoiceForm.amount),
+          status: 'pending',
+          due_date: newInvoiceForm.due_date,
+          invoice_number: invoiceNumber,
+          client_id: newInvoiceForm.client_id,
+          case_id: newInvoiceForm.case_id || undefined,
+          notes: newInvoiceForm.notes || undefined,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Fatura criada com sucesso"
+      });
+
+      setNewInvoiceForm({
+        client_id: '',
+        case_id: '',
+        description: '',
+        amount: '',
+        due_date: '',
+        notes: ''
+      });
+      setShowNewInvoiceDialog(false);
+      fetchStaffFinancialRecords();
+    } catch (error: any) {
+      console.error('Error creating invoice:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar fatura",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewRecordDetails = (record: FinancialRecord) => {
+    toast({
+      title: "Detalhes do Registro",
+      description: `Visualizando registro: ${record.description}`,
+    });
+    
+    // In a real implementation, this would open a detailed view modal
+    // showing complete record information
+  };
+
+  const handleMarkAsPaid = async (record: FinancialRecord) => {
+    try {
+      const { error } = await supabase
+        .from('financial_records')
+        .update({
+          status: 'Paid',
+          payment_date: new Date().toISOString()
+        })
+        .eq('id', record.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Registro marcado como pago com sucesso"
+      });
+
+      fetchStaffFinancialRecords();
+    } catch (error: any) {
+      console.error('Error marking as paid:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao marcar registro como pago",
+        variant: "destructive"
+      });
     }
   };
 
@@ -173,10 +279,98 @@ const AdminStaffBilling = () => {
                 Gestão financeira dos clientes atribuídos a {staffInfo?.full_name}
               </p>
             </div>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Fatura
-            </Button>
+            <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nova Fatura
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Nova Fatura</DialogTitle>
+                  <DialogDescription>
+                    Crie uma nova fatura para um dos seus clientes atribuídos
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="client">Cliente *</Label>
+                      <Select value={newInvoiceForm.client_id} onValueChange={(value) => setNewInvoiceForm({...newInvoiceForm, client_id: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um cliente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {assignedClients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.company_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="due_date">Data de Vencimento *</Label>
+                      <Input
+                        id="due_date"
+                        type="date"
+                        value={newInvoiceForm.due_date}
+                        onChange={(e) => setNewInvoiceForm({...newInvoiceForm, due_date: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Descrição *</Label>
+                    <Input
+                      id="description"
+                      value={newInvoiceForm.description}
+                      onChange={(e) => setNewInvoiceForm({...newInvoiceForm, description: e.target.value})}
+                      placeholder="Descreva o serviço prestado"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="amount">Valor *</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      value={newInvoiceForm.amount}
+                      onChange={(e) => setNewInvoiceForm({...newInvoiceForm, amount: e.target.value})}
+                      placeholder="0,00"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes">Observações</Label>
+                    <Textarea
+                      id="notes"
+                      value={newInvoiceForm.notes}
+                      onChange={(e) => setNewInvoiceForm({...newInvoiceForm, notes: e.target.value})}
+                      placeholder="Informações adicionais sobre a fatura"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setShowNewInvoiceDialog(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleCreateInvoice}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Criar Fatura
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </header>
@@ -377,11 +571,11 @@ const AdminStaffBilling = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 ml-4">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => handleViewRecordDetails(record)}>
                             Ver Detalhes
                           </Button>
                           {record.status === 'Pending' && (
-                            <Button size="sm">
+                            <Button size="sm" onClick={() => handleMarkAsPaid(record)}>
                               Marcar como Pago
                             </Button>
                           )}

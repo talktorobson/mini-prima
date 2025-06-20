@@ -100,6 +100,150 @@ export const FinancialReports: React.FC = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const handleCashFlowPDFExport = async () => {
+    try {
+      console.log('Generating cash flow PDF report...');
+      
+      // Create a simple PDF content
+      const pdfContent = `
+RELATÓRIO DE FLUXO DE CAIXA
+Período: ${formatDate(dateRange.from)} a ${formatDate(dateRange.to)}
+Gerado em: ${formatDate(new Date().toISOString())}
+
+${cashFlowProjections.map((projection, index) => `
+Mês ${index + 1}: ${projection.month}
+Receita Projetada: ${formatCurrency(projection.projectedIncome)}
+Despesas Projetadas: ${formatCurrency(projection.projectedExpenses)}
+Fluxo Líquido: ${formatCurrency(projection.netCashFlow)}
+Saldo Acumulado: ${formatCurrency(projection.runningBalance)}
+`).join('\n')}
+      `.trim();
+
+      // Create blob and download
+      const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `relatorio-fluxo-caixa-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Sucesso",
+        description: "Relatório de fluxo de caixa gerado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error generating cash flow PDF:', error);
+      toast({
+        title: "Erro", 
+        description: "Erro ao gerar relatório PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAgingReportPDFExport = async () => {
+    try {
+      console.log('Generating aging report PDF...');
+      
+      if (!agingReport) {
+        toast({
+          title: "Aviso",
+          description: "Dados do aging report não disponíveis",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create aging report content
+      const pdfContent = `
+RELATÓRIO DE AGING - CONTAS A RECEBER
+Gerado em: ${formatDate(new Date().toISOString())}
+
+RESUMO POR PERÍODO DE VENCIMENTO:
+Atual (até hoje): ${formatCurrency(agingReport.current)}
+1-30 dias: ${formatCurrency(agingReport.days1to30)}
+31-60 dias: ${formatCurrency(agingReport.days31to60)}
+61-90 dias: ${formatCurrency(agingReport.days61to90)}
+Mais de 90 dias: ${formatCurrency(agingReport.over90Days)}
+
+TOTAL EM ABERTO: ${formatCurrency(agingReport.total)}
+      `.trim();
+
+      // Create blob and download
+      const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `aging-report-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Sucesso",
+        description: "Aging report gerado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error generating aging report PDF:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar aging report PDF", 
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExecutiveDashboardPDFExport = async () => {
+    try {
+      console.log('Generating executive dashboard PDF...');
+      
+      // Create executive dashboard content
+      const pdfContent = `
+DASHBOARD EXECUTIVO FINANCEIRO
+Gerado em: ${formatDate(new Date().toISOString())}
+Período: ${formatDate(dateRange.from)} a ${formatDate(dateRange.to)}
+
+PRINCIPAIS INDICADORES:
+- Fluxo de Caixa Líquido: ${cashFlowProjections.length > 0 ? formatCurrency(cashFlowProjections[0]?.netCashFlow || 0) : 'N/A'}
+- Projeção de Receitas: ${cashFlowProjections.length > 0 ? formatCurrency(cashFlowProjections[0]?.projectedIncome || 0) : 'N/A'}
+- Total em Contas a Receber: ${agingReport ? formatCurrency(agingReport.total) : 'N/A'}
+- Contas Vencidas (90+ dias): ${agingReport ? formatCurrency(agingReport.over90Days) : 'N/A'}
+
+ANÁLISE DE TENDÊNCIAS:
+${cashFlowProjections.map((projection, index) => `
+Mês ${index + 1}: Fluxo Líquido ${formatCurrency(projection.netCashFlow)}
+`).join('')}
+      `.trim();
+
+      // Create blob and download
+      const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dashboard-executivo-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Sucesso",
+        description: "Dashboard executivo gerado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error generating executive dashboard PDF:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar dashboard executivo PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleExportReport = async (type: 'bills' | 'invoices' | 'payments') => {
     try {
       const blob = await financialAnalyticsService.exportToExcel(type);
@@ -617,7 +761,7 @@ export const FinancialReports: React.FC = () => {
                 <p className="text-sm text-gray-600">
                   Projeções e análise histórica do fluxo de caixa.
                 </p>
-                <Button className="w-full" variant="outline">
+                <Button className="w-full" variant="outline" onClick={handleCashFlowPDFExport}>
                   <Printer className="w-4 h-4 mr-2" />
                   Gerar PDF
                 </Button>
@@ -636,7 +780,7 @@ export const FinancialReports: React.FC = () => {
                 <p className="text-sm text-gray-600">
                   Análise detalhada de contas em aberto por período.
                 </p>
-                <Button className="w-full" variant="outline">
+                <Button className="w-full" variant="outline" onClick={handleAgingReportPDFExport}>
                   <Printer className="w-4 h-4 mr-2" />
                   Gerar PDF
                 </Button>
@@ -655,7 +799,7 @@ export const FinancialReports: React.FC = () => {
                 <p className="text-sm text-gray-600">
                   Dashboard executivo com principais KPIs financeiros.
                 </p>
-                <Button className="w-full" variant="outline">
+                <Button className="w-full" variant="outline" onClick={handleExecutiveDashboardPDFExport}>
                   <Printer className="w-4 h-4 mr-2" />
                   Gerar PDF
                 </Button>

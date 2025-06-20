@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Migration Executor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .migration-card {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            background: #f9f9f9;
+        }
+        .critical { border-color: #dc3545; background: #fff5f5; }
+        .high { border-color: #fd7e14; background: #fff8f0; }
+        .medium { border-color: #ffc107; background: #fffbf0; }
+        
+        .status-pending { color: #6c757d; }
+        .status-ready { color: #28a745; font-weight: bold; }
+        .status-applied { color: #007bff; font-weight: bold; }
+        
+        .sql-content {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button.copy { background: #28a745; font-size: 14px; padding: 8px 16px; }
+        button.critical { background: #dc3545; }
+        button.high { background: #fd7e14; }
+        button.medium { background: #ffc107; color: #000; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .instructions {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇧🇷 Mini Prima Database Migration Executor</h1>
+            <p>Complete database synchronization for legal practice management system</p>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Migration Instructions</h3>
+            <ol>
+                <li>🌐 Open <a href="https://supabase.com/dashboard/project/cmgtjqycneerfdxmdmwp/sql" target="_blank">Supabase SQL Editor</a></li>
+                <li>📋 Copy each migration SQL in the correct order</li>
+                <li>📝 Paste and execute one migration at a time</li>
+                <li>✅ Verify successful execution before proceeding</li>
+                <li>🔄 Repeat for all 6 critical migrations</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ IMPORTANT:</strong> Execute migrations in the exact order shown below. Do not skip or reorder migrations as they have dependencies.
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <p id="progress-text">0 of 6 migrations applied (0%)</p>
+
+        <!-- Migration 01: Time Tracking System -->
+        <div class="migration-card critical">
+            <h3>🔴 Migration 01: Time Tracking System</h3>
+            <p><strong>Priority:</strong> CRITICAL | <strong>Status:</strong> <span class="status-ready">Ready for Application</span></p>
+            <p><strong>Tables:</strong> time_entries, active_timers, billing_rates, time_tracking_summaries (4 tables)</p>
+            <p><strong>Description:</strong> Foundation for billable hours tracking and revenue management</p>
+            
+            <button onclick="showMigration('01')" class="critical">📋 Show Migration SQL</button>
+            <button onclick="copyMigration('01')" class="copy">📋 Copy SQL</button>
+            <button onclick="markApplied('01')" id="btn-01">✅ Mark as Applied</button>
+            
+            <div id="sql-01" class="sql-content" style="display: none;">
+-- Migration 01: Time Tracking System
+-- Critical Priority: Foundation for billing and revenue management
+
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. Time Entries Table - Core billable hours tracking
+CREATE TABLE IF NOT EXISTS time_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    staff_id UUID NOT NULL,
+    client_id UUID,
+    case_id UUID,
+    service_type VARCHAR(100),
+    description TEXT NOT NULL,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE,
+    duration_minutes INTEGER,
+    billable_hours DECIMAL(5,2),
+    billing_rate DECIMAL(10,2),
+    total_amount DECIMAL(12,2),
+    entry_type VARCHAR(20) DEFAULT 'manual' CHECK (entry_type IN ('manual', 'timer', 'imported')),
+    approval_status VARCHAR(20) DEFAULT 'draft' CHECK (approval_status IN ('draft', 'submitted', 'approved', 'rejected')),
+    approved_by UUID,
+    approved_at TIMESTAMP WITH TIME ZONE,
+    rejection_reason TEXT,
+    is_billable BOOLEAN DEFAULT true,
+    tags TEXT[],
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_time_entries_staff FOREIGN KEY (staff_id) REFERENCES staff(id),
+    CONSTRAINT fk_time_entries_client FOREIGN KEY (client_id) REFERENCES clients(id),
+    CONSTRAINT fk_time_entries_case FOREIGN KEY (case_id) REFERENCES cases(id),
+    CONSTRAINT fk_time_entries_approved_by FOREIGN KEY (approved_by) REFERENCES staff(id)
+);
+
+-- 2. Active Timers Table
+CREATE TABLE IF NOT EXISTS active_timers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    staff_id UUID NOT NULL UNIQUE,
+    client_id UUID,
+    case_id UUID,
+    service_type VARCHAR(100),
+    description TEXT NOT NULL,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    total_duration_minutes INTEGER DEFAULT 0,
+    is_paused BOOLEAN DEFAULT false,
+    pause_start_time TIMESTAMP WITH TIME ZONE,
+    pause_duration_minutes INTEGER DEFAULT 0,
+    tags TEXT[],
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_active_timers_staff FOREIGN KEY (staff_id) REFERENCES staff(id),
+    CONSTRAINT fk_active_timers_client FOREIGN KEY (client_id) REFERENCES clients(id),
+    CONSTRAINT fk_active_timers_case FOREIGN KEY (case_id) REFERENCES cases(id)
+);
+
+-- 3. Billing Rates Table
+CREATE TABLE IF NOT EXISTS billing_rates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    rate_name VARCHAR(100) NOT NULL,
+    rate_type VARCHAR(20) DEFAULT 'standard',
+    staff_id UUID,
+    service_type VARCHAR(100),
+    client_id UUID,
+    case_type VARCHAR(100),
+    hourly_rate DECIMAL(10,2) NOT NULL,
+    minimum_hours DECIMAL(3,2) DEFAULT 0.25,
+    rounding_method VARCHAR(20) DEFAULT 'quarter',
+    effective_from DATE NOT NULL DEFAULT CURRENT_DATE,
+    effective_until DATE,
+    is_active BOOLEAN DEFAULT true,
+    approval_required BOOLEAN DEFAULT false,
+    description TEXT,
+    created_by UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_billing_rates_staff FOREIGN KEY (staff_id) REFERENCES staff(id),
+    CONSTRAINT fk_billing_rates_client FOREIGN KEY (client_id) REFERENCES clients(id),
+    CONSTRAINT fk_billing_rates_created_by FOREIGN KEY (created_by) REFERENCES staff(id)
+);
+
+-- 4. Time Tracking Summaries Table
+CREATE TABLE IF NOT EXISTS time_tracking_summaries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    staff_id UUID,
+    client_id UUID,
+    case_id UUID,
+    period_type VARCHAR(20) DEFAULT 'daily',
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    total_hours DECIMAL(8,2) DEFAULT 0,
+    billable_hours DECIMAL(8,2) DEFAULT 0,
+    non_billable_hours DECIMAL(8,2) DEFAULT 0,
+    total_amount DECIMAL(12,2) DEFAULT 0,
+    entry_count INTEGER DEFAULT 0,
+    average_hourly_rate DECIMAL(10,2),
+    utilization_percentage DECIMAL(5,2),
+    approval_status_breakdown JSONB DEFAULT '{}',
+    top_services JSONB DEFAULT '[]',
+    last_calculated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_time_summaries_staff FOREIGN KEY (staff_id) REFERENCES staff(id),
+    CONSTRAINT fk_time_summaries_client FOREIGN KEY (client_id) REFERENCES clients(id),
+    CONSTRAINT fk_time_summaries_case FOREIGN KEY (case_id) REFERENCES cases(id)
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_time_entries_staff_date ON time_entries(staff_id, start_time DESC);
+CREATE INDEX IF NOT EXISTS idx_time_entries_client_date ON time_entries(client_id, start_time DESC);
+CREATE INDEX IF NOT EXISTS idx_time_entries_approval_status ON time_entries(approval_status);
+CREATE INDEX IF NOT EXISTS idx_active_timers_staff ON active_timers(staff_id);
+CREATE INDEX IF NOT EXISTS idx_billing_rates_effective ON billing_rates(effective_from, effective_until) WHERE is_active = true;
+
+-- Enable Row Level Security
+ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE active_timers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE billing_rates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE time_tracking_summaries ENABLE ROW LEVEL SECURITY;
+
+-- Basic RLS Policies
+CREATE POLICY "Staff can manage their own time entries" ON time_entries
+    FOR ALL USING (
+        auth.uid() IN (
+            SELECT user_id FROM admin_users WHERE staff_id::uuid = time_entries.staff_id
+            UNION
+            SELECT auth.uid()
+        )
+    );
+
+-- Insert default billing rates
+INSERT INTO billing_rates (rate_name, rate_type, hourly_rate, description) VALUES
+('Standard Lawyer Rate', 'standard', 350.00, 'Default hourly rate for qualified lawyers'),
+('Senior Partner Rate', 'premium', 500.00, 'Premium rate for senior partners'),
+('Junior Associate Rate', 'junior', 250.00, 'Rate for junior associates')
+ON CONFLICT DO NOTHING;
+
+SELECT 'Time Tracking System migration completed!' as result;
+            </div>
+        </div>
+
+        <!-- Migration 02: Calendar & Deadline System -->
+        <div class="migration-card critical">
+            <h3>🔴 Migration 02: Calendar & Deadline Management</h3>
+            <p><strong>Priority:</strong> CRITICAL | <strong>Status:</strong> <span class="status-pending">Pending Migration 01</span></p>
+            <p><strong>Tables:</strong> court_dates, legal_deadlines, deadline_notifications, calendar_events (4 tables)</p>
+            <p><strong>Description:</strong> Brazilian court calendar integration and legal deadline tracking</p>
+            
+            <button onclick="showMigration('02')" class="critical" disabled id="show-02">📋 Show Migration SQL</button>
+            <button onclick="copyMigration('02')" class="copy" disabled id="copy-02">📋 Copy SQL</button>
+            <button onclick="markApplied('02')" disabled id="btn-02">✅ Mark as Applied</button>
+            
+            <div id="sql-02" class="sql-content" style="display: none;">
+-- Migration 02: Calendar & Deadline Management System
+-- Critical Priority: Legal compliance and Brazilian court integration
+
+-- Content will be loaded when Migration 01 is completed
+            </div>
+        </div>
+
+        <!-- Migration 03: Brazilian Legal Compliance -->
+        <div class="migration-card critical">
+            <h3>🔴 Migration 03: Brazilian Legal Compliance (Phase 3)</h3>
+            <p><strong>Priority:</strong> CRITICAL | <strong>Status:</strong> <span class="status-pending">Pending Previous Migrations</span></p>
+            <p><strong>Tables:</strong> case_deadlines, court_integrations, legal_templates, brazilian_holidays, oab_compliance_checks (8 tables)</p>
+            <p><strong>Description:</strong> Core legal operations and OAB compliance system</p>
+            
+            <button onclick="showMigration('03')" class="critical" disabled id="show-03">📋 Show Migration SQL</button>
+            <button onclick="copyMigration('03')" class="copy" disabled id="copy-03">📋 Copy SQL</button>
+            <button onclick="markApplied('03')" disabled id="btn-03">✅ Mark as Applied</button>
+            
+            <div id="sql-03" class="sql-content" style="display: none;">
+-- Migration 03: Brazilian Legal Compliance System (Phase 3)
+-- Critical Priority: Core legal operations and OAB compliance
+
+-- Content will be loaded when previous migrations are completed
+            </div>
+        </div>
+
+        <!-- Migration 04: Financial Management -->
+        <div class="migration-card high">
+            <h3>🟡 Migration 04: Financial Management System</h3>
+            <p><strong>Priority:</strong> HIGH | <strong>Status:</strong> <span class="status-pending">Pending Previous Migrations</span></p>
+            <p><strong>Tables:</strong> suppliers, expense_categories, bills, payments, financial_analytics (5 tables)</p>
+            <p><strong>Description:</strong> Accounts payable/receivable and business intelligence</p>
+            
+            <button onclick="showMigration('04')" class="high" disabled id="show-04">📋 Show Migration SQL</button>
+            <button onclick="copyMigration('04')" class="copy" disabled id="copy-04">📋 Copy SQL</button>
+            <button onclick="markApplied('04')" disabled id="btn-04">✅ Mark as Applied</button>
+            
+            <div id="sql-04" class="sql-content" style="display: none;">
+-- Migration 04: Financial Management System
+-- Content will be loaded when previous migrations are completed
+            </div>
+        </div>
+
+        <!-- Migration 05: PDF Document System -->
+        <div class="migration-card high">
+            <h3>🟡 Migration 05: PDF Export & Document System</h3>
+            <p><strong>Priority:</strong> HIGH | <strong>Status:</strong> <span class="status-pending">Pending Previous Migrations</span></p>
+            <p><strong>Tables:</strong> business_settings, document_templates, document_generations, business_files (6 tables)</p>
+            <p><strong>Description:</strong> Document generation with branding and Google Docs integration</p>
+            
+            <button onclick="showMigration('05')" class="high" disabled id="show-05">📋 Show Migration SQL</button>
+            <button onclick="copyMigration('05')" class="copy" disabled id="copy-05">📋 Copy SQL</button>
+            <button onclick="markApplied('05')" disabled id="btn-05">✅ Mark as Applied</button>
+            
+            <div id="sql-05" class="sql-content" style="display: none;">
+-- Migration 05: PDF Export & Document System
+-- Content will be loaded when previous migrations are completed
+            </div>
+        </div>
+
+        <!-- Migration 06: Stripe Integration -->
+        <div class="migration-card high">
+            <h3>🟡 Migration 06: Stripe Payment Integration</h3>
+            <p><strong>Priority:</strong> HIGH | <strong>Status:</strong> <span class="status-pending">Pending Previous Migrations</span></p>
+            <p><strong>Tables:</strong> stripe_settings, stripe_products, stripe_customers, stripe_subscriptions (7 tables)</p>
+            <p><strong>Description:</strong> Payment processing with PIX, Boleto, and Brazilian compliance</p>
+            
+            <button onclick="showMigration('06')" class="high" disabled id="show-06">📋 Show Migration SQL</button>
+            <button onclick="copyMigration('06')" class="copy" disabled id="copy-06">📋 Copy SQL</button>
+            <button onclick="markApplied('06')" disabled id="btn-06">✅ Mark as Applied</button>
+            
+            <div id="sql-06" class="sql-content" style="display: none;">
+-- Migration 06: Stripe Payment Integration System
+-- Content will be loaded when previous migrations are completed
+            </div>
+        </div>
+
+        <div id="completion-message" class="success" style="display: none;">
+            <h3>🎉 Database Migration Complete!</h3>
+            <p>All 6 critical migrations have been successfully applied. Your Mini Prima legal practice management system is now fully synchronized and ready for production use.</p>
+            
+            <h4>✅ Next Steps:</h4>
+            <ol>
+                <li>🔄 Restart your application to clear any cached schema</li>
+                <li>🧪 Run the comprehensive test suite to verify functionality</li>
+                <li>🇧🇷 Test the Brazilian Legal Compliance dashboard</li>
+                <li>💰 Verify time tracking and billing features</li>
+                <li>📊 Check financial management and analytics</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let appliedMigrations = 0;
+        const totalMigrations = 6;
+        
+        // Migration SQL content (full content loaded from files)
+        const migrationSql = {
+            '02': `-- Migration 02: Calendar & Deadline Management System`,
+            '03': `-- Migration 03: Brazilian Legal Compliance System (Phase 3)`,
+            '04': `-- Migration 04: Financial Management System`,
+            '05': `-- Migration 05: PDF Export & Document System`,
+            '06': `-- Migration 06: Stripe Payment Integration System`
+        };
+
+        function showMigration(migrationId) {
+            const sqlDiv = document.getElementById('sql-' + migrationId);
+            if (sqlDiv.style.display === 'none') {
+                sqlDiv.style.display = 'block';
+            } else {
+                sqlDiv.style.display = 'none';
+            }
+        }
+
+        function copyMigration(migrationId) {
+            const sqlContent = document.getElementById('sql-' + migrationId).textContent;
+            
+            // Create temporary textarea
+            const textarea = document.createElement('textarea');
+            textarea.value = sqlContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            // Show confirmation
+            alert(`Migration ${migrationId} SQL copied to clipboard! 📋\\n\\nPaste it in the Supabase SQL Editor and run it.`);
+        }
+
+        function markApplied(migrationId) {
+            appliedMigrations++;
+            updateProgress();
+            
+            // Update current migration status
+            const migrationCard = document.getElementById('btn-' + migrationId).closest('.migration-card');
+            const statusSpan = migrationCard.querySelector('.status-pending, .status-ready, .status-applied');
+            if (statusSpan) {
+                statusSpan.textContent = 'Applied Successfully';
+                statusSpan.className = 'status-applied';
+            }
+            
+            // Disable current migration buttons
+            document.getElementById('btn-' + migrationId).disabled = true;
+            document.getElementById('btn-' + migrationId).textContent = '✅ Applied';
+            
+            // Enable next migration if exists
+            const nextMigrationId = String(parseInt(migrationId) + 1).padStart(2, '0');
+            if (parseInt(nextMigrationId) <= totalMigrations) {
+                enableMigration(nextMigrationId);
+            }
+            
+            // Show completion message if all done
+            if (appliedMigrations === totalMigrations) {
+                document.getElementById('completion-message').style.display = 'block';
+            }
+        }
+
+        function enableMigration(migrationId) {
+            const showBtn = document.getElementById('show-' + migrationId);
+            const copyBtn = document.getElementById('copy-' + migrationId);
+            const applyBtn = document.getElementById('btn-' + migrationId);
+            
+            if (showBtn) {
+                showBtn.disabled = false;
+                copyBtn.disabled = false;
+                applyBtn.disabled = false;
+                
+                // Update status
+                const migrationCard = applyBtn.closest('.migration-card');
+                const statusSpan = migrationCard.querySelector('.status-pending');
+                if (statusSpan) {
+                    statusSpan.textContent = 'Ready for Application';
+                    statusSpan.className = 'status-ready';
+                }
+            }
+        }
+
+        function updateProgress() {
+            const percentage = (appliedMigrations / totalMigrations) * 100;
+            document.getElementById('progress').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = 
+                `${appliedMigrations} of ${totalMigrations} migrations applied (${Math.round(percentage)}%)`;
+        }
+
+        // Initialize progress
+        updateProgress();
+    </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile UI Bug Fix Testing - Mini Prima</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+        .bug-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+        .bug-card.critical { border-color: #dc2626; background: #fef2f2; }
+        .bug-card.fixed { border-color: #16a34a; background: #f0fdf4; }
+        .bug-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        .bug-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .status-critical { background: #fecaca; color: #dc2626; }
+        .status-fixed { background: #bbf7d0; color: #16a34a; }
+        .status-testing { background: #fcd34d; color: #d97706; }
+        .test-section {
+            margin: 24px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .mobile-viewport {
+            width: 375px;
+            height: 667px;
+            border: 2px solid #000;
+            border-radius: 20px;
+            margin: 20px auto;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .mobile-screen {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 18px;
+        }
+        .device-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .device-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .device-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .fix-summary {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 20px;
+            margin: 24px;
+        }
+        .implementation-steps {
+            margin: 24px;
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .step {
+            margin: 12px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Mobile UI Bug Fix Testing</h1>
+            <p>Agent 3: Critical Mobile Responsiveness Fixes</p>
+            <div style="font-size: 14px; margin-top: 16px; opacity: 0.9;">
+                <strong>Target Bugs:</strong> BUG-UI-001, BUG-UI-002 | 
+                <strong>Priority:</strong> CRITICAL | 
+                <strong>Impact:</strong> Mobile Usage Blocked
+            </div>
+        </div>
+
+        <div class="status-grid">
+            <div class="bug-card fixed">
+                <div class="bug-title">✅ BUG-UI-001: Admin Sidebar Mobile</div>
+                <span class="bug-status status-fixed">FIXED</span>
+                <p><strong>Issue:</strong> Admin panel unusable on mobile devices</p>
+                <p><strong>File:</strong> src/components/admin/AdminSidebar.tsx, AdminLayout.tsx</p>
+                <p><strong>Status:</strong> ✅ Fixed layout margin issue, improved touch targets</p>
+                <p><strong>Solution:</strong> Enhanced mobile drawer with proper responsive design</p>
+            </div>
+
+            <div class="bug-card fixed">  
+                <div class="bug-title">✅ BUG-UI-002: Portal Mobile Navigation</div>
+                <span class="bug-status status-fixed">FIXED</span>
+                <p><strong>Issue:</strong> Client portal lacks mobile navigation menu</p>
+                <p><strong>File:</strong> src/components/Portal.tsx, PortalMobileNav.tsx</p>
+                <p><strong>Status:</strong> ✅ Mobile navigation menu implemented across portal</p>
+                <p><strong>Solution:</strong> Created reusable mobile navigation component</p>
+            </div>
+        </div>
+
+        <div class="fix-summary">
+            <h3>✅ Implementation Summary</h3>
+            <p><strong>AdminSidebar Fixed:</strong> ✅ Enhanced mobile sheet navigation with proper touch targets (min 44px), improved hamburger button styling, and fixed layout margin issues in AdminLayout.</p>
+            <p><strong>Portal Fixed:</strong> ✅ Created reusable PortalMobileNav component with consistent navigation across all portal pages, responsive header adjustments, and mobile-optimized touch interactions.</p>
+            <p><strong>Mobile Hook:</strong> ✅ Leveraged useIsMobile() hook to provide seamless responsive experience across all components.</p>
+        </div>
+
+        <div class="implementation-steps">
+            <h3>✅ Completed Implementation</h3>
+            
+            <div class="step" style="background: #f0fdf4; border-left-color: #22c55e;">
+                <strong>✅ Step 1: AdminSidebar Mobile Enhancement</strong>
+                <p>✅ Fixed mobile menu button positioning and styling (12x12px, shadow-lg)</p>
+                <p>✅ Enhanced Z-index for mobile overlay (z-50)</p>
+                <p>✅ Improved touch targets for mobile devices (min-h-[44px])</p>
+                <p>✅ Enhanced hamburger menu functionality with 300px sheet width</p>
+            </div>
+
+            <div class="step" style="background: #f0fdf4; border-left-color: #22c55e;">
+                <strong>✅ Step 2: Portal Mobile Navigation</strong>
+                <p>✅ Created PortalMobileNav component for portal sub-pages</p>
+                <p>✅ Implemented slide-out navigation with proper styling</p>
+                <p>✅ Added navigation state tracking and visual feedback</p>
+                <p>✅ Ensured consistent mobile UX across all portal pages</p>
+            </div>
+
+            <div class="step" style="background: #f0fdf4; border-left-color: #22c55e;">
+                <strong>✅ Step 3: Mobile Layout Optimization</strong>
+                <p>✅ Optimized touch targets (minimum 48px for navigation items)</p>
+                <p>✅ Improved mobile spacing and responsive header padding</p>
+                <p>✅ Fixed AdminLayout margin conflicts on mobile (md:ml-64)</p>
+                <p>✅ Enhanced mobile accessibility with proper ARIA labels</p>
+            </div>
+
+            <div class="step" style="background: #fef3c7; border-left-color: #f59e0b;">
+                <strong>🧪 Step 4: Cross-Device Testing (Ready for Testing)</strong>
+                <p>📱 Test on phones (375px - 414px) - Use viewport selector below</p>
+                <p>📱 Test on tablets (768px - 1024px) - Use iPad option</p>
+                <p>🔄 Validate landscape orientation functionality</p>
+                <p>⚡ Performance testing on mobile devices</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 Mobile Viewport Testing</h3>
+            <p>Test the mobile experience using the device selector and viewport below:</p>
+            
+            <div class="device-selector">
+                <button class="device-btn active" onclick="setDevice(375, 667, 'iPhone SE')">iPhone SE</button>
+                <button class="device-btn" onclick="setDevice(390, 844, 'iPhone 12')">iPhone 12</button>
+                <button class="device-btn" onclick="setDevice(414, 896, 'iPhone 11')">iPhone 11</button>
+                <button class="device-btn" onclick="setDevice(360, 800, 'Android')">Android</button>
+                <button class="device-btn" onclick="setDevice(768, 1024, 'iPad')">iPad</button>
+            </div>
+
+            <div class="mobile-viewport" id="mobileViewport">
+                <iframe id="mobileFrame" class="mobile-screen" src="http://localhost:8080" title="Mobile Test View"></iframe>
+            </div>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <p><strong>Current Device:</strong> <span id="currentDevice">iPhone SE (375x667)</span></p>
+                <p style="font-size: 14px; color: #6b7280;">Navigate to admin panel and client portal to test mobile functionality</p>
+            </div>
+        </div>
+
+        <div class="test-section" style="background: #fef3c7; border-left-color: #f59e0b;">
+            <h3>⚠️ Current Mobile Issues Detected</h3>
+            <ul style="margin: 12px 0; padding-left: 20px;">
+                <li><strong>AdminSidebar:</strong> Mobile menu button may not be properly positioned</li>
+                <li><strong>AdminLayout:</strong> Desktop margin may affect mobile layout (ml-64)</li>
+                <li><strong>Portal:</strong> Missing navigation menu for sub-pages (cases, documents, etc.)</li>
+                <li><strong>Touch Targets:</strong> Some buttons may be too small for mobile interaction</li>
+                <li><strong>Responsive Breakpoints:</strong> Need to validate all breakpoint transitions</li>
+            </ul>
+        </div>
+
+        <div class="test-section" style="background: #f0fdf4; border-left-color: #22c55e;">
+            <h3>✅ Expected Results After Fixes</h3>
+            <ul style="margin: 12px 0; padding-left: 20px;">
+                <li><strong>Admin Panel:</strong> Functional hamburger menu with smooth mobile navigation</li>
+                <li><strong>Client Portal:</strong> Easy mobile navigation between portal sections</li>
+                <li><strong>Touch Experience:</strong> All interactive elements easily tappable</li>
+                <li><strong>Responsive Design:</strong> Seamless experience across all mobile devices</li>
+                <li><strong>Performance:</strong> Fast loading and smooth interactions on mobile</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function setDevice(width, height, name) {
+            const viewport = document.getElementById('mobileViewport');
+            const deviceName = document.getElementById('currentDevice');
+            
+            viewport.style.width = width + 'px';
+            viewport.style.height = height + 'px';
+            deviceName.textContent = `${name} (${width}x${height})`;
+            
+            // Update active button
+            document.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Auto-refresh iframe every 30 seconds to show updates
+        setInterval(() => {
+            const frame = document.getElementById('mobileFrame');
+            if (frame.src) {
+                frame.src = frame.src;
+            }
+        }, 30000);
+
+        console.log('🔧 Mobile UI Bug Fix Testing Environment Ready');
+        console.log('📱 Test both Admin Panel and Client Portal on mobile devices');
+        console.log('🎯 Focus Areas: Navigation, Touch Targets, Responsive Layout');
+    </script>
+</body>
+</html>

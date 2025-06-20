@@ -2,7 +2,7 @@
 // D'Avila Reis Legal Practice Management System
 // Comprehensive case details view with management actions
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   ArrowLeft, 
   Edit, 
@@ -25,13 +30,18 @@ import {
   Target,
   MessageSquare,
   Upload,
-  Download
+  Download,
+  Wifi,
+  WifiOff,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { caseService } from '@/services/caseService';
 import { supabase } from '@/integrations/supabase/client';
+import { securityService } from '@/services/securityService';
 import CaseDocumentsList from '@/components/CaseDocumentsList';
 import DocumentAttachmentButton from '@/components/DocumentAttachmentButton';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface CaseDetailsPageProps {}
 
@@ -44,12 +54,58 @@ const CaseDetails: React.FC<CaseDetailsPageProps> = () => {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const [progressUpdate, setProgressUpdate] = useState({ percentage: 0, notes: '' });
+  const [statusUpdate, setStatusUpdate] = useState({ status: '', notes: '' });
+  const [notesUpdate, setNotesUpdate] = useState('');
+  
+  // Real-time connection state
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const connectionMonitorRef = useRef<{ disconnect: () => void; getStatus: () => string } | null>(null);
 
   useEffect(() => {
     if (caseId) {
       loadCaseDetails();
+      setupRealtimeSubscription();
     }
+
+    // Cleanup on unmount
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        channelRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (connectionMonitorRef.current) {
+        connectionMonitorRef.current.disconnect();
+        connectionMonitorRef.current = null;
+      }
+    };
   }, [caseId]);
+
+  // Initialize dialog states when case data loads
+  useEffect(() => {
+    if (case_) {
+      setProgressUpdate({ 
+        percentage: case_.progress_percentage || 0, 
+        notes: '' 
+      });
+      setStatusUpdate({ 
+        status: case_.status || '', 
+        notes: '' 
+      });
+      setNotesUpdate(case_.notes || '');
+    }
+  }, [case_]);
 
   const loadCaseDetails = async () => {
     if (!caseId) return;
@@ -64,11 +120,312 @@ const CaseDetails: React.FC<CaseDetailsPageProps> = () => {
         return;
       }
       setCase(caseData);
+      setLastUpdated(new Date());
     } catch (error: any) {
       console.error('Error loading case details:', error);
       setError(error.message || 'Erro ao carregar detalhes do caso');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupRealtimeSubscription = async () => {
+    if (!caseId) return;
+
+    try {
+      setConnectionStatus('connecting');
+
+      // Security validation for real-time connection
+      const securityCheck = await securityService.validateRealtimeConnection({
+        channel: `case-${caseId}`,
+        resource_id: caseId,
+      });
+
+      if (!securityCheck.allowed) {
+        setConnectionStatus('disconnected');
+        toast({
+          title: "Acesso negado",
+          description: securityCheck.reason,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Clean up existing subscription and monitor
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+      }
+      if (connectionMonitorRef.current) {
+        connectionMonitorRef.current.disconnect();
+      }
+
+      // Start connection monitoring
+      connectionMonitorRef.current = securityService.monitorConnection(`case-${caseId}`);
+
+      // Create new real-time channel for this case
+      const channel = supabase
+        .channel(`case-${caseId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'cases',
+            filter: `id=eq.${caseId}`,
+          },
+          (payload) => {
+            console.log('Case update received:', payload);
+            handleCaseUpdate(payload);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'documents',
+            filter: `case_id=eq.${caseId}`,
+          },
+          (payload) => {
+            console.log('Document update received:', payload);
+            handleDocumentUpdate(payload);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'case_updates',
+            filter: `case_id=eq.${caseId}`,
+          },
+          (payload) => {
+            console.log('Case update log received:', payload);
+            handleCaseUpdateLog(payload);
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status);
+          
+          if (status === 'SUBSCRIBED') {
+            setConnectionStatus('connected');
+            toast({
+              title: "Conexão estabelecida",
+              description: "Atualizações em tempo real ativadas",
+              duration: 2000,
+            });
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setConnectionStatus('disconnected');
+            handleConnectionError();
+          }
+        });
+
+      channelRef.current = channel;
+
+    } catch (error) {
+      console.error('Error setting up real-time subscription:', error);
+      setConnectionStatus('disconnected');
+      handleConnectionError();
+    }
+  };
+
+  const handleCaseUpdate = (payload: any) => {
+    const { eventType, new: newRecord, old: oldRecord } = payload;
+    
+    if (eventType === 'UPDATE' && newRecord) {
+      // Update case data optimistically
+      setCase((prevCase: any) => {
+        if (!prevCase) return newRecord;
+        
+        // Show toast notification for status changes
+        if (prevCase.status !== newRecord.status) {
+          toast({
+            title: "Status do caso atualizado",
+            description: `Status alterado de "${prevCase.status}" para "${newRecord.status}"`,
+          });
+        }
+        
+        // Show toast notification for progress changes
+        if (prevCase.progress_percentage !== newRecord.progress_percentage) {
+          toast({
+            title: "Progresso atualizado",
+            description: `Progresso: ${newRecord.progress_percentage}%`,
+          });
+        }
+        
+        return { ...prevCase, ...newRecord };
+      });
+      
+      setLastUpdated(new Date());
+    }
+  };
+
+  const handleDocumentUpdate = (payload: any) => {
+    const { eventType, new: newRecord } = payload;
+    
+    if (eventType === 'INSERT' && newRecord) {
+      toast({
+        title: "Novo documento adicionado",
+        description: `${newRecord.document_name} foi anexado ao caso`,
+      });
+      
+      // Reload case details to get updated document count
+      loadCaseDetails();
+    } else if (eventType === 'DELETE') {
+      toast({
+        title: "Documento removido",
+        description: "Um documento foi removido do caso",
+      });
+      
+      // Reload case details to get updated document count
+      loadCaseDetails();
+    }
+  };
+
+  const handleCaseUpdateLog = (payload: any) => {
+    const { new: newRecord } = payload;
+    
+    if (newRecord) {
+      toast({
+        title: "Nova atualização do caso",
+        description: newRecord.title || "Atualização adicionada ao histórico",
+      });
+      
+      // Reload case details to get the new update in the timeline
+      loadCaseDetails();
+    }
+  };
+
+  const handleConnectionError = () => {
+    toast({
+      title: "Conexão perdida",
+      description: "Tentando reconectar...",
+      variant: "destructive",
+    });
+
+    // Attempt to reconnect after 5 seconds
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+    
+    reconnectTimeoutRef.current = setTimeout(() => {
+      if (caseId) {
+        setupRealtimeSubscription();
+      }
+    }, 5000);
+  };
+
+  const forceRefresh = () => {
+    loadCaseDetails();
+    if (caseId) {
+      setupRealtimeSubscription();
+    }
+  };
+
+  const handleProgressUpdate = async () => {
+    if (!caseId || updating) return;
+
+    try {
+      setUpdating(true);
+      await caseService.updateCaseProgress(caseId, progressUpdate.percentage, progressUpdate.notes);
+      
+      toast({
+        title: "Progresso atualizado",
+        description: `Progresso atualizado para ${progressUpdate.percentage}%`
+      });
+      
+      setShowProgressDialog(false);
+      setProgressUpdate({ percentage: 0, notes: '' });
+      
+      // Reload case details to reflect changes
+      loadCaseDetails();
+    } catch (error: any) {
+      console.error('Error updating progress:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar progresso",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!caseId || !statusUpdate.status || updating) return;
+
+    try {
+      setUpdating(true);
+      
+      const updateData: any = {
+        id: caseId,
+        status: statusUpdate.status
+      };
+
+      await caseService.updateCase(updateData);
+      
+      // Create a case update log for the status change
+      if (statusUpdate.notes) {
+        await caseService.updateCase({
+          id: caseId,
+          notes: case_.notes ? `${case_.notes}\n\n[${new Date().toLocaleDateString('pt-BR')}] Status alterado para "${statusUpdate.status}": ${statusUpdate.notes}` : statusUpdate.notes
+        });
+      }
+      
+      toast({
+        title: "Status atualizado",
+        description: `Status alterado para "${statusUpdate.status}"`
+      });
+      
+      setShowStatusDialog(false);
+      setStatusUpdate({ status: '', notes: '' });
+      
+      // Reload case details to reflect changes
+      loadCaseDetails();
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar status",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleNotesUpdate = async () => {
+    if (!caseId || updating) return;
+
+    try {
+      setUpdating(true);
+      
+      const updateData = {
+        id: caseId,
+        notes: notesUpdate
+      };
+
+      await caseService.updateCase(updateData);
+      
+      toast({
+        title: "Observações atualizadas",
+        description: "Observações do caso foram atualizadas com sucesso"
+      });
+      
+      setShowNotesDialog(false);
+      setNotesUpdate('');
+      
+      // Reload case details to reflect changes
+      loadCaseDetails();
+    } catch (error: any) {
+      console.error('Error updating notes:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar observações",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -206,6 +563,181 @@ const CaseDetails: React.FC<CaseDetailsPageProps> = () => {
               <Badge className={getPriorityColor(case_.priority)}>
                 {case_.priority}
               </Badge>
+              
+              {/* Connection Status Indicator */}
+              <div className="flex items-center space-x-1 text-xs">
+                {connectionStatus === 'connected' && (
+                  <>
+                    <Wifi className="h-3 w-3 text-green-600" />
+                    <span className="text-green-600">Online</span>
+                  </>
+                )}
+                {connectionStatus === 'connecting' && (
+                  <>
+                    <RefreshCw className="h-3 w-3 animate-spin text-yellow-600" />
+                    <span className="text-yellow-600">Conectando</span>
+                  </>
+                )}
+                {connectionStatus === 'disconnected' && (
+                  <>
+                    <WifiOff className="h-3 w-3 text-red-600" />
+                    <span className="text-red-600">Offline</span>
+                  </>
+                )}
+              </div>
+              
+              {/* Last Updated */}
+              {lastUpdated && (
+                <span className="text-xs text-gray-500">
+                  Atualizado: {lastUpdated.toLocaleTimeString('pt-BR')}
+                </span>
+              )}
+              
+              {/* Refresh Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={forceRefresh}
+                title="Atualizar dados"
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+              
+              {/* Quick Update Actions */}
+              <Dialog open={showProgressDialog} onOpenChange={setShowProgressDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-300">
+                    <Target className="h-4 w-4 mr-2" />
+                    Progresso
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Atualizar Progresso do Caso</DialogTitle>
+                    <DialogDescription>
+                      Atualize o percentual de progresso e adicione observações.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="progress">Progresso (%)</Label>
+                      <Input
+                        id="progress"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={progressUpdate.percentage}
+                        onChange={(e) => setProgressUpdate(prev => ({ ...prev, percentage: parseInt(e.target.value) || 0 }))}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="progressNotes">Observações</Label>
+                      <Textarea
+                        id="progressNotes"
+                        value={progressUpdate.notes}
+                        onChange={(e) => setProgressUpdate(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Descreva as atividades realizadas..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowProgressDialog(false)}>Cancelar</Button>
+                    <Button onClick={handleProgressUpdate} disabled={updating}>
+                      {updating ? 'Atualizando...' : 'Atualizar Progresso'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Status
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Atualizar Status do Caso</DialogTitle>
+                    <DialogDescription>
+                      Altere o status do caso e adicione observações sobre a mudança.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="status">Novo Status</Label>
+                      <Select value={statusUpdate.status} onValueChange={(value) => setStatusUpdate(prev => ({ ...prev, status: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Open">Aberto</SelectItem>
+                          <SelectItem value="In Progress">Em Andamento</SelectItem>
+                          <SelectItem value="Waiting Client">Aguardando Cliente</SelectItem>
+                          <SelectItem value="Waiting Court">Aguardando Tribunal</SelectItem>
+                          <SelectItem value="On Hold">Suspenso</SelectItem>
+                          <SelectItem value="Closed - Won">Fechado - Ganho</SelectItem>
+                          <SelectItem value="Closed - Lost">Fechado - Perdido</SelectItem>
+                          <SelectItem value="Cancelled">Cancelado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="statusNotes">Motivo da Mudança</Label>
+                      <Textarea
+                        id="statusNotes"
+                        value={statusUpdate.notes}
+                        onChange={(e) => setStatusUpdate(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Explique o motivo da mudança de status..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowStatusDialog(false)}>Cancelar</Button>
+                    <Button onClick={handleStatusUpdate} disabled={updating || !statusUpdate.status}>
+                      {updating ? 'Atualizando...' : 'Atualizar Status'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={showNotesDialog} onOpenChange={setShowNotesDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-purple-600 border-purple-300">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Observações
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Atualizar Observações do Caso</DialogTitle>
+                    <DialogDescription>
+                      Adicione ou edite observações importantes sobre o caso.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="notes">Observações</Label>
+                      <Textarea
+                        id="notes"
+                        value={notesUpdate}
+                        onChange={(e) => setNotesUpdate(e.target.value)}
+                        placeholder="Adicione observações importantes..."
+                        rows={5}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowNotesDialog(false)}>Cancelar</Button>
+                    <Button onClick={handleNotesUpdate} disabled={updating}>
+                      {updating ? 'Atualizando...' : 'Atualizar Observações'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               
               <DocumentAttachmentButton
                 caseId={case_.id}

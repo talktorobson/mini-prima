@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Funcionalidades Críticas - Mensagens e Casos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #2d3748;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-category {
+            border-left: 4px solid #4299e1;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .test-steps {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .expected-result {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .bug-info {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .fix-applied {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .test-priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .critical { background: #fed7d7; color: #c53030; }
+        .high { background: #fbb6ce; color: #b83280; }
+        .medium { background: #ffeaa7; color: #d69e2e; }
+        ol, ul { margin: 0; padding-left: 20px; }
+        .url-box {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .test-checklist {
+            background: #f0f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .checklist-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Teste de Funcionalidades Críticas</h1>
+        <p>Verificação de Correções: Mensagens e Atualizações de Casos</p>
+        <p><strong>Sistema:</strong> D'Avila Reis Legal Practice Management</p>
+        <p><strong>Data:</strong> <span id="currentDate"></span></p>
+    </div>
+
+    <div class="test-section">
+        <div class="test-category">
+            <h2>🐛 BUG-CORE-005: Falhas no Envio de Mensagens</h2>
+            <span class="test-priority critical">CRÍTICO</span>
+        </div>
+
+        <div class="bug-info">
+            <h3>Problema Identificado:</h3>
+            <ul>
+                <li>Operações de envio de mensagens falhando silenciosamente</li>
+                <li>Mensagens não sendo persistidas no banco de dados</li>
+                <li>Falhas na atualização em tempo real da interface</li>
+                <li>Indicadores de digitação não funcionando corretamente</li>
+            </ul>
+        </div>
+
+        <div class="fix-applied">
+            <h3>✅ Correções Aplicadas:</h3>
+            <ul>
+                <li><strong>Validação de Criptografia:</strong> Verificadas funções de encriptação/descriptografia</li>
+                <li><strong>Tratamento de Erros:</strong> Melhorada captura e exibição de erros de envio</li>
+                <li><strong>Thread Management:</strong> Corrigida criação e reutilização de threads de conversa</li>
+                <li><strong>Real-time Updates:</strong> Validadas assinaturas de tempo real</li>
+                <li><strong>Estado da UI:</strong> Correção de atualizações otimistas da interface</li>
+            </ul>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 1: Envio de Mensagens Básico</h3>
+            <div class="url-box">
+                <strong>URL:</strong> http://localhost:5173/portal/messages
+            </div>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>Faça login como cliente no portal</li>
+                    <li>Navegue para "Mensagens"</li>
+                    <li>Ative o modo "Chat"</li>
+                    <li>Digite uma mensagem de teste: "Teste de mensagem básica"</li>
+                    <li>Clique em "Enviar" ou pressione Enter</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Mensagem aparece imediatamente na interface</li>
+                    <li>✅ Toast de sucesso: "Mensagem enviada"</li>
+                    <li>✅ Campo de input limpo após envio</li>
+                    <li>✅ Indicador de status (✓ ou ✓✓) visível</li>
+                    <li>✅ Sem erros no console do browser</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 2: Indicadores de Digitação</h3>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>No chat ativo, comece a digitar uma mensagem</li>
+                    <li>Pause por 2 segundos sem enviar</li>
+                    <li>Continue digitando</li>
+                    <li>Envie a mensagem</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Sistema detecta quando usuário está digitando</li>
+                    <li>✅ Timeout de digitação funciona corretamente</li>
+                    <li>✅ Indicador para quando mensagem é enviada</li>
+                    <li>✅ Sem broadcasting de erro no console</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 3: Busca e Filtros de Mensagens</h3>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>Envie pelo menos 3 mensagens diferentes</li>
+                    <li>Use a barra de busca para procurar por uma palavra específica</li>
+                    <li>Ative filtros avançados</li>
+                    <li>Teste filtros de data, tipo de mensagem e status de leitura</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Busca de texto funciona corretamente</li>
+                    <li>✅ Highlight de termos buscados aparece</li>
+                    <li>✅ Filtros aplicam corretamente</li>
+                    <li>✅ Contador de mensagens atualiza</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-category">
+            <h2>🐛 BUG-CORE-006: Inconsistências nas Atualizações de Casos</h2>
+            <span class="test-priority critical">CRÍTICO</span>
+        </div>
+
+        <div class="bug-info">
+            <h3>Problema Identificado:</h3>
+            <ul>
+                <li>Operações de atualização de casos inconsistentes</li>
+                <li>Progresso não sendo salvo corretamente</li>
+                <li>Inconsistência de dados entre interface e banco</li>
+                <li>Funções de atualização não implementadas (handleProgressUpdate, handleStatusUpdate, handleNotesUpdate)</li>
+            </ul>
+        </div>
+
+        <div class="fix-applied">
+            <h3>✅ Correções Aplicadas:</h3>
+            <ul>
+                <li><strong>Funções Implementadas:</strong> Criadas handleProgressUpdate, handleStatusUpdate, handleNotesUpdate</li>
+                <li><strong>Persistência de Dados:</strong> Chamadas corretas para caseService.updateCase e caseService.updateCaseProgress</li>
+                <li><strong>Inicialização de Estado:</strong> useEffect para inicializar dialogs com dados atuais do caso</li>
+                <li><strong>Feedback do Usuário:</strong> Toasts de sucesso e erro implementados</li>
+                <li><strong>Recarregamento de Dados:</strong> loadCaseDetails após cada atualização</li>
+            </ul>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 4: Atualização de Progresso</h3>
+            <div class="url-box">
+                <strong>URL:</strong> http://localhost:5173/admin/staff/cases/[case-id]
+            </div>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>Acesse qualquer página de detalhes de caso como admin</li>
+                    <li>Clique no botão "Progresso" no header</li>
+                    <li>Altere o percentual de progresso (ex: 75%)</li>
+                    <li>Adicione observações: "Progresso atualizado em teste"</li>
+                    <li>Clique "Atualizar Progresso"</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Dialog abre com valor atual de progresso</li>
+                    <li>✅ Toast de sucesso aparece</li>
+                    <li>✅ Barra de progresso atualiza visualmente</li>
+                    <li>✅ Dialog fecha automaticamente</li>
+                    <li>✅ Dados persistem após refresh da página</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 5: Atualização de Status</h3>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>Clique no botão "Status" no header</li>
+                    <li>Selecione um novo status (ex: "Em Andamento")</li>
+                    <li>Adicione motivo: "Status alterado para teste"</li>
+                    <li>Clique "Atualizar Status"</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Select abre com status atual selecionado</li>
+                    <li>✅ Todos os status disponíveis listados</li>
+                    <li>✅ Toast de sucesso com novo status</li>
+                    <li>✅ Badge de status atualiza no header</li>
+                    <li>✅ Observações adicionadas ao histórico</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 6: Atualização de Observações</h3>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>Clique no botão "Observações" no header</li>
+                    <li>Edite ou adicione observações ao caso</li>
+                    <li>Clique "Atualizar Observações"</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Textarea abre com observações atuais</li>
+                    <li>✅ Texto persiste corretamente</li>
+                    <li>✅ Toast de confirmação aparece</li>
+                    <li>✅ Observações aparecem na sidebar</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Teste 7: Real-time Updates</h3>
+            <div class="test-steps">
+                <h4>Passos:</h4>
+                <ol>
+                    <li>Abra a mesma página de caso em duas abas diferentes</li>
+                    <li>Em uma aba, atualize o progresso</li>
+                    <li>Observe a segunda aba</li>
+                    <li>Repita para status e observações</li>
+                </ol>
+            </div>
+            <div class="expected-result">
+                <h4>Resultado Esperado:</h4>
+                <ul>
+                    <li>✅ Indicador de conexão mostra "Online"</li>
+                    <li>✅ Atualizações aparecem em tempo real na segunda aba</li>
+                    <li>✅ Toasts de notificação de atualizações externas</li>
+                    <li>✅ "Última atualização" timestamp atualiza</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-category">
+            <h2>📋 Checklist de Validação</h2>
+        </div>
+
+        <div class="test-checklist">
+            <h3>🔹 Mensagens (BUG-CORE-005)</h3>
+            <div class="checklist-item">
+                <input type="checkbox" id="msg1">
+                <label for="msg1">Mensagens são enviadas e aparecem imediatamente na UI</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="msg2">
+                <label for="msg2">Toasts de sucesso/erro aparecem corretamente</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="msg3">
+                <label for="msg3">Indicadores de digitação funcionam</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="msg4">
+                <label for="msg4">Busca e filtros de mensagens operacionais</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="msg5">
+                <label for="msg5">Sem erros no console durante envio de mensagens</label>
+            </div>
+
+            <h3>🔹 Atualizações de Casos (BUG-CORE-006)</h3>
+            <div class="checklist-item">
+                <input type="checkbox" id="case1">
+                <label for="case1">Atualização de progresso funciona e persiste</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="case2">
+                <label for="case2">Atualização de status funciona e persiste</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="case3">
+                <label for="case3">Atualização de observações funciona e persiste</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="case4">
+                <label for="case4">Real-time updates funcionam entre múltiplas abas</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="case5">
+                <label for="case5">Dialogs inicializam com dados corretos</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="case6">
+                <label for="case6">Todas as funções de update estão implementadas</label>
+            </div>
+
+            <h3>🔹 Funcionalidade Geral</h3>
+            <div class="checklist-item">
+                <input type="checkbox" id="gen1">
+                <label for="gen1">Sem quebras de funcionalidades existentes</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="gen2">
+                <label for="gen2">Performance adequada (< 2s para operações)</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="gen3">
+                <label for="gen3">Interface responsiva em mobile</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="gen4">
+                <label for="gen4">Tratamento de erros adequado em todos os fluxos</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section" style="background: #e6fffa; border: 2px solid #26d0ce;">
+        <h2>🎯 Resumo da Validação</h2>
+        <div id="testSummary">
+            <p><strong>Status:</strong> <span id="overallStatus">Pendente</span></p>
+            <p><strong>Itens Validados:</strong> <span id="checkedCount">0</span> / <span id="totalCount">15</span></p>
+            <p><strong>Taxa de Sucesso:</strong> <span id="successRate">0%</span></p>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;">
+            <h3>📝 Observações do Teste:</h3>
+            <textarea id="testNotes" placeholder="Adicione observações sobre os testes realizados..." 
+                     style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <button onclick="generateReport()" 
+                    style="background: #667eea; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                📊 Gerar Relatório de Teste
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Update current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
+
+        // Track checkbox changes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const totalCount = checkboxes.length;
+        document.getElementById('totalCount').textContent = totalCount;
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSummary);
+        });
+
+        function updateSummary() {
+            const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const successRate = Math.round((checkedCount / totalCount) * 100);
+            
+            document.getElementById('checkedCount').textContent = checkedCount;
+            document.getElementById('successRate').textContent = successRate + '%';
+            
+            let status = 'Pendente';
+            if (successRate === 100) {
+                status = '✅ Completo';
+                document.getElementById('overallStatus').style.color = '#22c55e';
+            } else if (successRate >= 75) {
+                status = '🟡 Quase Completo';
+                document.getElementById('overallStatus').style.color = '#f59e0b';
+            } else if (successRate > 0) {
+                status = '🔄 Em Progresso';
+                document.getElementById('overallStatus').style.color = '#3b82f6';
+            }
+            
+            document.getElementById('overallStatus').textContent = status;
+        }
+
+        function generateReport() {
+            const checkedItems = [];
+            const uncheckedItems = [];
+            
+            checkboxes.forEach(checkbox => {
+                const label = checkbox.nextElementSibling.textContent;
+                if (checkbox.checked) {
+                    checkedItems.push('✅ ' + label);
+                } else {
+                    uncheckedItems.push('❌ ' + label);
+                }
+            });
+            
+            const notes = document.getElementById('testNotes').value;
+            const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const successRate = Math.round((checkedCount / totalCount) * 100);
+            
+            const report = `
+RELATÓRIO DE TESTE - CORREÇÃO DE BUGS CRÍTICOS
+Data: ${new Date().toLocaleString('pt-BR')}
+Sistema: D'Avila Reis Legal Practice Management
+
+=== RESUMO ===
+Taxa de Sucesso: ${successRate}%
+Itens Validados: ${checkedCount}/${totalCount}
+
+=== BUGS CORRIGIDOS ===
+• BUG-CORE-005: Falhas no Envio de Mensagens
+• BUG-CORE-006: Inconsistências nas Atualizações de Casos
+
+=== ITENS VALIDADOS ===
+${checkedItems.join('\n')}
+
+=== PENDÊNCIAS ===
+${uncheckedItems.join('\n')}
+
+=== OBSERVAÇÕES ===
+${notes || 'Nenhuma observação adicional.'}
+
+=== PRÓXIMOS PASSOS ===
+${successRate === 100 ? 
+    '✅ Todos os testes passaram. Sistema pronto para produção.' : 
+    `❗ ${uncheckedItems.length} itens ainda precisam ser corrigidos antes da aprovação final.`}
+            `.trim();
+            
+            // Create downloadable report
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio-teste-bugs-core-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('Relatório gerado e baixado com sucesso!');
+        }
+
+        // Initialize summary on page load
+        updateSummary();
+    </script>
+</body>
+</html>

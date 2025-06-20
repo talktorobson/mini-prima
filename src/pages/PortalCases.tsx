@@ -7,13 +7,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ArrowLeft, ArrowRight, Upload, Scale, Search, Filter, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { casesService } from '@/services/database';
+import { caseService } from '@/services/caseService';
 import DocumentUpload from '@/components/DocumentUpload';
 import CaseDetailsModal from '@/components/CaseDetailsModal';
+import PortalMobileNav from '@/components/PortalMobileNav';
+import { useAuth } from '@/contexts/AuthContext';
+import { useClientData } from '@/hooks/useClientData';
+import { useIsMobile } from '@/hooks/use-mobile';
 import * as XLSX from 'xlsx';
 
 const PortalCases = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const { data: client } = useClientData();
+  const isMobile = useIsMobile();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedCaseForUpload, setSelectedCaseForUpload] = useState<{ id: string; title: string } | null>(null);
   const [selectedCaseForDetails, setSelectedCaseForDetails] = useState<any>(null);
@@ -29,7 +36,7 @@ const PortalCases = () => {
   // Fetch cases from database with proper error handling
   const { data: cases = [], isLoading, error, refetch } = useQuery({
     queryKey: ['client-cases'],
-    queryFn: casesService.getCases,
+    queryFn: caseService.getCases,
     retry: 3,
     retryDelay: 1000,
   });
@@ -267,19 +274,24 @@ const PortalCases = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile Navigation */}
+      {isMobile && <PortalMobileNav client={client} signOut={signOut} />}
+      
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className={`flex justify-between items-center h-16 ${isMobile ? 'pl-16' : ''}`}>
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/portal')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Voltar ao Portal</span>
-              </Button>
-              <div className="border-l border-gray-300 pl-4">
+              {!isMobile && (
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/portal')}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Voltar ao Portal</span>
+                </Button>
+              )}
+              <div className={`${!isMobile ? 'border-l border-gray-300 pl-4' : ''}`}>
                 <h1 className="text-xl font-bold text-gray-900">Meus Casos</h1>
               </div>
             </div>

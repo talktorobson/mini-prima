@@ -17,7 +17,10 @@ import {
   RefreshCw,
   BarChart3,
   PieChart,
-  FileText
+  FileText,
+  Search,
+  Filter,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { stripeService } from '@/services/stripeService';
@@ -41,6 +44,13 @@ export default function PaymentAnalytics() {
     end_date: new Date().toISOString().split('T')[0],
   });
   const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('');
+  
+  // Payment search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [methodFilter, setMethodFilter] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     loadAnalytics();
@@ -121,6 +131,189 @@ export default function PaymentAnalytics() {
       title: 'Sucesso',
       description: 'Dados exportados com sucesso',
     });
+  };
+
+  // Mock payment data for search functionality
+  const mockPayments = [
+    {
+      id: 'pay_1234567890',
+      client_name: 'Empresa ABC Ltda',
+      amount: 1500.00,
+      status: 'succeeded',
+      method: 'PIX',
+      description: 'Assinatura Mensal - Plano Professional',
+      created_at: '2024-06-15T10:30:00Z',
+      invoice_id: 'inv_abc123',
+      subscription_id: 'sub_abc123'
+    },
+    {
+      id: 'pay_0987654321',
+      client_name: 'Consultoria XYZ S.A.',
+      amount: 2500.00,
+      status: 'succeeded',
+      method: 'Cartão de Crédito',
+      description: 'Pagamento de Caso - Trabalhista',
+      created_at: '2024-06-14T15:45:00Z',
+      invoice_id: 'inv_xyz789',
+      case_id: 'case_xyz789'
+    },
+    {
+      id: 'pay_5678901234',
+      client_name: 'Indústria DEF Ltda',
+      amount: 800.00,
+      status: 'failed',
+      method: 'Boleto',
+      description: 'Consultoria Jurídica - Tributário',
+      created_at: '2024-06-13T09:15:00Z',
+      invoice_id: 'inv_def456',
+      failure_reason: 'Insuficiência de fundos'
+    },
+    {
+      id: 'pay_3456789012',
+      client_name: 'Startup GHI Tech',
+      amount: 600.00,
+      status: 'pending',
+      method: 'PIX',
+      description: 'Assinatura Mensal - Plano Básico',
+      created_at: '2024-06-12T14:20:00Z',
+      invoice_id: 'inv_ghi789'
+    },
+    {
+      id: 'pay_7890123456',
+      client_name: 'Comércio JKL S.A.',
+      amount: 3200.00,
+      status: 'succeeded',
+      method: 'Transferência Bancária',
+      description: 'Pagamento de Caso - Societário',
+      created_at: '2024-06-11T16:30:00Z',
+      invoice_id: 'inv_jkl012',
+      case_id: 'case_jkl012'
+    }
+  ];
+
+  // Advanced payment search function
+  const handlePaymentSearch = async () => {
+    setIsSearching(true);
+    
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      let filtered = mockPayments;
+      
+      // Apply search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(payment => 
+          payment.client_name.toLowerCase().includes(query) ||
+          payment.id.toLowerCase().includes(query) ||
+          payment.description.toLowerCase().includes(query) ||
+          payment.invoice_id.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply status filter
+      if (statusFilter) {
+        filtered = filtered.filter(payment => payment.status === statusFilter);
+      }
+      
+      // Apply method filter
+      if (methodFilter) {
+        filtered = filtered.filter(payment => payment.method === methodFilter);
+      }
+      
+      setSearchResults(filtered);
+      
+      toast({
+        title: 'Busca concluída',
+        description: `${filtered.length} pagamentos encontrados.`,
+      });
+      
+    } catch (error) {
+      console.error('Error searching payments:', error);
+      toast({
+        title: 'Erro na busca',
+        description: 'Erro ao pesquisar pagamentos. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Clear search filters
+  const clearSearchFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
+    setMethodFilter('');
+    setSearchResults([]);
+  };
+
+  // Export search results function
+  const exportSearchResults = () => {
+    try {
+      if (searchResults.length === 0) {
+        toast({
+          title: 'Nenhum resultado',
+          description: 'Não há resultados de busca para exportar.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Create CSV content
+      const headers = ['ID', 'Cliente', 'Valor', 'Status', 'Método', 'Data', 'Descrição'];
+      const csvContent = [
+        headers.join(','),
+        ...searchResults.map(payment => [
+          payment.id,
+          `"${payment.customer_name}"`,
+          `R$ ${payment.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          payment.status,
+          payment.method,
+          new Date(payment.created_at).toLocaleDateString('pt-BR'),
+          `"${payment.description || ''}"`
+        ].join(','))
+      ].join('\n');
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `pagamentos-busca-${new Date().toISOString().split('T')[0]}.csv`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Exportação concluída',
+        description: `${searchResults.length} pagamentos exportados com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Error exporting search results:', error);
+      toast({
+        title: 'Erro na exportação',
+        description: 'Erro ao exportar resultados da busca.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Get status badge color
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'succeeded':
+        return <Badge className="bg-green-100 text-green-800">Sucesso</Badge>;
+      case 'failed':
+        return <Badge className="bg-red-100 text-red-800">Falhou</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   const mockChartData = {
@@ -287,7 +480,7 @@ export default function PaymentAnalytics() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Visão Geral
@@ -299,6 +492,10 @@ export default function PaymentAnalytics() {
           <TabsTrigger value="methods" className="flex items-center gap-2">
             <PieChart className="h-4 w-4" />
             Métodos
+          </TabsTrigger>
+          <TabsTrigger value="search" className="flex items-center gap-2">
+            <Search className="h-4 w-4" />
+            Buscar Pagamentos
           </TabsTrigger>
           <TabsTrigger value="performance" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -553,6 +750,166 @@ export default function PaymentAnalytics() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Payment Search */}
+        <TabsContent value="search" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                Busca Avançada de Pagamentos
+              </CardTitle>
+              <CardDescription>
+                Pesquise e filtre pagamentos por cliente, status, método e mais
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="search_query">Buscar</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="search_query"
+                      placeholder="Cliente, ID do pagamento, fatura..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="status_filter">Status</Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos os status</SelectItem>
+                      <SelectItem value="succeeded">Sucesso</SelectItem>
+                      <SelectItem value="failed">Falhou</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="method_filter">Método de Pagamento</Label>
+                  <Select value={methodFilter} onValueChange={setMethodFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os métodos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos os métodos</SelectItem>
+                      <SelectItem value="PIX">PIX</SelectItem>
+                      <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                      <SelectItem value="Boleto">Boleto</SelectItem>
+                      <SelectItem value="Transferência Bancária">Transferência Bancária</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-end gap-2">
+                  <Button onClick={handlePaymentSearch} disabled={isSearching}>
+                    <Search className="h-4 w-4 mr-2" />
+                    {isSearching ? 'Buscando...' : 'Buscar'}
+                  </Button>
+                  <Button variant="outline" onClick={clearSearchFilters}>
+                    <Filter className="h-4 w-4 mr-2" />
+                    Limpar
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Resultados da Busca ({searchResults.length})</CardTitle>
+                <CardDescription>
+                  Pagamentos encontrados com base nos filtros aplicados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {searchResults.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-medium text-sm">{payment.client_name}</h3>
+                          <p className="text-xs text-gray-500">ID: {payment.id}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-lg">
+                            {stripeService.formatCurrency(payment.amount * 100)}
+                          </div>
+                          {getStatusBadge(payment.status)}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <div className="space-y-1">
+                          <p><strong>Método:</strong> {payment.method}</p>
+                          <p><strong>Descrição:</strong> {payment.description}</p>
+                          <p><strong>Data:</strong> {new Date(payment.created_at).toLocaleString('pt-BR')}</p>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <p><strong>Fatura:</strong> {payment.invoice_id}</p>
+                          {payment.case_id && <p><strong>Caso:</strong> {payment.case_id}</p>}
+                          {payment.subscription_id && <p><strong>Assinatura:</strong> {payment.subscription_id}</p>}
+                          {payment.failure_reason && (
+                            <p className="text-red-600"><strong>Motivo:</strong> {payment.failure_reason}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end mt-3">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-3 w-3 mr-1" />
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {searchResults.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" size="sm" onClick={exportSearchResults}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar Resultados
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Empty State */}
+          {searchResults.length === 0 && (searchQuery || statusFilter || methodFilter) && !isSearching && (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Nenhum pagamento encontrado
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Tente ajustar os filtros de busca ou usar termos diferentes
+                </p>
+                <Button variant="outline" onClick={clearSearchFilters}>
+                  Limpar Filtros
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

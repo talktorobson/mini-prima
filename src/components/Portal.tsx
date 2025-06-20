@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
   FileText, 
   MessageSquare, 
@@ -14,16 +15,20 @@ import {
   ArrowRight,
   Eye,
   Download,
-  Bell
+  Bell,
+  Menu,
+  Home
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientData } from '@/hooks/useClientData';
-import { casesService, documentsService, financialService, notificationsService } from '@/services/database';
+import { documentsService, financialService, notificationsService } from '@/services/database';
+import { caseService } from '@/services/caseService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
+import PortalMobileNav from '@/components/PortalMobileNav';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Portal = () => {
@@ -43,7 +48,7 @@ const Portal = () => {
   // Get dashboard data
   const { data: cases = [] } = useQuery({
     queryKey: ['cases'],
-    queryFn: casesService.getCases,
+    queryFn: caseService.getCases,
     enabled: !!client
   });
 
@@ -282,10 +287,13 @@ const Portal = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      {/* Mobile Navigation */}
+      {isMobile && <PortalMobileNav client={client} signOut={signOut} />}
+      
       {/* Compact Header */}
       <header className="bg-slate-800/90 backdrop-blur-sm border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12">
+          <div className={`flex justify-between items-center h-12 ${isMobile ? 'pl-16' : ''}`}>
             <div className="flex items-center space-x-3">
               <Building2 className="h-6 w-6 text-blue-400" />
               <div>
@@ -294,10 +302,12 @@ const Portal = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 text-blue-200">
-                <User className="h-3 w-3" />
-                <span className="text-xs">{client?.contact_person}</span>
-              </div>
+              {!isMobile && (
+                <div className="flex items-center space-x-2 text-blue-200">
+                  <User className="h-3 w-3" />
+                  <span className="text-xs">{client?.contact_person}</span>
+                </div>
+              )}
               <Button
                 variant="outline"
                 size="sm"

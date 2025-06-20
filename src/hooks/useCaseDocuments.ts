@@ -30,13 +30,25 @@ export const useAllDocuments = () => {
           case:cases (
             case_title,
             case_number,
-            counterparty_name
+            counterparty_name,
+            client:clients (
+              company_name,
+              contact_person
+            )
           )
         `)
         .order('upload_date', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Flatten client data structure for easier access
+      const processedData = data?.map(doc => ({
+        ...doc,
+        client: doc.case?.client || null
+      })) || [];
+      
+      console.log('useAllDocuments - Fetched documents:', processedData.length);
+      return processedData;
     },
   });
 };

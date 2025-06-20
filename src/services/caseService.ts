@@ -67,6 +67,38 @@ class CaseService {
 
   async createCase(request: CreateCaseRequest): Promise<Case> {
     try {
+      console.log('Creating case with request:', request);
+
+      // Validate required fields
+      if (!request.client_id || !request.case_title || !request.service_type) {
+        throw new Error('Campos obrigatórios não preenchidos: Cliente, Título e Tipo de Serviço são obrigatórios');
+      }
+
+      // Verify client exists
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('id', request.client_id)
+        .single();
+
+      if (clientError || !client) {
+        throw new Error('Cliente especificado não existe no sistema');
+      }
+
+      // Verify assigned lawyer exists if provided
+      if (request.assigned_lawyer) {
+        const { data: lawyer, error: lawyerError } = await supabase
+          .from('staff')
+          .select('id')
+          .eq('id', request.assigned_lawyer)
+          .single();
+
+        if (lawyerError || !lawyer) {
+          throw new Error('Advogado especificado não existe no sistema');
+        }
+      }
+
+      // Prepare case data with proper array handling
       const caseData: CaseInsert = {
         ...request,
         case_number: this.generateCaseNumber(),
@@ -74,27 +106,55 @@ class CaseService {
         status: request.status || 'Open',
         priority: request.priority || 'Medium',
         progress_percentage: 0,
-        supporting_staff: request.supporting_staff ? JSON.stringify(request.supporting_staff) : null,
+        // Handle supporting_staff as proper JSON array
+        supporting_staff: request.supporting_staff && request.supporting_staff.length > 0 
+          ? JSON.stringify(request.supporting_staff) 
+          : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+
+      console.log('Inserting case data:', caseData);
 
       const { data, error } = await supabase
         .from('cases')
         .insert(caseData)
         .select(`
           *,
-          client:clients(*)
+          client:clients(
+            id,
+            company_name,
+            contact_person,
+            email,
+            phone
+          )
         `)
         .single();
 
       if (error) {
-        console.error('Error creating case:', error);
-        throw new Error(`Erro ao criar caso: ${error.message}`);
+        console.error('Database error creating case:', error);
+        
+        // Provide specific error messages
+        if (error.code === '23505') {
+          throw new Error('Já existe um caso com essas informações. Verifique número do processo ou título.');
+        } else if (error.code === '23503') {
+          throw new Error('Dados relacionados inválidos. Verifique cliente e advogado selecionados.');
+        } else if (error.code === '23502') {
+          throw new Error('Campos obrigatórios não preenchidos corretamente.');
+        } else {
+          throw new Error(`Erro ao criar caso: ${error.message}`);
+        }
       }
 
-      // Create initial case update
-      await this.createCaseUpdate(data.id, 'case_created', 'Caso criado', 'Novo caso registrado no sistema');
+      console.log('Case created successfully:', data.id);
+
+      // Create initial case update (don't fail if this fails)
+      try {
+        await this.createCaseUpdate(data.id, 'case_created', 'Caso criado', 'Novo caso registrado no sistema');
+      } catch (updateError) {
+        console.warn('Failed to create initial case update:', updateError);
+        // Don't throw here as the case was created successfully
+      }
 
       return data;
     } catch (error) {
@@ -105,13 +165,57 @@ class CaseService {
 
   async updateCase(request: UpdateCaseRequest): Promise<Case> {
     try {
+      console.log('Updating case with request:', request);
+      
       const { id, ...updateData } = request;
+      
+      // Verify case exists
+      const { data: existingCase, error: fetchError } = await supabase
+        .from('cases')
+        .select('id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !existingCase) {
+        throw new Error('Caso não encontrado no sistema');
+      }
+
+      // Verify client exists if being updated
+      if (updateData.client_id) {
+        const { data: client, error: clientError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', updateData.client_id)
+          .single();
+
+        if (clientError || !client) {
+          throw new Error('Cliente especificado não existe no sistema');
+        }
+      }
+
+      // Verify assigned lawyer exists if being updated
+      if (updateData.assigned_lawyer) {
+        const { data: lawyer, error: lawyerError } = await supabase
+          .from('staff')
+          .select('id')
+          .eq('id', updateData.assigned_lawyer)
+          .single();
+
+        if (lawyerError || !lawyer) {
+          throw new Error('Advogado especificado não existe no sistema');
+        }
+      }
       
       const caseUpdate: CaseUpdate = {
         ...updateData,
-        supporting_staff: updateData.supporting_staff ? JSON.stringify(updateData.supporting_staff) : undefined,
+        // Handle supporting_staff array properly
+        supporting_staff: updateData.supporting_staff && updateData.supporting_staff.length > 0
+          ? JSON.stringify(updateData.supporting_staff) 
+          : updateData.supporting_staff === null ? null : undefined,
         updated_at: new Date().toISOString()
       };
+
+      console.log('Updating case with data:', caseUpdate);
 
       const { data, error } = await supabase
         .from('cases')
@@ -119,17 +223,40 @@ class CaseService {
         .eq('id', id)
         .select(`
           *,
-          client:clients(*)
+          client:clients(
+            id,
+            company_name,
+            contact_person,
+            email,
+            phone
+          )
         `)
         .single();
 
       if (error) {
-        console.error('Error updating case:', error);
-        throw new Error(`Erro ao atualizar caso: ${error.message}`);
+        console.error('Database error updating case:', error);
+        
+        // Provide specific error messages
+        if (error.code === '23505') {
+          throw new Error('Já existe um caso com essas informações. Verifique número do processo ou título.');
+        } else if (error.code === '23503') {
+          throw new Error('Dados relacionados inválidos. Verifique cliente e advogado selecionados.');
+        } else if (error.code === '23502') {
+          throw new Error('Campos obrigatórios não preenchidos corretamente.');
+        } else {
+          throw new Error(`Erro ao atualizar caso: ${error.message}`);
+        }
       }
 
-      // Create case update log
-      await this.createCaseUpdate(id, 'case_updated', 'Caso atualizado', 'Informações do caso foram atualizadas');
+      console.log('Case updated successfully:', data.id);
+
+      // Create case update log (don't fail if this fails)
+      try {
+        await this.createCaseUpdate(id, 'case_updated', 'Caso atualizado', 'Informações do caso foram atualizadas');
+      } catch (updateError) {
+        console.warn('Failed to create case update log:', updateError);
+        // Don't throw here as the case was updated successfully
+      }
 
       return data;
     } catch (error) {

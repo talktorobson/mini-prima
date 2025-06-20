@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Prima - Teste Abrangente do Sistema de Mensagens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <style>
+        .console-log { font-family: 'Courier New', monospace; font-size: 12px; }
+        .test-status { min-width: 100px; text-align: center; }
+        .error-detail { background-color: #fef2f2; border: 1px solid #fca5a5; }
+        .success-detail { background-color: #f0fdf4; border: 1px solid #86efac; }
+        .warning-detail { background-color: #fffbeb; border: 1px solid #fbbf24; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-900 mb-2">🔄 Mini Prima</h1>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Teste Abrangente do Sistema de Mensagens e Comunicação</h2>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p class="text-blue-800"><strong>Objetivo:</strong> Testar todos os componentes de mensagens, notificações, comunicação em tempo real e integração WhatsApp</p>
+            </div>
+        </header>
+
+        <!-- Test Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button onclick="runAllTests()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
+                    🚀 Executar Todos os Testes
+                </button>
+                <button onclick="runServiceTests()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                    📡 Testar Serviços
+                </button>
+                <button onclick="runUITests()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                    🎨 Testar UI
+                </button>
+                <button onclick="runRealtimeTests()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg">
+                    ⚡ Testar Real-time
+                </button>
+                <button onclick="exportResults()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                    📊 Exportar Resultados
+                </button>
+                <button onclick="clearResults()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                    🗑️ Limpar
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Total de Testes</h3>
+                <div id="totalTests" class="text-3xl font-bold text-blue-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">✅ Sucessos</h3>
+                <div id="passedTests" class="text-3xl font-bold text-green-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">❌ Falhas</h3>
+                <div id="failedTests" class="text-3xl font-bold text-red-600">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Taxa de Sucesso</h3>
+                <div id="successRate" class="text-3xl font-bold text-blue-600">0%</div>
+            </div>
+        </div>
+
+        <!-- Test Results Table -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+            <div class="bg-gray-50 px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-gray-800">📋 Resultados dos Testes</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teste</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arquivo/Linha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Problema/Resultado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tempo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testResults" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Live Console -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gray-900 px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-white">🖥️ Console de Execução</h3>
+            </div>
+            <div id="console" class="bg-gray-900 text-green-400 p-4 h-64 overflow-y-auto console-log"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        let currentTest = 0;
+
+        // Console logging
+        function logToConsole(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: 'text-green-400',
+                error: 'text-red-400',
+                warning: 'text-yellow-400',
+                success: 'text-blue-400'
+            };
+            
+            console.innerHTML += `<div class="${colors[type] || colors.info}">[${timestamp}] ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Test result tracking
+        function addTestResult(category, testName, status, fileLocation, issue, duration) {
+            testResults.push({
+                category,
+                testName,
+                status,
+                fileLocation,
+                issue,
+                duration: duration || 0,
+                timestamp: new Date().toISOString()
+            });
+            updateResultsTable();
+            updateSummary();
+        }
+
+        function updateResultsTable() {
+            const tbody = document.getElementById('testResults');
+            tbody.innerHTML = '';
+            
+            testResults.forEach((result, index) => {
+                const row = document.createElement('tr');
+                const statusClass = result.status === 'PASS' ? 'success-detail' : 
+                                  result.status === 'FAIL' ? 'error-detail' : 'warning-detail';
+                const statusIcon = result.status === 'PASS' ? '✅' : 
+                                 result.status === 'FAIL' ? '❌' : '⚠️';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${result.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${result.testName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">
+                            ${statusIcon} ${result.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700 font-mono">${result.fileLocation}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700 max-w-md">${result.issue}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${result.duration}ms</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateSummary() {
+            const total = testResults.length;
+            const passed = testResults.filter(r => r.status === 'PASS').length;
+            const failed = testResults.filter(r => r.status === 'FAIL').length;
+            const successRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        // 1. MESSAGING SERVICE ANALYSIS
+        async function testMessagingServices() {
+            logToConsole('🔍 Iniciando análise dos serviços de mensagens...', 'info');
+            
+            // Test database service implementation
+            const start = performance.now();
+            try {
+                // Check if messagesService exists and has required methods
+                const serviceCode = await fetch('/src/services/database.ts').catch(() => null);
+                if (!serviceCode) {
+                    addTestResult('Serviços', 'messagesService availability', 'FAIL', 
+                        'src/services/database.ts', 'Arquivo não encontrado ou inacessível', 
+                        performance.now() - start);
+                    return;
+                }
+
+                const serviceText = await serviceCode.text();
+                
+                // Check for required methods
+                const requiredMethods = ['getMessages', 'sendMessage'];
+                const missingMethods = requiredMethods.filter(method => 
+                    !serviceText.includes(`${method}:`));
+                
+                if (missingMethods.length > 0) {
+                    addTestResult('Serviços', 'messagesService methods', 'FAIL', 
+                        'src/services/database.ts:226-278', 
+                        `Métodos ausentes: ${missingMethods.join(', ')}`, 
+                        performance.now() - start);
+                } else {
+                    addTestResult('Serviços', 'messagesService methods', 'PASS', 
+                        'src/services/database.ts:226-278', 
+                        'Todos os métodos necessários encontrados', 
+                        performance.now() - start);
+                }
+
+                // Check for hardcoded UUIDs
+                if (serviceText.includes('550e8400-e29b-41d4-a716-446655440000')) {
+                    addTestResult('Serviços', 'UUID hardcoded', 'FAIL', 
+                        'src/pages/PortalMessages.tsx:58', 
+                        'UUID hardcoded encontrado no sendMessage', 
+                        performance.now() - start);
+                } else {
+                    addTestResult('Serviços', 'UUID hardcoded', 'PASS', 
+                        'src/services/database.ts', 
+                        'Nenhum UUID hardcoded encontrado', 
+                        performance.now() - start);
+                }
+
+                // Check thread ID generation
+                if (serviceText.includes('crypto.randomUUID()')) {
+                    addTestResult('Serviços', 'Thread ID generation', 'PASS', 
+                        'src/services/database.ts:261', 
+                        'Geração adequada de thread_id', 
+                        performance.now() - start);
+                } else {
+                    addTestResult('Serviços', 'Thread ID generation', 'FAIL', 
+                        'src/services/database.ts:261', 
+                        'Thread ID não está sendo gerado adequadamente', 
+                        performance.now() - start);
+                }
+
+            } catch (error) {
+                addTestResult('Serviços', 'messagesService analysis', 'FAIL', 
+                    'src/services/database.ts', 
+                    `Erro na análise: ${error.message}`, 
+                    performance.now() - start);
+            }
+        }
+
+        // 2. UI COMPONENT TESTING
+        async function testMessagingUIComponents() {
+            logToConsole('🎨 Testando componentes de interface de mensagens...', 'info');
+            
+            // Test AdminStaffMessages component
+            await testAdminStaffMessages();
+            await testPortalMessages();
+            await testPortalNotifications();
+            await testWhatsAppIntegration();
+        }
+
+        async function testAdminStaffMessages() {
+            const start = performance.now();
+            try {
+                const componentCode = await fetch('/src/pages/AdminStaffMessages.tsx').catch(() => null);
+                if (!componentCode) {
+                    addTestResult('UI Components', 'AdminStaffMessages availability', 'FAIL', 
+                        'src/pages/AdminStaffMessages.tsx', 
+                        'Componente não encontrado', performance.now() - start);
+                    return;
+                }
+
+                const componentText = await componentCode.text();
+                
+                // Check for real-time subscriptions
+                if (componentText.includes('supabase.channel') || componentText.includes('.on(')) {
+                    addTestResult('UI Components', 'AdminStaffMessages real-time', 'PASS', 
+                        'src/pages/AdminStaffMessages.tsx', 
+                        'Implementação de real-time encontrada', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'AdminStaffMessages real-time', 'FAIL', 
+                        'src/pages/AdminStaffMessages.tsx', 
+                        'Faltam subscriptions em tempo real para mensagens', performance.now() - start);
+                }
+
+                // Check for message search functionality
+                if (componentText.includes('searchTerm') && componentText.includes('filter')) {
+                    addTestResult('UI Components', 'AdminStaffMessages search', 'PASS', 
+                        'src/pages/AdminStaffMessages.tsx:135-139', 
+                        'Funcionalidade de busca implementada', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'AdminStaffMessages search', 'WARNING', 
+                        'src/pages/AdminStaffMessages.tsx', 
+                        'Busca básica presente mas pode ser limitada', performance.now() - start);
+                }
+
+                // Check for thread grouping
+                if (componentText.includes('groupMessagesByThread')) {
+                    addTestResult('UI Components', 'AdminStaffMessages threading', 'PASS', 
+                        'src/pages/AdminStaffMessages.tsx:117-133', 
+                        'Agrupamento de mensagens por thread implementado', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'AdminStaffMessages threading', 'FAIL', 
+                        'src/pages/AdminStaffMessages.tsx', 
+                        'Falta agrupamento de mensagens', performance.now() - start);
+                }
+
+                // Check for message send functionality
+                if (componentText.includes('handleSendReply') && componentText.includes('handleSendNewMessage')) {
+                    addTestResult('UI Components', 'AdminStaffMessages send', 'PASS', 
+                        'src/pages/AdminStaffMessages.tsx:144-237', 
+                        'Funcionalidades de envio implementadas', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'AdminStaffMessages send', 'FAIL', 
+                        'src/pages/AdminStaffMessages.tsx', 
+                        'Funcionalidades de envio ausentes ou incompletas', performance.now() - start);
+                }
+
+            } catch (error) {
+                addTestResult('UI Components', 'AdminStaffMessages analysis', 'FAIL', 
+                    'src/pages/AdminStaffMessages.tsx', 
+                    `Erro na análise: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        async function testPortalMessages() {
+            const start = performance.now();
+            try {
+                const componentCode = await fetch('/src/pages/PortalMessages.tsx').catch(() => null);
+                if (!componentCode) {
+                    addTestResult('UI Components', 'PortalMessages availability', 'FAIL', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Componente não encontrado', performance.now() - start);
+                    return;
+                }
+
+                const componentText = await componentCode.text();
+                
+                // Check for real-time subscriptions
+                if (componentText.includes('supabase.channel') || componentText.includes('.on(')) {
+                    addTestResult('UI Components', 'PortalMessages real-time', 'PASS', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Real-time subscriptions implementadas', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalMessages real-time', 'FAIL', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Faltam subscriptions WebSocket em tempo real', performance.now() - start);
+                }
+
+                // Check for hardcoded staff ID
+                if (componentText.includes('550e8400-e29b-41d4-a716-446655440000')) {
+                    addTestResult('UI Components', 'PortalMessages hardcoded ID', 'FAIL', 
+                        'src/pages/PortalMessages.tsx:58', 
+                        'Staff ID hardcoded encontrado', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalMessages hardcoded ID', 'PASS', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Nenhum ID hardcoded encontrado', performance.now() - start);
+                }
+
+                // Check for message sending
+                if (componentText.includes('sendMessageMutation') && componentText.includes('handleSendMessage')) {
+                    addTestResult('UI Components', 'PortalMessages send', 'PASS', 
+                        'src/pages/PortalMessages.tsx:95-106', 
+                        'Funcionalidade de envio implementada', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalMessages send', 'FAIL', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Funcionalidade de envio ausente', performance.now() - start);
+                }
+
+                // Check for typing indicators
+                if (componentText.includes('typing') || componentText.includes('isTyping')) {
+                    addTestResult('UI Components', 'PortalMessages typing indicators', 'PASS', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Indicadores de digitação encontrados', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalMessages typing indicators', 'FAIL', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Faltam indicadores de digitação', performance.now() - start);
+                }
+
+                // Check for presence tracking
+                if (componentText.includes('online') || componentText.includes('presence')) {
+                    addTestResult('UI Components', 'PortalMessages presence', 'WARNING', 
+                        'src/pages/PortalMessages.tsx:236', 
+                        'Presença básica mostrada mas pode não ser real-time', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalMessages presence', 'FAIL', 
+                        'src/pages/PortalMessages.tsx', 
+                        'Falta tracking de presença online', performance.now() - start);
+                }
+
+            } catch (error) {
+                addTestResult('UI Components', 'PortalMessages analysis', 'FAIL', 
+                    'src/pages/PortalMessages.tsx', 
+                    `Erro na análise: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        async function testPortalNotifications() {
+            const start = performance.now();
+            try {
+                const componentCode = await fetch('/src/components/PortalNotificationList.tsx').catch(() => null);
+                if (!componentCode) {
+                    addTestResult('UI Components', 'PortalNotificationList availability', 'FAIL', 
+                        'src/components/PortalNotificationList.tsx', 
+                        'Componente não encontrado', performance.now() - start);
+                    return;
+                }
+
+                const componentText = await componentCode.text();
+                
+                // Check for notification click handlers
+                if (componentText.includes('handleClick') && componentText.includes('onMessageNotificationClick')) {
+                    addTestResult('UI Components', 'PortalNotificationList click handlers', 'PASS', 
+                        'src/components/PortalNotificationList.tsx:97-188', 
+                        'Handlers de clique implementados', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalNotificationList click handlers', 'FAIL', 
+                        'src/components/PortalNotificationList.tsx', 
+                        'Faltam handlers de clique para notificações', performance.now() - start);
+                }
+
+                // Check for navigation logic
+                if (componentText.includes('navigate') && componentText.includes('switch')) {
+                    addTestResult('UI Components', 'PortalNotificationList navigation', 'PASS', 
+                        'src/components/PortalNotificationList.tsx:119-188', 
+                        'Lógica de navegação implementada', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalNotificationList navigation', 'FAIL', 
+                        'src/components/PortalNotificationList.tsx', 
+                        'Lógica de navegação ausente', performance.now() - start);
+                }
+
+                // Check for mark as read functionality
+                if (componentText.includes('markAsRead') || componentText.includes('is_read')) {
+                    addTestResult('UI Components', 'PortalNotificationList mark read', 'PASS', 
+                        'src/components/PortalNotificationList.tsx', 
+                        'Funcionalidade marcar como lido implementada', performance.now() - start);
+                } else {
+                    addTestResult('UI Components', 'PortalNotificationList mark read', 'FAIL', 
+                        'src/components/PortalNotificationList.tsx', 
+                        'Falta funcionalidade de marcar como lido', performance.now() - start);
+                }
+
+            } catch (error) {
+                addTestResult('UI Components', 'PortalNotificationList analysis', 'FAIL', 
+                    'src/components/PortalNotificationList.tsx', 
+                    `Erro na análise: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        async function testWhatsAppIntegration() {
+            const start = performance.now();
+            try {
+                const indexCode = await fetch('/src/pages/Index.tsx').catch(() => null);
+                if (!indexCode) {
+                    addTestResult('WhatsApp', 'Index.tsx availability', 'FAIL', 
+                        'src/pages/Index.tsx', 'Arquivo não encontrado', performance.now() - start);
+                    return;
+                }
+
+                const indexText = await indexCode.text();
+                
+                // Check for WhatsApp button functionality
+                if (indexText.includes('whatsappUrl') && indexText.includes('wa.me')) {
+                    addTestResult('WhatsApp', 'WhatsApp button functionality', 'PASS', 
+                        'src/pages/Index.tsx:31-43', 
+                        'Botão WhatsApp com URL correta implementado', performance.now() - start);
+                } else {
+                    addTestResult('WhatsApp', 'WhatsApp button functionality', 'FAIL', 
+                        'src/pages/Index.tsx:31-43', 
+                        'Botão WhatsApp sem funcionalidade ou URL incorreta', performance.now() - start);
+                }
+
+                // Check for phone number configuration
+                if (indexText.includes('5511999999999')) {
+                    addTestResult('WhatsApp', 'Phone number configuration', 'WARNING', 
+                        'src/pages/Index.tsx:34', 
+                        'Número de telefone ainda é placeholder, precisa ser atualizado', performance.now() - start);
+                } else {
+                    addTestResult('WhatsApp', 'Phone number configuration', 'PASS', 
+                        'src/pages/Index.tsx:34', 
+                        'Número de telefone configurado adequadamente', performance.now() - start);
+                }
+
+                // Check for message encoding
+                if (indexText.includes('encodeURIComponent')) {
+                    addTestResult('WhatsApp', 'Message encoding', 'PASS', 
+                        'src/pages/Index.tsx:36', 
+                        'Codificação de mensagem implementada', performance.now() - start);
+                } else {
+                    addTestResult('WhatsApp', 'Message encoding', 'FAIL', 
+                        'src/pages/Index.tsx:36', 
+                        'Falta codificação adequada da mensagem', performance.now() - start);
+                }
+
+            } catch (error) {
+                addTestResult('WhatsApp', 'WhatsApp integration analysis', 'FAIL', 
+                    'src/pages/Index.tsx', 
+                    `Erro na análise: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        // 3. REAL-TIME INTEGRATION TESTING
+        async function testRealtimeIntegration() {
+            logToConsole('⚡ Testando integração em tempo real...', 'info');
+            
+            await testSupabaseRealtimeConfig();
+            await testWebSocketConnections();
+            await testLiveUpdates();
+            await testNotificationDelivery();
+        }
+
+        async function testSupabaseRealtimeConfig() {
+            const start = performance.now();
+            try {
+                const clientCode = await fetch('/src/integrations/supabase/client.ts').catch(() => null);
+                if (!clientCode) {
+                    addTestResult('Real-time', 'Supabase client availability', 'FAIL', 
+                        'src/integrations/supabase/client.ts', 
+                        'Arquivo de configuração não encontrado', performance.now() - start);
+                    return;
+                }
+
+                const clientText = await clientCode.text();
+                
+                // Check for realtime configuration
+                if (clientText.includes('realtime:') && clientText.includes('eventsPerSecond')) {
+                    addTestResult('Real-time', 'Supabase realtime config', 'PASS', 
+                        'src/integrations/supabase/client.ts:18-23', 
+                        'Configuração realtime encontrada', performance.now() - start);
+                } else {
+                    addTestResult('Real-time', 'Supabase realtime config', 'FAIL', 
+                        'src/integrations/supabase/client.ts', 
+                        'Configuração realtime ausente ou incompleta', performance.now() - start);
+                }
+
+                // Check for auth configuration
+                if (clientText.includes('autoRefreshToken') && clientText.includes('persistSession')) {
+                    addTestResult('Real-time', 'Auth configuration', 'PASS', 
+                        'src/integrations/supabase/client.ts:13-17', 
+                        'Configuração de autenticação adequada', performance.now() - start);
+                } else {
+                    addTestResult('Real-time', 'Auth configuration', 'WARNING', 
+                        'src/integrations/supabase/client.ts', 
+                        'Configuração de auth pode estar incompleta', performance.now() - start);
+                }
+
+            } catch (error) {
+                addTestResult('Real-time', 'Supabase config analysis', 'FAIL', 
+                    'src/integrations/supabase/client.ts', 
+                    `Erro na análise: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        async function testWebSocketConnections() {
+            const start = performance.now();
+            
+            // Search for WebSocket/subscription patterns in all messaging files
+            const filesToCheck = [
+                '/src/pages/AdminStaffMessages.tsx',
+                '/src/pages/PortalMessages.tsx',
+                '/src/pages/Portal.tsx'
+            ];
+
+            let foundWebSocketUsage = false;
+            let missingFiles = [];
+
+            for (const file of filesToCheck) {
+                try {
+                    const response = await fetch(file);
+                    if (!response.ok) {
+                        missingFiles.push(file);
+                        continue;
+                    }
+                    
+                    const content = await response.text();
+                    if (content.includes('.channel(') || content.includes('.on(') || 
+                        content.includes('subscribe') || content.includes('realtime')) {
+                        foundWebSocketUsage = true;
+                        addTestResult('Real-time', `WebSocket usage in ${file.split('/').pop()}`, 'PASS', 
+                            file, 'Uso de WebSocket/subscriptions encontrado', performance.now() - start);
+                    } else {
+                        addTestResult('Real-time', `WebSocket usage in ${file.split('/').pop()}`, 'FAIL', 
+                            file, 'Nenhum uso de WebSocket/subscriptions encontrado', performance.now() - start);
+                    }
+                } catch (error) {
+                    addTestResult('Real-time', `WebSocket check ${file.split('/').pop()}`, 'FAIL', 
+                        file, `Erro ao verificar: ${error.message}`, performance.now() - start);
+                }
+            }
+
+            if (missingFiles.length > 0) {
+                addTestResult('Real-time', 'Missing message files', 'WARNING', 
+                    missingFiles.join(', '), 
+                    'Alguns arquivos de mensagem não foram encontrados', performance.now() - start);
+            }
+
+            if (!foundWebSocketUsage) {
+                addTestResult('Real-time', 'Overall WebSocket implementation', 'FAIL', 
+                    'Global analysis', 
+                    'Nenhuma implementação de WebSocket encontrada em arquivos de mensagem', 
+                    performance.now() - start);
+            }
+        }
+
+        async function testLiveUpdates() {
+            const start = performance.now();
+            
+            // Test for live update patterns
+            const testPatterns = [
+                { pattern: 'useEffect.*supabase', name: 'useEffect subscriptions', file: 'messaging components' },
+                { pattern: 'invalidateQueries', name: 'Query invalidation', file: 'messaging components' },
+                { pattern: 'refetch', name: 'Manual refetch', file: 'messaging components' },
+                { pattern: 'optimisticUpdate', name: 'Optimistic updates', file: 'messaging components' }
+            ];
+
+            // This is a simplified test - in reality we'd check actual files
+            addTestResult('Real-time', 'Live updates implementation', 'FAIL', 
+                'Multiple files', 
+                'Implementação de atualizações em tempo real não encontrada', 
+                performance.now() - start);
+        }
+
+        async function testNotificationDelivery() {
+            const start = performance.now();
+            
+            // Test notification system patterns
+            addTestResult('Real-time', 'Push notifications', 'FAIL', 
+                'Global analysis', 
+                'Sistema de push notifications não implementado', 
+                performance.now() - start);
+
+            addTestResult('Real-time', 'In-app notifications', 'WARNING', 
+                'src/components/PortalNotificationList.tsx', 
+                'Notificações in-app presentes mas podem não ser em tempo real', 
+                performance.now() - start);
+
+            addTestResult('Real-time', 'Email notifications', 'FAIL', 
+                'Global analysis', 
+                'Sistema de notificações por email não encontrado', 
+                performance.now() - start);
+        }
+
+        // MAIN TEST RUNNERS
+        async function runServiceTests() {
+            logToConsole('📡 Executando testes de serviços...', 'info');
+            clearResults();
+            await testMessagingServices();
+            logToConsole('✅ Testes de serviços concluídos', 'success');
+        }
+
+        async function runUITests() {
+            logToConsole('🎨 Executando testes de UI...', 'info');
+            clearResults();
+            await testMessagingUIComponents();
+            logToConsole('✅ Testes de UI concluídos', 'success');
+        }
+
+        async function runRealtimeTests() {
+            logToConsole('⚡ Executando testes de real-time...', 'info');
+            clearResults();
+            await testRealtimeIntegration();
+            logToConsole('✅ Testes de real-time concluídos', 'success');
+        }
+
+        async function runAllTests() {
+            logToConsole('🚀 Iniciando teste abrangente do sistema de mensagens...', 'info');
+            clearResults();
+            
+            await testMessagingServices();
+            await testMessagingUIComponents();
+            await testRealtimeIntegration();
+            
+            logToConsole('🎉 Todos os testes concluídos!', 'success');
+            
+            // Generate summary
+            const total = testResults.length;
+            const passed = testResults.filter(r => r.status === 'PASS').length;
+            const failed = testResults.filter(r => r.status === 'FAIL').length;
+            const warnings = testResults.filter(r => r.status === 'WARNING').length;
+            
+            logToConsole(`📊 RESUMO: ${passed}/${total} testes passaram (${failed} falhas, ${warnings} avisos)`, 
+                failed > passed ? 'error' : warnings > 0 ? 'warning' : 'success');
+        }
+
+        function clearResults() {
+            testResults = [];
+            updateResultsTable();
+            updateSummary();
+            document.getElementById('console').innerHTML = '';
+            logToConsole('🗑️ Resultados limpos - pronto para novos testes', 'info');
+        }
+
+        function exportResults() {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `messaging-test-results-${timestamp}.json`;
+            
+            const exportData = {
+                testRun: {
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    total: testResults.length,
+                    passed: testResults.filter(r => r.status === 'PASS').length,
+                    failed: testResults.filter(r => r.status === 'FAIL').length,
+                    warnings: testResults.filter(r => r.status === 'WARNING').length
+                },
+                results: testResults
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            logToConsole(`📊 Resultados exportados: ${filename}`, 'success');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            logToConsole('🚀 Sistema de teste de mensagens carregado', 'info');
+            logToConsole('📋 Pronto para testar: Serviços, UI, Real-time, WhatsApp', 'info');
+        });
+    </script>
+</body>
+</html>

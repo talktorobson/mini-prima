@@ -3,6 +3,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Loader2 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -12,6 +13,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { loading, adminUser } = useAdminAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -41,7 +43,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {!isLoginPage && <AdminSidebar />}
-      <div className={`flex-1 ${!isLoginPage ? 'ml-64' : ''}`}>
+      <div className={`flex-1 ${!isLoginPage && !isMobile ? 'md:ml-64' : ''}`}>
         {children}
       </div>
     </div>

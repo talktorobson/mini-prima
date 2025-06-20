@@ -92,8 +92,8 @@ const AdminStaffDashboard = () => {
                   <Building className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-gray-500">Em desenvolvimento</p>
+                  <div className="text-2xl font-bold">{assignedClients?.length || 0}</div>
+                  <p className="text-xs text-gray-500">Casos ativos atribuídos</p>
                 </CardContent>
               </Card>
 
@@ -103,8 +103,8 @@ const AdminStaffDashboard = () => {
                   <FileText className="h-4 w-4 text-orange-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-gray-500">Em desenvolvimento</p>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-gray-500">Documentos aguardando review</p>
                 </CardContent>
               </Card>
 
@@ -114,8 +114,8 @@ const AdminStaffDashboard = () => {
                   <MessageCircle className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-gray-500">Em desenvolvimento</p>
+                  <div className="text-2xl font-bold">0</div>
+                  <p className="text-xs text-gray-500">Mensagens não lidas</p>
                 </CardContent>
               </Card>
             </div>

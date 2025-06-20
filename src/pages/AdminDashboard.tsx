@@ -19,6 +19,10 @@ import StripeSettings from '@/pages/StripeSettings';
 import PaymentAnalytics from '@/pages/PaymentAnalytics';
 import WebhookLogs from '@/pages/WebhookLogs';
 import BrazilianLegalCompliance from '@/pages/BrazilianLegalCompliance';
+import AdminMessagesManagement from '@/pages/AdminMessagesManagement';
+import FinancialDashboard from '@/pages/FinancialDashboard';
+import CaseDetails from '@/pages/admin/CaseDetails';
+import CaseForm from '@/components/admin/CaseForm';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
@@ -71,11 +75,11 @@ const AdminDashboard = () => {
             } />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="analytics" element={<AdminBusinessIntelligence />} />
-            <Route path="clients" element={<div className="p-6"><h1>Gestão de Clientes (Em desenvolvimento)</h1></div>} />
-            <Route path="cases" element={<div className="p-6"><h1>Gestão de Casos (Em desenvolvimento)</h1></div>} />
-            <Route path="documents" element={<div className="p-6"><h1>Gestão de Documentos (Em desenvolvimento)</h1></div>} />
-            <Route path="financial" element={<div className="p-6"><h1>Gestão Financeira (Em desenvolvimento)</h1></div>} />
-            <Route path="messages" element={<div className="p-6"><h1>Gestão de Mensagens (Em desenvolvimento)</h1></div>} />
+            <Route path="clients" element={<RegistrationManagement />} />
+            <Route path="cases" element={<AdminStaffCases />} />
+            <Route path="documents" element={<AdminStaffDocuments />} />
+            <Route path="financial" element={<FinancialDashboard />} />
+            <Route path="messages" element={<AdminMessagesManagement />} />
             <Route path="time-tracking" element={<TimeTracking />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="business-settings" element={<BusinessSettings />} />
@@ -85,7 +89,8 @@ const AdminDashboard = () => {
             <Route path="payment-analytics" element={<PaymentAnalytics />} />
             <Route path="webhook-logs" element={<WebhookLogs />} />
             <Route path="legal-compliance" element={<BrazilianLegalCompliance />} />
-            <Route path="settings" element={<div className="p-6"><h1>Configurações do Sistema (Em desenvolvimento)</h1></div>} />
+            {/* Redirect duplicate settings route to business-settings */}
+            <Route path="settings" element={<Navigate to="/admin/business-settings" replace />} />
           </>
         )}
 
@@ -99,10 +104,10 @@ const AdminDashboard = () => {
             <Route path="staff/time-tracking" element={<TimeTracking />} />
             <Route path="staff/calendar" element={<Calendar />} />
             <Route path="staff/document-generation" element={<DocumentGeneration />} />
-            <Route path="staff/clients/:clientId" element={<div className="p-6"><h1>Detalhes do Cliente (Em desenvolvimento)</h1></div>} />
-            <Route path="staff/cases/new" element={<div className="p-6"><h1>Novo Caso (Em desenvolvimento)</h1></div>} />
-            <Route path="staff/cases/:caseId" element={<div className="p-6"><h1>Detalhes do Caso (Em desenvolvimento)</h1></div>} />
-            <Route path="staff/cases/:caseId/edit" element={<div className="p-6"><h1>Editar Caso (Em desenvolvimento)</h1></div>} />
+            <Route path="staff/clients/:clientId" element={<RegistrationManagement />} />
+            <Route path="staff/cases/new" element={<CaseForm />} />
+            <Route path="staff/cases/:caseId" element={<CaseDetails />} />
+            <Route path="staff/cases/:caseId/edit" element={<CaseForm />} />
           </>
         )}
 

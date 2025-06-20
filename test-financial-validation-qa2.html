@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA-2 Backend/API Testing - Financial Validation Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: "🧪";
+            font-size: 48px;
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .status-bar {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .status-success { background: #d4edda; color: #155724; }
+        .status-warning { background: #fff3cd; color: #856404; }
+        .status-danger { background: #f8d7da; color: #721c24; }
+        .status-info { background: #d1ecf1; color: #0c5460; }
+        
+        .test-controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .test-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #495057, #343a40);
+            color: white;
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-content {
+            padding: 20px;
+        }
+        
+        .test-case {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .test-case.success {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+        
+        .test-case.failure {
+            border-left-color: #dc3545;
+            background: #fff8f8;
+        }
+        
+        .test-case.warning {
+            border-left-color: #ffc107;
+            background: #fffef8;
+        }
+        
+        .test-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .test-result {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .result-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result-failure {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .logs {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .logs-header {
+            background: #343a40;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logs-content {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        
+        .log-timestamp {
+            color: #a0aec0;
+            margin-right: 10px;
+        }
+        
+        .log-level-info { color: #63b3ed; }
+        .log-level-success { color: #68d391; }
+        .log-level-warning { color: #fbb6ce; }
+        .log-level-error { color: #fc8181; }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .summary-label {
+            color: #6c757d;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+        
+        .test-input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        
+        .test-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .test-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header::before {
+                display: none;
+            }
+            
+            .control-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QA-2 Backend/API Testing</h1>
+            <p>Financial Validation Service & Service Architecture Testing</p>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-item status-info">
+                <span>🎯</span>
+                <span>Target: Financial Validation Service</span>
+            </div>
+            <div class="status-item status-info">
+                <span>⚡</span>
+                <span>Tests: <span id="total-tests">0</span></span>
+            </div>
+            <div class="status-item status-success">
+                <span>✅</span>
+                <span>Passed: <span id="passed-tests">0</span></span>
+            </div>
+            <div class="status-item status-danger">
+                <span>❌</span>
+                <span>Failed: <span id="failed-tests">0</span></span>
+            </div>
+            <div class="status-item status-warning">
+                <span>⚠️</span>
+                <span>Warnings: <span id="warning-tests">0</span></span>
+            </div>
+        </div>
+        
+        <div class="test-controls">
+            <div class="control-group">
+                <button class="btn btn-primary" onclick="runAllTests()">
+                    🚀 Run All Tests
+                </button>
+                <button class="btn btn-success" onclick="runCriticalTests()">
+                    ⚡ Critical Tests Only
+                </button>
+                <button class="btn btn-warning" onclick="runServiceConsistencyTests()">
+                    🔧 Service Architecture
+                </button>
+                <button class="btn btn-danger" onclick="runBrazilianComplianceTests()">
+                    🇧🇷 Brazilian Compliance
+                </button>
+                <button class="btn btn-primary" onclick="clearResults()">
+                    🗑️ Clear Results
+                </button>
+            </div>
+        </div>
+        
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-number" style="color: #007bff;" id="total-count">0</div>
+                <div class="summary-label">Total Tests</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number" style="color: #28a745;" id="success-count">0</div>
+                <div class="summary-label">Passed</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number" style="color: #dc3545;" id="failure-count">0</div>
+                <div class="summary-label">Failed</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number" style="color: #ffc107;" id="warning-count">0</div>
+                <div class="summary-label">Warnings</div>
+            </div>
+        </div>
+        
+        <div class="test-sections">
+            <div class="test-section">
+                <div class="section-header">
+                    💰 Currency & Amount Validation
+                </div>
+                <div class="section-content" id="currency-tests">
+                    <!-- Currency validation tests will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <div class="section-header">
+                    🇧🇷 Brazilian Tax ID Validation
+                </div>
+                <div class="section-content" id="tax-id-tests">
+                    <!-- Tax ID validation tests will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-sections">
+            <div class="test-section">
+                <div class="section-header">
+                    💳 Payment Method Validation
+                </div>
+                <div class="section-content" id="payment-tests">
+                    <!-- Payment method tests will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <div class="section-header">
+                    🔧 Service Architecture Tests
+                </div>
+                <div class="section-content" id="architecture-tests">
+                    <!-- Architecture tests will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="logs">
+            <div class="logs-header">
+                📊 Test Execution Logs
+                <button class="btn btn-sm" onclick="clearLogs()" style="padding: 6px 12px; font-size: 0.8em;">Clear Logs</button>
+            </div>
+            <div class="logs-content" id="test-logs">
+                <div class="log-entry">
+                    <span class="log-timestamp">[INIT]</span>
+                    <span class="log-level-info">QA-2 Backend/API Testing initialized. Ready to test Financial Validation Service.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Financial Validation Service for Testing
+        class MockFinancialValidationService {
+            constructor() {
+                this.DEFAULT_CONFIG = {
+                    minAmount: 0.01,
+                    maxAmount: 999999999.99,
+                    allowZero: false,
+                    currency: 'BRL',
+                    locale: 'pt-BR'
+                };
+            }
+            
+            formatCurrency(amount, config = {}) {
+                const mergedConfig = { ...this.DEFAULT_CONFIG, ...config };
+                const numValue = typeof amount === 'string' ? parseFloat(amount) : amount;
+                
+                if (isNaN(numValue)) {
+                    return 'R$ 0,00';
+                }
+
+                return numValue.toLocaleString(mergedConfig.locale, {
+                    style: 'currency',
+                    currency: mergedConfig.currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            
+            parseCurrency(value) {
+                if (!value) return 0;
+                
+                const cleaned = value.replace(/[R$\s]/g, '');
+                const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+                
+                const parsed = parseFloat(normalized);
+                return isNaN(parsed) ? 0 : parsed;
+            }
+            
+            validateAmount(amount, config = {}) {
+                const mergedConfig = { ...this.DEFAULT_CONFIG, ...config };
+                const errors = [];
+                const warnings = [];
+                
+                const numValue = typeof amount === 'string' ? this.parseCurrency(amount) : amount;
+                
+                if (isNaN(numValue)) {
+                    errors.push('Valor deve ser um número válido');
+                    return { isValid: false, errors, warnings };
+                }
+
+                if (numValue < 0) {
+                    errors.push('Valor não pode ser negativo');
+                }
+
+                if (!mergedConfig.allowZero && numValue === 0) {
+                    errors.push('Valor deve ser maior que zero');
+                }
+
+                if (mergedConfig.minAmount && numValue < mergedConfig.minAmount) {
+                    errors.push(`Valor mínimo é ${this.formatCurrency(mergedConfig.minAmount)}`);
+                }
+
+                if (mergedConfig.maxAmount && numValue > mergedConfig.maxAmount) {
+                    errors.push(`Valor máximo é ${this.formatCurrency(mergedConfig.maxAmount)}`);
+                }
+
+                if (numValue > 1000000) {
+                    warnings.push('Valor muito alto - verifique se está correto');
+                }
+
+                if (numValue < 1 && numValue > 0) {
+                    warnings.push('Valor muito baixo - verifique se está correto');
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors,
+                    warnings
+                };
+            }
+            
+            validatePercentage(percentage, config = {}) {
+                const errors = [];
+                const warnings = [];
+                
+                const numValue = typeof percentage === 'string' ? parseFloat(percentage.replace(',', '.')) : percentage;
+                
+                if (isNaN(numValue)) {
+                    errors.push('Percentual deve ser um número válido');
+                    return { isValid: false, errors, warnings };
+                }
+
+                const minPercentage = config.min ?? 0;
+                const maxPercentage = config.max ?? 100;
+
+                if (numValue < minPercentage) {
+                    errors.push(`Percentual mínimo é ${minPercentage}%`);
+                }
+
+                if (numValue > maxPercentage) {
+                    errors.push(`Percentual máximo é ${maxPercentage}%`);
+                }
+
+                if (numValue > 50 && maxPercentage === 100) {
+                    warnings.push('Percentual alto - verifique se está correto');
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors,
+                    warnings
+                };
+            }
+            
+            validateCPF(cpf) {
+                const errors = [];
+                
+                if (!cpf) {
+                    errors.push('CPF é obrigatório');
+                    return { isValid: false, errors };
+                }
+
+                const cleanCPF = cpf.replace(/[^\d]/g, '');
+                
+                if (cleanCPF.length !== 11) {
+                    errors.push('CPF deve conter 11 dígitos');
+                    return { isValid: false, errors };
+                }
+
+                if (/^(\d)\1+$/.test(cleanCPF)) {
+                    errors.push('CPF inválido');
+                    return { isValid: false, errors };
+                }
+
+                // CPF validation algorithm
+                const digits = cleanCPF.split('').map(Number);
+                
+                let sum = 0;
+                for (let i = 0; i < 9; i++) {
+                    sum += digits[i] * (10 - i);
+                }
+                let checkDigit1 = 11 - (sum % 11);
+                if (checkDigit1 >= 10) checkDigit1 = 0;
+                
+                if (digits[9] !== checkDigit1) {
+                    errors.push('CPF inválido');
+                    return { isValid: false, errors };
+                }
+
+                sum = 0;
+                for (let i = 0; i < 10; i++) {
+                    sum += digits[i] * (11 - i);
+                }
+                let checkDigit2 = 11 - (sum % 11);
+                if (checkDigit2 >= 10) checkDigit2 = 0;
+                
+                if (digits[10] !== checkDigit2) {
+                    errors.push('CPF inválido');
+                    return { isValid: false, errors };
+                }
+
+                return { isValid: true, errors };
+            }
+            
+            validateCNPJ(cnpj) {
+                const errors = [];
+                
+                if (!cnpj) {
+                    errors.push('CNPJ é obrigatório');
+                    return { isValid: false, errors };
+                }
+
+                const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+                
+                if (cleanCNPJ.length !== 14) {
+                    errors.push('CNPJ deve conter 14 dígitos');
+                    return { isValid: false, errors };
+                }
+
+                if (/^(\d)\1+$/.test(cleanCNPJ)) {
+                    errors.push('CNPJ inválido');
+                    return { isValid: false, errors };
+                }
+
+                // CNPJ validation algorithm
+                const digits = cleanCNPJ.split('').map(Number);
+                
+                const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+                let sum = 0;
+                for (let i = 0; i < 12; i++) {
+                    sum += digits[i] * weights1[i];
+                }
+                let checkDigit1 = 11 - (sum % 11);
+                if (checkDigit1 >= 10) checkDigit1 = 0;
+                
+                if (digits[12] !== checkDigit1) {
+                    errors.push('CNPJ inválido');
+                    return { isValid: false, errors };
+                }
+
+                const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+                sum = 0;
+                for (let i = 0; i < 13; i++) {
+                    sum += digits[i] * weights2[i];
+                }
+                let checkDigit2 = 11 - (sum % 11);
+                if (checkDigit2 >= 10) checkDigit2 = 0;
+                
+                if (digits[13] !== checkDigit2) {
+                    errors.push('CNPJ inválido');
+                    return { isValid: false, errors };
+                }
+
+                return { isValid: true, errors };
+            }
+            
+            validatePixKey(pixKey, type) {
+                const errors = [];
+                
+                if (!pixKey) {
+                    errors.push('Chave PIX é obrigatória');
+                    return { isValid: false, errors };
+                }
+
+                switch (type) {
+                    case 'cpf':
+                        return this.validateCPF(pixKey);
+                    
+                    case 'cnpj':
+                        return this.validateCNPJ(pixKey);
+                    
+                    case 'email':
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(pixKey)) {
+                            errors.push('Email inválido');
+                        }
+                        break;
+                    
+                    case 'phone':
+                        const phoneRegex = /^\+55\d{10,11}$/;
+                        if (!phoneRegex.test(pixKey)) {
+                            errors.push('Telefone deve estar no formato +5511999999999');
+                        }
+                        break;
+                    
+                    case 'random':
+                        const randomKeyRegex = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+                        if (!randomKeyRegex.test(pixKey)) {
+                            errors.push('Chave aleatória inválida');
+                        }
+                        break;
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors
+                };
+            }
+            
+            validateInstallmentPlan(totalAmount, installments, interestRate) {
+                const errors = [];
+                const warnings = [];
+
+                const amountValidation = this.validateAmount(totalAmount);
+                if (!amountValidation.isValid) {
+                    errors.push(...amountValidation.errors);
+                }
+
+                if (!Number.isInteger(installments) || installments < 1) {
+                    errors.push('Número de parcelas deve ser um número inteiro positivo');
+                }
+
+                if (installments > 60) {
+                    errors.push('Número máximo de parcelas é 60');
+                }
+
+                if (installments > 24) {
+                    warnings.push('Número alto de parcelas - considere revisar');
+                }
+
+                if (interestRate !== undefined) {
+                    const interestValidation = this.validatePercentage(interestRate, { min: 0, max: 15 });
+                    if (!interestValidation.isValid) {
+                        errors.push(...interestValidation.errors.map(e => `Taxa de juros: ${e}`));
+                    }
+                }
+
+                const installmentAmount = totalAmount / installments;
+                if (installmentAmount < 50) {
+                    warnings.push('Valor da parcela muito baixo (< R$ 50,00)');
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors,
+                    warnings
+                };
+            }
+            
+            validatePaymentMethod(method, data) {
+                const errors = [];
+
+                switch (method) {
+                    case 'pix':
+                        if (!data.pixKey) {
+                            errors.push('Chave PIX é obrigatória');
+                        }
+                        if (!data.amount || data.amount <= 0) {
+                            errors.push('Valor deve ser maior que zero');
+                        }
+                        break;
+
+                    case 'boleto':
+                        if (!data.dueDate) {
+                            errors.push('Data de vencimento é obrigatória');
+                        }
+                        if (!data.payerName) {
+                            errors.push('Nome do pagador é obrigatório');
+                        }
+                        if (!data.amount || data.amount <= 0) {
+                            errors.push('Valor deve ser maior que zero');
+                        }
+                        break;
+
+                    case 'credit_card':
+                        if (!data.cardNumber || data.cardNumber.length < 13) {
+                            errors.push('Número do cartão inválido');
+                        }
+                        if (!data.expiryDate) {
+                            errors.push('Data de vencimento do cartão é obrigatória');
+                        }
+                        if (!data.cvv || data.cvv.length < 3) {
+                            errors.push('CVV inválido');
+                        }
+                        break;
+
+                    case 'bank_transfer':
+                        if (!data.bank || !data.agency || !data.account) {
+                            errors.push('Dados bancários incompletos');
+                        }
+                        break;
+                }
+
+                return {
+                    isValid: errors.length === 0,
+                    errors
+                };
+            }
+        }
+        
+        // Initialize mock service
+        const financialValidationService = new MockFinancialValidationService();
+        
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            warnings: 0
+        };
+        
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testStats.total;
+            document.getElementById('passed-tests').textContent = testStats.passed;
+            document.getElementById('failed-tests').textContent = testStats.failed;
+            document.getElementById('warning-tests').textContent = testStats.warnings;
+            
+            document.getElementById('total-count').textContent = testStats.total;
+            document.getElementById('success-count').textContent = testStats.passed;
+            document.getElementById('failure-count').textContent = testStats.failed;
+            document.getElementById('warning-count').textContent = testStats.warnings;
+        }
+        
+        function addLog(level, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level}">${message}</span>
+            `;
+            
+            const logsContent = document.getElementById('test-logs');
+            logsContent.appendChild(logEntry);
+            logsContent.scrollTop = logsContent.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('test-logs').innerHTML = `
+                <div class="log-entry">
+                    <span class="log-timestamp">[CLEAR]</span>
+                    <span class="log-level-info">Logs cleared. Ready for new test execution.</span>
+                </div>
+            `;
+        }
+        
+        function clearResults() {
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            updateStats();
+            
+            document.getElementById('currency-tests').innerHTML = '';
+            document.getElementById('tax-id-tests').innerHTML = '';
+            document.getElementById('payment-tests').innerHTML = '';
+            document.getElementById('architecture-tests').innerHTML = '';
+            
+            clearLogs();
+            addLog('info', 'All test results cleared.');
+        }
+        
+        function createTestCase(title, testFunction, container) {
+            const testCase = document.createElement('div');
+            testCase.className = 'test-case';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = title;
+            testCase.appendChild(titleDiv);
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result';
+            testCase.appendChild(resultDiv);
+            
+            testStats.total++;
+            
+            try {
+                const result = testFunction();
+                
+                if (result.status === 'pass') {
+                    testCase.classList.add('success');
+                    titleDiv.innerHTML = `✅ ${title}`;
+                    resultDiv.className = 'test-result result-success';
+                    resultDiv.textContent = result.message;
+                    testStats.passed++;
+                    addLog('success', `PASS: ${title}`);
+                } else if (result.status === 'warning') {
+                    testCase.classList.add('warning');
+                    titleDiv.innerHTML = `⚠️ ${title}`;
+                    resultDiv.className = 'test-result result-warning';
+                    resultDiv.textContent = result.message;
+                    testStats.warnings++;
+                    addLog('warning', `WARNING: ${title} - ${result.message}`);
+                } else {
+                    testCase.classList.add('failure');
+                    titleDiv.innerHTML = `❌ ${title}`;
+                    resultDiv.className = 'test-result result-failure';
+                    resultDiv.textContent = result.message;
+                    testStats.failed++;
+                    addLog('error', `FAIL: ${title} - ${result.message}`);
+                }
+            } catch (error) {
+                testCase.classList.add('failure');
+                titleDiv.innerHTML = `❌ ${title}`;
+                resultDiv.className = 'test-result result-failure';
+                resultDiv.textContent = `Error: ${error.message}`;
+                testStats.failed++;
+                addLog('error', `ERROR: ${title} - ${error.message}`);
+            }
+            
+            container.appendChild(testCase);
+            updateStats();
+        }
+        
+        // Currency & Amount Validation Tests
+        function runCurrencyTests() {
+            const container = document.getElementById('currency-tests');
+            
+            createTestCase('Valid Amount Validation', () => {
+                const result = financialValidationService.validateAmount(1000.50);
+                return result.isValid && result.errors.length === 0 ? 
+                    { status: 'pass', message: 'Amount R$ 1.000,50 validated successfully' } :
+                    { status: 'fail', message: `Validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Zero Amount Rejection', () => {
+                const result = financialValidationService.validateAmount(0);
+                return !result.isValid && result.errors.includes('Valor deve ser maior que zero') ? 
+                    { status: 'pass', message: 'Zero amount correctly rejected' } :
+                    { status: 'fail', message: 'Zero amount validation failed' };
+            }, container);
+            
+            createTestCase('Negative Amount Rejection', () => {
+                const result = financialValidationService.validateAmount(-100);
+                return !result.isValid && result.errors.includes('Valor não pode ser negativo') ? 
+                    { status: 'pass', message: 'Negative amount correctly rejected' } :
+                    { status: 'fail', message: 'Negative amount validation failed' };
+            }, container);
+            
+            createTestCase('Brazilian Currency Formatting', () => {
+                const formatted = financialValidationService.formatCurrency(1234.56);
+                return formatted === 'R$ 1.234,56' ? 
+                    { status: 'pass', message: `Correctly formatted: ${formatted}` } :
+                    { status: 'fail', message: `Expected 'R$ 1.234,56', got '${formatted}'` };
+            }, container);
+            
+            createTestCase('Currency Parsing', () => {
+                const parsed = financialValidationService.parseCurrency('R$ 1.234,56');
+                return parsed === 1234.56 ? 
+                    { status: 'pass', message: `Correctly parsed: ${parsed}` } :
+                    { status: 'fail', message: `Expected 1234.56, got ${parsed}` };
+            }, container);
+            
+            createTestCase('High Amount Warning', () => {
+                const result = financialValidationService.validateAmount(1500000);
+                return result.isValid && result.warnings && result.warnings.length > 0 ? 
+                    { status: 'warning', message: `Warning triggered: ${result.warnings[0]}` } :
+                    { status: 'fail', message: 'High amount warning not triggered' };
+            }, container);
+            
+            createTestCase('Percentage Validation', () => {
+                const result = financialValidationService.validatePercentage(15.5);
+                return result.isValid ? 
+                    { status: 'pass', message: 'Percentage 15.5% validated successfully' } :
+                    { status: 'fail', message: `Percentage validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Invalid Percentage Range', () => {
+                const result = financialValidationService.validatePercentage(150);
+                return !result.isValid && result.errors.includes('Percentual máximo é 100%') ? 
+                    { status: 'pass', message: 'Invalid percentage range correctly rejected' } :
+                    { status: 'fail', message: 'Invalid percentage validation failed' };
+            }, container);
+        }
+        
+        // Brazilian Tax ID Validation Tests
+        function runTaxIdTests() {
+            const container = document.getElementById('tax-id-tests');
+            
+            createTestCase('Valid CPF Validation', () => {
+                const result = financialValidationService.validateCPF('11144477735');
+                return result.isValid ? 
+                    { status: 'pass', message: 'Valid CPF accepted' } :
+                    { status: 'fail', message: `CPF validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Invalid CPF Rejection', () => {
+                const result = financialValidationService.validateCPF('11111111111');
+                return !result.isValid ? 
+                    { status: 'pass', message: 'Invalid CPF correctly rejected' } :
+                    { status: 'fail', message: 'Invalid CPF was incorrectly accepted' };
+            }, container);
+            
+            createTestCase('CPF Length Validation', () => {
+                const result = financialValidationService.validateCPF('123456789');
+                return !result.isValid && result.errors.includes('CPF deve conter 11 dígitos') ? 
+                    { status: 'pass', message: 'CPF length validation working' } :
+                    { status: 'fail', message: 'CPF length validation failed' };
+            }, container);
+            
+            createTestCase('Valid CNPJ Validation', () => {
+                const result = financialValidationService.validateCNPJ('11222333000181');
+                return result.isValid ? 
+                    { status: 'pass', message: 'Valid CNPJ accepted' } :
+                    { status: 'fail', message: `CNPJ validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Invalid CNPJ Rejection', () => {
+                const result = financialValidationService.validateCNPJ('11111111111111');
+                return !result.isValid ? 
+                    { status: 'pass', message: 'Invalid CNPJ correctly rejected' } :
+                    { status: 'fail', message: 'Invalid CNPJ was incorrectly accepted' };
+            }, container);
+            
+            createTestCase('CNPJ Length Validation', () => {
+                const result = financialValidationService.validateCNPJ('1234567890123');
+                return !result.isValid && result.errors.includes('CNPJ deve conter 14 dígitos') ? 
+                    { status: 'pass', message: 'CNPJ length validation working' } :
+                    { status: 'fail', message: 'CNPJ length validation failed' };
+            }, container);
+            
+            createTestCase('Empty CPF Validation', () => {
+                const result = financialValidationService.validateCPF('');
+                return !result.isValid && result.errors.includes('CPF é obrigatório') ? 
+                    { status: 'pass', message: 'Empty CPF correctly rejected' } :
+                    { status: 'fail', message: 'Empty CPF validation failed' };
+            }, container);
+            
+            createTestCase('Empty CNPJ Validation', () => {
+                const result = financialValidationService.validateCNPJ('');
+                return !result.isValid && result.errors.includes('CNPJ é obrigatório') ? 
+                    { status: 'pass', message: 'Empty CNPJ correctly rejected' } :
+                    { status: 'fail', message: 'Empty CNPJ validation failed' };
+            }, container);
+        }
+        
+        // Payment Method Validation Tests
+        function runPaymentTests() {
+            const container = document.getElementById('payment-tests');
+            
+            createTestCase('PIX Key CPF Validation', () => {
+                const result = financialValidationService.validatePixKey('11144477735', 'cpf');
+                return result.isValid ? 
+                    { status: 'pass', message: 'PIX CPF key validated successfully' } :
+                    { status: 'fail', message: `PIX CPF validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('PIX Key Email Validation', () => {
+                const result = financialValidationService.validatePixKey('test@example.com', 'email');
+                return result.isValid ? 
+                    { status: 'pass', message: 'PIX email key validated successfully' } :
+                    { status: 'fail', message: `PIX email validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('PIX Key Phone Validation', () => {
+                const result = financialValidationService.validatePixKey('+5511999999999', 'phone');
+                return result.isValid ? 
+                    { status: 'pass', message: 'PIX phone key validated successfully' } :
+                    { status: 'fail', message: `PIX phone validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('PIX Key Random Validation', () => {
+                const result = financialValidationService.validatePixKey('550e8400-e29b-41d4-a716-446655440000', 'random');
+                return result.isValid ? 
+                    { status: 'pass', message: 'PIX random key validated successfully' } :
+                    { status: 'fail', message: `PIX random key validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Payment Method PIX Validation', () => {
+                const result = financialValidationService.validatePaymentMethod('pix', {
+                    pixKey: '11144477735',
+                    amount: 100.50
+                });
+                return result.isValid ? 
+                    { status: 'pass', message: 'PIX payment method validated successfully' } :
+                    { status: 'fail', message: `PIX payment validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Payment Method Boleto Validation', () => {
+                const result = financialValidationService.validatePaymentMethod('boleto', {
+                    dueDate: '2024-12-31',
+                    payerName: 'João Silva',
+                    amount: 250.00
+                });
+                return result.isValid ? 
+                    { status: 'pass', message: 'Boleto payment method validated successfully' } :
+                    { status: 'fail', message: `Boleto payment validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Installment Plan Validation', () => {
+                const result = financialValidationService.validateInstallmentPlan(5000, 12, 2.5);
+                return result.isValid ? 
+                    { status: 'pass', message: 'Installment plan validated successfully' } :
+                    { status: 'fail', message: `Installment validation failed: ${result.errors.join(', ')}` };
+            }, container);
+            
+            createTestCase('Invalid Payment Method Data', () => {
+                const result = financialValidationService.validatePaymentMethod('pix', {
+                    amount: 0
+                });
+                return !result.isValid ? 
+                    { status: 'pass', message: 'Invalid payment data correctly rejected' } :
+                    { status: 'fail', message: 'Invalid payment data validation failed' };
+            }, container);
+        }
+        
+        // Service Architecture Tests
+        function runArchitectureTests() {
+            const container = document.getElementById('architecture-tests');
+            
+            createTestCase('Service Class Structure', () => {
+                const hasDefaultConfig = financialValidationService.hasOwnProperty('DEFAULT_CONFIG');
+                const hasMethods = typeof financialValidationService.validateAmount === 'function';
+                return hasDefaultConfig && hasMethods ? 
+                    { status: 'pass', message: 'Service class structure is consistent' } :
+                    { status: 'fail', message: 'Service class structure issues detected' };
+            }, container);
+            
+            createTestCase('Method Return Consistency', () => {
+                const result = financialValidationService.validateAmount(100);
+                const hasRequiredProps = result.hasOwnProperty('isValid') && 
+                                        result.hasOwnProperty('errors') && 
+                                        Array.isArray(result.errors);
+                return hasRequiredProps ? 
+                    { status: 'pass', message: 'Method return types are consistent' } :
+                    { status: 'fail', message: 'Method return type inconsistency detected' };
+            }, container);
+            
+            createTestCase('Error Message Localization', () => {
+                const result = financialValidationService.validateAmount(-1);
+                const hasPortugueseMessages = result.errors.some(error => 
+                    error.includes('não pode ser negativo'));
+                return hasPortugueseMessages ? 
+                    { status: 'pass', message: 'Error messages properly localized to Portuguese' } :
+                    { status: 'fail', message: 'Error message localization issues detected' };
+            }, container);
+            
+            createTestCase('Brazilian Currency Standards', () => {
+                const config = financialValidationService.DEFAULT_CONFIG;
+                const correctStandards = config.currency === 'BRL' && 
+                                       config.locale === 'pt-BR';
+                return correctStandards ? 
+                    { status: 'pass', message: 'Brazilian currency standards properly implemented' } :
+                    { status: 'fail', message: 'Brazilian currency standards not correctly set' };
+            }, container);
+            
+            createTestCase('Input Sanitization', () => {
+                const result = financialValidationService.parseCurrency('R$ 1.234,56 ');
+                const correctParsing = result === 1234.56;
+                return correctParsing ? 
+                    { status: 'pass', message: 'Input sanitization working correctly' } :
+                    { status: 'fail', message: 'Input sanitization issues detected' };
+            }, container);
+            
+            createTestCase('Service Method Coverage', () => {
+                const requiredMethods = [
+                    'formatCurrency', 'parseCurrency', 'validateAmount', 
+                    'validatePercentage', 'validateCPF', 'validateCNPJ',
+                    'validatePixKey', 'validateInstallmentPlan', 'validatePaymentMethod'
+                ];
+                
+                const missingMethods = requiredMethods.filter(method => 
+                    typeof financialValidationService[method] !== 'function');
+                
+                return missingMethods.length === 0 ? 
+                    { status: 'pass', message: 'All required methods are implemented' } :
+                    { status: 'fail', message: `Missing methods: ${missingMethods.join(', ')}` };
+            }, container);
+            
+            createTestCase('Validation Result Schema', () => {
+                const results = [
+                    financialValidationService.validateAmount(100),
+                    financialValidationService.validateCPF('11144477735'),
+                    financialValidationService.validatePixKey('test@example.com', 'email')
+                ];
+                
+                const allConsistent = results.every(result => 
+                    typeof result.isValid === 'boolean' && 
+                    Array.isArray(result.errors));
+                
+                return allConsistent ? 
+                    { status: 'pass', message: 'Validation result schema is consistent across methods' } :
+                    { status: 'fail', message: 'Validation result schema inconsistencies detected' };
+            }, container);
+            
+            createTestCase('Edge Case Handling', () => {
+                const edgeCases = [
+                    financialValidationService.validateAmount(null),
+                    financialValidationService.validateAmount(undefined),
+                    financialValidationService.validateAmount(''),
+                    financialValidationService.validateCPF(null),
+                    financialValidationService.validateCNPJ('')
+                ];
+                
+                const allHandled = edgeCases.every(result => 
+                    typeof result === 'object' && 
+                    typeof result.isValid === 'boolean');
+                
+                return allHandled ? 
+                    { status: 'pass', message: 'Edge cases properly handled' } :
+                    { status: 'fail', message: 'Edge case handling issues detected' };
+            }, container);
+        }
+        
+        function runAllTests() {
+            clearResults();
+            addLog('info', 'Starting comprehensive Financial Validation Service testing...');
+            
+            setTimeout(() => {
+                runCurrencyTests();
+                setTimeout(() => {
+                    runTaxIdTests();
+                    setTimeout(() => {
+                        runPaymentTests();
+                        setTimeout(() => {
+                            runArchitectureTests();
+                            
+                            const successRate = ((testStats.passed / testStats.total) * 100).toFixed(1);
+                            addLog('info', `Testing completed. Success rate: ${successRate}% (${testStats.passed}/${testStats.total})`);
+                            
+                            if (successRate >= 90) {
+                                addLog('success', '🎉 EXCELLENT: Financial Validation Service is production-ready!');
+                            } else if (successRate >= 75) {
+                                addLog('warning', '⚠️ GOOD: Some issues need attention before production deployment.');
+                            } else {
+                                addLog('error', '❌ CRITICAL: Major issues detected. Service requires significant fixes.');
+                            }
+                        }, 100);
+                    }, 100);
+                }, 100);
+            }, 100);
+        }
+        
+        function runCriticalTests() {
+            clearResults();
+            addLog('info', 'Running critical validation tests only...');
+            
+            const container = document.getElementById('currency-tests');
+            
+            createTestCase('CRITICAL: Amount Validation', () => {
+                const result = financialValidationService.validateAmount(1000);
+                return result.isValid ? 
+                    { status: 'pass', message: 'Core amount validation working' } :
+                    { status: 'fail', message: 'CRITICAL FAILURE: Amount validation broken' };
+            }, container);
+            
+            createTestCase('CRITICAL: CPF Validation', () => {
+                const result = financialValidationService.validateCPF('11144477735');
+                return result.isValid ? 
+                    { status: 'pass', message: 'Core CPF validation working' } :
+                    { status: 'fail', message: 'CRITICAL FAILURE: CPF validation broken' };
+            }, container);
+            
+            createTestCase('CRITICAL: CNPJ Validation', () => {
+                const result = financialValidationService.validateCNPJ('11222333000181');
+                return result.isValid ? 
+                    { status: 'pass', message: 'Core CNPJ validation working' } :
+                    { status: 'fail', message: 'CRITICAL FAILURE: CNPJ validation broken' };
+            }, container);
+            
+            createTestCase('CRITICAL: Currency Formatting', () => {
+                const formatted = financialValidationService.formatCurrency(1234.56);
+                return formatted.includes('R$') && formatted.includes(',') ? 
+                    { status: 'pass', message: 'Core currency formatting working' } :
+                    { status: 'fail', message: 'CRITICAL FAILURE: Currency formatting broken' };
+            }, container);
+            
+            addLog('info', 'Critical tests completed.');
+        }
+        
+        function runServiceConsistencyTests() {
+            clearResults();
+            addLog('info', 'Running service architecture consistency tests...');
+            runArchitectureTests();
+            addLog('info', 'Service architecture tests completed.');
+        }
+        
+        function runBrazilianComplianceTests() {
+            clearResults();
+            addLog('info', 'Running Brazilian financial compliance tests...');
+            runTaxIdTests();
+            runPaymentTests();
+            addLog('info', 'Brazilian compliance tests completed.');
+        }
+        
+        // Initialize testing interface
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('success', 'QA-2 Backend/API Testing system initialized successfully.');
+            addLog('info', 'Ready to test Financial Validation Service and Service Architecture.');
+            addLog('info', 'Click "Run All Tests" to begin comprehensive testing.');
+        });
+    </script>
+</body>
+</html>

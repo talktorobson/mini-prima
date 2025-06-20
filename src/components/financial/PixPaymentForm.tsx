@@ -28,6 +28,7 @@ import {
 
 // Import PIX Service
 import { pixService, type PixChargeResponse, type PixPaymentStatus } from '@/services/pixService';
+import { financialValidationService } from '@/services/financialValidationService';
 
 interface Props {
   clientId?: string;
@@ -62,11 +63,52 @@ export const PixPaymentForm: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<'idle' | 'creating' | 'active' | 'completed' | 'expired'>('idle');
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string[]}>({});
+
+  // Validate form data
+  const validateForm = () => {
+    const errors: {[key: string]: string[]} = {};
+
+    // Validate amount
+    const amountValidation = financialValidationService.validateAmount(formData.amount, {
+      minAmount: 0.01,
+      maxAmount: 1000000
+    });
+    if (!amountValidation.isValid) {
+      errors.amount = amountValidation.errors;
+    }
+
+    // Validate payer document if provided
+    if (formData.payerDocument) {
+      let documentValidation;
+      if (formData.documentType === 'cpf') {
+        documentValidation = financialValidationService.validateCPF(formData.payerDocument);
+      } else {
+        documentValidation = financialValidationService.validateCNPJ(formData.payerDocument);
+      }
+      if (!documentValidation.isValid) {
+        errors.payerDocument = documentValidation.errors;
+      }
+    }
+
+    // Validate payer name
+    if (!formData.payerName || formData.payerName.trim().length < 3) {
+      errors.payerName = ['Nome do pagador deve ter pelo menos 3 caracteres'];
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Handle PIX charge creation using database service
   const handleCreateCharge = async () => {
-    if (!formData.amount || !clientId) {
-      setError('Valor e cliente são obrigatórios');
+    if (!clientId) {
+      setError('Cliente é obrigatório');
+      return;
+    }
+
+    if (!validateForm()) {
+      setError('Por favor, corrija os erros no formulário');
       return;
     }
 
@@ -79,7 +121,7 @@ export const PixPaymentForm: React.FC<Props> = ({
         clientId,
         caseId,
         invoiceId,
-        amount: parseFloat(formData.amount),
+        amount: financialValidationService.parseCurrency(formData.amount),
         description: formData.description || 'Pagamento de serviços jurídicos',
         payerName: formData.payerName || undefined,
         payerDocument: formData.payerDocument || undefined,
@@ -163,11 +205,44 @@ export const PixPaymentForm: React.FC<Props> = ({
   };
 
   const formatCurrency = (value: string) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? 'R$ 0,00' : num.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    });
+    return financialValidationService.formatCurrency(value);
+  };
+
+  // Handle amount input with real-time validation
+  const handleAmountChange = (value: string) => {
+    setFormData(prev => ({ ...prev, amount: value }));
+    
+    // Clear previous validation errors for amount
+    if (validationErrors.amount) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.amount;
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle document input with validation and formatting
+  const handleDocumentChange = (value: string) => {
+    let formattedValue = value;
+    
+    // Format based on document type
+    if (formData.documentType === 'cpf' && value.length <= 14) {
+      formattedValue = financialValidationService.formatCPF(value);
+    } else if (formData.documentType === 'cnpj' && value.length <= 18) {
+      formattedValue = financialValidationService.formatCNPJ(value);
+    }
+    
+    setFormData(prev => ({ ...prev, payerDocument: formattedValue }));
+    
+    // Clear previous validation errors for document
+    if (validationErrors.payerDocument) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.payerDocument;
+        return newErrors;
+      });
+    }
   };
 
   const getStatusBadge = () => {
@@ -338,9 +413,17 @@ export const PixPaymentForm: React.FC<Props> = ({
               step="0.01"
               placeholder="0,00"
               value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              className={validationErrors.amount ? 'border-red-500' : ''}
             />
-            {formData.amount && (
+            {validationErrors.amount && (
+              <div className="text-sm text-red-600">
+                {validationErrors.amount.map((err, idx) => (
+                  <p key={idx}>{err}</p>
+                ))}
+              </div>
+            )}
+            {formData.amount && !validationErrors.amount && (
               <p className="text-sm text-gray-600">
                 {formatCurrency(formData.amount)}
               </p>
@@ -382,8 +465,26 @@ export const PixPaymentForm: React.FC<Props> = ({
               id="payerName"
               placeholder="Nome completo ou razão social"
               value={formData.payerName}
-              onChange={(e) => setFormData(prev => ({ ...prev, payerName: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, payerName: e.target.value }));
+                // Clear validation errors for payer name
+                if (validationErrors.payerName) {
+                  setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.payerName;
+                    return newErrors;
+                  });
+                }
+              }}
+              className={validationErrors.payerName ? 'border-red-500' : ''}
             />
+            {validationErrors.payerName && (
+              <div className="text-sm text-red-600">
+                {validationErrors.payerName.map((err, idx) => (
+                  <p key={idx}>{err}</p>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -411,8 +512,16 @@ export const PixPaymentForm: React.FC<Props> = ({
                 id="payerDocument"
                 placeholder={formData.documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
                 value={formData.payerDocument}
-                onChange={(e) => setFormData(prev => ({ ...prev, payerDocument: e.target.value }))}
+                onChange={(e) => handleDocumentChange(e.target.value)}
+                className={validationErrors.payerDocument ? 'border-red-500' : ''}
               />
+              {validationErrors.payerDocument && (
+                <div className="text-sm text-red-600">
+                  {validationErrors.payerDocument.map((err, idx) => (
+                    <p key={idx}>{err}</p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

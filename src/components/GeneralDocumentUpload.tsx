@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
-import { clientService, casesService } from '@/services/database';
+import { clientService } from '@/services/database';
+import { caseService } from '@/services/caseService';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { getDocumentTypeDisplayLabel } from '@/lib/documentUtils';
@@ -49,7 +50,7 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
   // Fetch available cases
   const { data: cases = [] } = useQuery({
     queryKey: ['cases'],
-    queryFn: casesService.getCases,
+    queryFn: caseService.getCases,
     enabled: isOpen,
   });
 
@@ -98,77 +99,156 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
     setUploading(true);
 
     try {
-      // Get current user and client
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
+      // Get current user first
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
       }
 
-      console.log('Getting current client...');
-      const client = await clientService.getCurrentClient();
-      if (!client) {
-        throw new Error('Cliente não encontrado');
+      console.log('User authenticated:', user.id);
+
+      // Test storage bucket access first
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      if (bucketError) {
+        console.error('Bucket access error:', bucketError);
+        throw new Error('Erro ao acessar sistema de armazenamento. Verifique sua conexão.');
       }
 
-      console.log('Client found:', client.id);
+      const caseDocumentsBucket = buckets?.find(b => b.name === 'case-documents');
+      if (!caseDocumentsBucket) {
+        throw new Error('Bucket de documentos não configurado. Contate o administrador.');
+      }
 
-      const uploadPromises = selectedFiles.map(async ({ file, category, caseId }) => {
-        console.log(`Uploading file: ${file.name}, category: ${category}, case: ${caseId === 'general' ? 'General' : caseId}`);
+      console.log('Storage bucket verified:', caseDocumentsBucket.name);
+
+      // Get current client
+      let client;
+      try {
+        client = await clientService.getCurrentClient();
+        if (!client) {
+          // For admin users, use a fallback approach
+          const { data: staffUser } = await supabase
+            .from('staff')
+            .select('id, full_name')
+            .eq('email', user.email)
+            .single();
+          
+          if (staffUser) {
+            console.log('Admin user detected, using staff context');
+            client = { id: 'admin-' + staffUser.id, company_name: 'Administração' };
+          } else {
+            throw new Error('Usuário não encontrado no sistema');
+          }
+        }
+      } catch (clientError) {
+        console.error('Client retrieval error:', clientError);
+        throw new Error('Erro ao identificar cliente. Verifique suas permissões.');
+      }
+
+      console.log('Client identified:', client.id);
+
+      const uploadPromises = selectedFiles.map(async ({ file, category, caseId }, index) => {
+        console.log(`[${index + 1}/${selectedFiles.length}] Uploading: ${file.name}`);
         
-        // Create a safe file path
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error(`Arquivo "${file.name}" excede o limite de 10MB`);
+        }
+
+        // Create secure file path
         const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 8);
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fileName = (caseId !== 'general' && caseId !== 'administrative') 
-          ? `${user.id}/${caseId}/${timestamp}-${safeName}`
-          : `${user.id}/general/${timestamp}-${safeName}`;
+          ? `cases/${caseId}/${timestamp}-${randomId}-${safeName}`
+          : `general/${user.id}/${timestamp}-${randomId}-${safeName}`;
         
-        console.log('Uploading to storage path:', fileName);
+        console.log(`Uploading to: ${fileName}`);
 
-        // Upload file to storage
-        const { error: uploadError } = await supabase.storage
+        // Upload file with proper error handling
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('case-documents')
           .upload(fileName, file, {
             cacheControl: '3600',
-            upsert: false
+            upsert: false,
+            contentType: file.type || 'application/octet-stream'
           });
 
         if (uploadError) {
-          console.error('Storage upload error:', uploadError);
-          throw uploadError;
+          console.error(`Upload error for ${file.name}:`, uploadError);
+          
+          // Handle specific error cases
+          if (uploadError.message?.includes('already exists')) {
+            // Retry with new filename
+            const retryFileName = `${fileName.replace(/(\.[^.]+)$/, '')}-retry-${Date.now()}$1`;
+            const { error: retryError } = await supabase.storage
+              .from('case-documents')
+              .upload(retryFileName, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type || 'application/octet-stream'
+              });
+            
+            if (retryError) {
+              throw new Error(`Falha no upload de "${file.name}": ${retryError.message}`);
+            }
+            console.log(`Retry upload successful: ${retryFileName}`);
+          } else {
+            throw new Error(`Falha no upload de "${file.name}": ${uploadError.message}`);
+          }
         }
 
-        console.log('File uploaded successfully, creating document record...');
+        console.log(`File uploaded successfully: ${fileName}`);
 
-        // Create document record with client_id
-        const { error: insertError } = await supabase
+        // Get signed URL for verification
+        const { data: urlData } = supabase.storage
+          .from('case-documents')
+          .getPublicUrl(fileName);
+
+        // Create document record with comprehensive data
+        const documentData = {
+          document_name: file.name,
+          original_filename: file.name,
+          file_path: fileName,
+          file_url: urlData?.publicUrl,
+          document_type: (caseId !== 'general' && caseId !== 'administrative') ? 'Case Document' : 'General Document',
+          document_category: category,
+          file_size: file.size,
+          case_id: (caseId !== 'general' && caseId !== 'administrative') ? caseId : null,
+          client_id: client.id.startsWith('admin-') ? null : client.id,
+          status: 'Draft',
+          is_visible_to_client: true,
+          upload_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        console.log('Creating document record...', documentData);
+
+        const { data: docRecord, error: insertError } = await supabase
           .from('documents')
-          .insert({
-            document_name: file.name,
-            original_filename: file.name,
-            file_path: fileName,
-            document_type: (caseId !== 'general' && caseId !== 'administrative') ? 'Case Document' : 'General Document',
-            document_category: category,
-            file_size: file.size,
-            case_id: (caseId !== 'general' && caseId !== 'administrative') ? caseId : null,
-            client_id: client.id,
-            status: 'Draft',
-            is_visible_to_client: true
-          });
+          .insert(documentData)
+          .select()
+          .single();
 
         if (insertError) {
           console.error('Database insert error:', insertError);
-          throw insertError;
+          
+          // Clean up uploaded file on database error
+          await supabase.storage.from('case-documents').remove([fileName]);
+          
+          throw new Error(`Erro ao salvar registro de "${file.name}": ${insertError.message}`);
         }
 
-        console.log('Document record created successfully');
-        return file.name;
+        console.log(`Document record created successfully:`, docRecord.id);
+        return { fileName: file.name, documentId: docRecord.id };
       });
 
-      await Promise.all(uploadPromises);
+      const results = await Promise.all(uploadPromises);
 
       toast({
         title: "Sucesso",
-        description: `${selectedFiles.length} documento(s) enviado(s) com sucesso!`,
+        description: `${results.length} documento(s) enviado(s) com sucesso!`,
         variant: "success"
       });
 
@@ -176,10 +256,10 @@ const GeneralDocumentUpload: React.FC<GeneralDocumentUploadProps> = ({
       onUploadComplete?.();
       onClose();
     } catch (error) {
-      console.error('Error uploading files:', error);
+      console.error('Upload process error:', error);
       toast({
-        title: "Erro",
-        description: `Erro ao enviar documentos: ${error.message}`,
+        title: "Erro no Upload",
+        description: error.message || 'Erro inesperado ao enviar documentos. Tente novamente.',
         variant: "destructive"
       });
     } finally {

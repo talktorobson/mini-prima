@@ -23,7 +23,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClientData } from '@/hooks/useClientData';
-import { casesService, documentsService, financialService, notificationsService } from '@/services/database';
+import { documentsService, financialService, notificationsService } from '@/services/database';
+import { caseService } from '@/services/caseService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DocumentPreviewSheet from '@/components/DocumentPreviewSheet';
@@ -46,7 +47,7 @@ const Portal = () => {
   // Get dashboard data
   const { data: cases = [] } = useQuery({
     queryKey: ['cases'],
-    queryFn: casesService.getCases,
+    queryFn: caseService.getCases,
     enabled: !!client
   });
 

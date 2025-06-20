@@ -30,6 +30,7 @@ import {
 
 // Import Boleto Service
 import { boletoService, type BoletoResponse, type BoletoPaymentStatus } from '@/services/boletoService';
+import { financialValidationService } from '@/services/financialValidationService';
 
 // Boleto Service Types
 interface BoletoRequest {
@@ -144,6 +145,7 @@ export const BoletoForm: React.FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'generating' | 'generated' | 'paid' | 'expired'>('idle');
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string[]}>({});
 
   // Brazilian states
   const brazilianStates = [
@@ -179,9 +181,97 @@ export const BoletoForm: React.FC<Props> = ({
     return 'DOC' + Date.now().toString();
   };
 
+  // Validate form data
+  const validateForm = () => {
+    const errors: {[key: string]: string[]} = {};
+
+    // Validate amount
+    const amountValidation = financialValidationService.validateAmount(formData.amount, {
+      minAmount: 0.01,
+      maxAmount: 1000000
+    });
+    if (!amountValidation.isValid) {
+      errors.amount = amountValidation.errors;
+    }
+
+    // Validate payer name
+    if (!formData.payerName || formData.payerName.trim().length < 3) {
+      errors.payerName = ['Nome do pagador deve ter pelo menos 3 caracteres'];
+    }
+
+    // Validate due date
+    if (!formData.dueDate) {
+      errors.dueDate = ['Data de vencimento é obrigatória'];
+    } else {
+      const dueDate = new Date(formData.dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (dueDate < today) {
+        errors.dueDate = ['Data de vencimento deve ser hoje ou no futuro'];
+      }
+    }
+
+    // Validate payer document if provided
+    if (formData.payerDocument) {
+      let documentValidation;
+      if (formData.documentType === 'cpf') {
+        documentValidation = financialValidationService.validateCPF(formData.payerDocument);
+      } else {
+        documentValidation = financialValidationService.validateCNPJ(formData.payerDocument);
+      }
+      if (!documentValidation.isValid) {
+        errors.payerDocument = documentValidation.errors;
+      }
+    }
+
+    // Validate address if provided
+    if (formData.street && formData.street.length < 5) {
+      errors.street = ['Logradouro deve ter pelo menos 5 caracteres'];
+    }
+
+    if (formData.city && formData.city.length < 2) {
+      errors.city = ['Nome da cidade deve ter pelo menos 2 caracteres'];
+    }
+
+    if (formData.zipCode && !financialValidationService.validateCEP(formData.zipCode).isValid) {
+      errors.zipCode = ['CEP inválido'];
+    }
+
+    // Validate optional fees and interest
+    if (formData.enableInterest) {
+      const interestValidation = financialValidationService.validatePercentage(formData.interestValue, { min: 0, max: 15 });
+      if (!interestValidation.isValid) {
+        errors.interestValue = interestValidation.errors;
+      }
+    }
+
+    if (formData.enableFine) {
+      const fineValidation = financialValidationService.validatePercentage(formData.fineValue, { min: 0, max: 30 });
+      if (!fineValidation.isValid) {
+        errors.fineValue = fineValidation.errors;
+      }
+    }
+
+    if (formData.enableDiscount) {
+      const discountValidation = financialValidationService.validatePercentage(formData.discountValue, { min: 0, max: 100 });
+      if (!discountValidation.isValid) {
+        errors.discountValue = discountValidation.errors;
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleGenerateBoleto = async () => {
-    if (!formData.amount || !formData.payerName || !formData.dueDate || !clientId) {
-      setError('Valor, nome do pagador, data de vencimento e cliente são obrigatórios');
+    if (!clientId) {
+      setError('Cliente é obrigatório');
+      return;
+    }
+
+    if (!validateForm()) {
+      setError('Por favor, corrija os erros no formulário');
       return;
     }
 
@@ -194,7 +284,7 @@ export const BoletoForm: React.FC<Props> = ({
         clientId,
         caseId,
         invoiceId,
-        amount: parseFloat(formData.amount),
+        amount: financialValidationService.parseCurrency(formData.amount),
         dueDate: formData.dueDate,
         documentNumber: formData.documentNumber,
         payerName: formData.payerName,
@@ -310,11 +400,40 @@ export const BoletoForm: React.FC<Props> = ({
   };
 
   const formatCurrency = (value: string) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? 'R$ 0,00' : num.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    });
+    return financialValidationService.formatCurrency(value);
+  };
+
+  // Handle input changes with validation clearing
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation errors for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle document input with formatting
+  const handleDocumentChange = (value: string) => {
+    let formattedValue = value;
+    
+    if (formData.documentType === 'cpf' && value.length <= 14) {
+      formattedValue = financialValidationService.formatCPF(value);
+    } else if (formData.documentType === 'cnpj' && value.length <= 18) {
+      formattedValue = financialValidationService.formatCNPJ(value);
+    }
+    
+    handleInputChange('payerDocument', formattedValue);
+  };
+
+  // Handle CEP input with formatting
+  const handleCEPChange = (value: string) => {
+    const formattedValue = financialValidationService.formatCEP(value);
+    handleInputChange('zipCode', formattedValue);
   };
 
   const getStatusBadge = () => {
@@ -510,9 +629,17 @@ export const BoletoForm: React.FC<Props> = ({
                 step="0.01"
                 placeholder="0,00"
                 value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) => handleInputChange('amount', e.target.value)}
+                className={validationErrors.amount ? 'border-red-500' : ''}
               />
-              {formData.amount && (
+              {validationErrors.amount && (
+                <div className="text-sm text-red-600">
+                  {validationErrors.amount.map((err, idx) => (
+                    <p key={idx}>{err}</p>
+                  ))}
+                </div>
+              )}
+              {formData.amount && !validationErrors.amount && (
                 <p className="text-sm text-gray-600">
                   {formatCurrency(formData.amount)}
                 </p>
@@ -525,8 +652,16 @@ export const BoletoForm: React.FC<Props> = ({
                 id="dueDate"
                 type="date"
                 value={formData.dueDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                className={validationErrors.dueDate ? 'border-red-500' : ''}
               />
+              {validationErrors.dueDate && (
+                <div className="text-sm text-red-600">
+                  {validationErrors.dueDate.map((err, idx) => (
+                    <p key={idx}>{err}</p>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -592,8 +727,16 @@ export const BoletoForm: React.FC<Props> = ({
               id="payerName"
               placeholder="Nome completo ou razão social"
               value={formData.payerName}
-              onChange={(e) => setFormData(prev => ({ ...prev, payerName: e.target.value }))}
+              onChange={(e) => handleInputChange('payerName', e.target.value)}
+              className={validationErrors.payerName ? 'border-red-500' : ''}
             />
+            {validationErrors.payerName && (
+              <div className="text-sm text-red-600">
+                {validationErrors.payerName.map((err, idx) => (
+                  <p key={idx}>{err}</p>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -621,8 +764,16 @@ export const BoletoForm: React.FC<Props> = ({
                 id="payerDocument"
                 placeholder={formData.documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
                 value={formData.payerDocument}
-                onChange={(e) => setFormData(prev => ({ ...prev, payerDocument: e.target.value }))}
+                onChange={(e) => handleDocumentChange(e.target.value)}
+                className={validationErrors.payerDocument ? 'border-red-500' : ''}
               />
+              {validationErrors.payerDocument && (
+                <div className="text-sm text-red-600">
+                  {validationErrors.payerDocument.map((err, idx) => (
+                    <p key={idx}>{err}</p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

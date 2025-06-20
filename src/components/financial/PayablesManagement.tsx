@@ -40,8 +40,9 @@ import {
   Building
 } from 'lucide-react';
 
-import { billsService, supplierService, type Bill, type Supplier } from '@/lib/financialService';
+import { billsService, supplierService, financialAnalyticsService, type Bill, type Supplier } from '@/lib/financialService';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const PayablesManagement: React.FC = () => {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -95,6 +96,44 @@ export const PayablesManagement: React.FC = () => {
       style: 'currency',
       currency: 'BRL'
     }).format(amount);
+  };
+
+  const handleExport = async () => {
+    try {
+      console.log('Exporting payables data...');
+      const blob = await financialAnalyticsService.exportToExcel('bills', filters);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contas-a-pagar-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Sucesso",
+        description: "Dados exportados com sucesso",
+      });
+    } catch (error) {
+      console.error('Error exporting payables data:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao exportar dados",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleFilter = () => {
+    console.log('Opening filter dialog...');
+    // TODO: Implement advanced filter dialog
+    toast({
+      title: "Filtros",
+      description: "Funcionalidade de filtros avançados será implementada em breve",
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -262,12 +301,12 @@ export const PayablesManagement: React.FC = () => {
                 </DialogContent>
               </Dialog>
               
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleExport}>
                 <Download className="w-4 h-4 mr-2" />
                 Exportar
               </Button>
               
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleFilter}>
                 <Filter className="w-4 h-4 mr-2" />
                 Filtros
               </Button>
@@ -612,19 +651,64 @@ const PaymentForm: React.FC<{
   onSubmit: (billId: string, paymentData: any) => void;
   onCancel: () => void;
 }> = ({ bill, onSubmit, onCancel }) => {
+  const { toast } = useToast();
   const [paymentData, setPaymentData] = useState({
     amount: bill.remaining_amount.toString(),
     payment_date: new Date().toISOString().split('T')[0],
     payment_method: 'transfer',
     reference_number: '',
-    notes: ''
+    notes: '',
+    proof_file: null as File | null
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    let proof_url = '';
+    
+    // Upload payment proof if file is provided
+    if (paymentData.proof_file) {
+      try {
+        const timestamp = Date.now();
+        const filename = `payment-proof-${timestamp}-${paymentData.proof_file.name}`;
+        const filePath = `payment-proofs/${bill.id}/${filename}`;
+        
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, paymentData.proof_file);
+          
+        if (uploadError) {
+          console.error('Error uploading payment proof:', uploadError);
+          toast({
+            title: "Erro",
+            description: "Erro ao fazer upload do comprovante",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+          
+        proof_url = urlData.publicUrl;
+      } catch (error) {
+        console.error('Error processing payment proof:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao processar comprovante",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     onSubmit(bill.id, {
       ...paymentData,
-      amount: parseFloat(paymentData.amount)
+      amount: parseFloat(paymentData.amount),
+      proof_url
     });
   };
 
@@ -697,6 +781,23 @@ const PaymentForm: React.FC<{
           onChange={(e) => setPaymentData({...paymentData, notes: e.target.value})}
           placeholder="Informações adicionais sobre o pagamento"
         />
+      </div>
+
+      <div>
+        <Label htmlFor="proof_file">Comprovante de Pagamento</Label>
+        <Input
+          id="proof_file"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          onChange={(e) => {
+            const file = e.target.files?.[0] || null;
+            setPaymentData({...paymentData, proof_file: file});
+          }}
+          className="cursor-pointer"
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          Anexe o comprovante do pagamento (PDF, JPG, PNG - máx. 10MB)
+        </p>
       </div>
 
       <div className="flex justify-end space-x-2">

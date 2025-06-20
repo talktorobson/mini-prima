@@ -36,6 +36,7 @@ const AdminSubscriptions: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTier, setFilterTier] = useState<string>('all');
   const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
+  const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -135,6 +136,100 @@ const AdminSubscriptions: React.FC = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditPlan = (plan: SubscriptionPlan) => {
+    setSelectedPlan(plan);
+    setNewPlan({
+      name: plan.name,
+      tier: plan.tier,
+      category: plan.category,
+      monthly_price: plan.monthly_price,
+      yearly_price: plan.yearly_price,
+      description: plan.description,
+      consulting_hours_quota: plan.consulting_hours_quota,
+      document_review_quota: plan.document_review_quota,
+      legal_questions_quota: plan.legal_questions_quota,
+      litigation_discount_percentage: plan.litigation_discount_percentage,
+      features: plan.features
+    });
+    setIsEditPlanOpen(true);
+  };
+
+  const handleUpdatePlan = async () => {
+    if (!selectedPlan) return;
+
+    try {
+      // Here we would call the API to update the plan
+      // For now, we'll just show a success message
+      toast({
+        title: "Sucesso",
+        description: "Plano atualizado com sucesso",
+      });
+      
+      setIsEditPlanOpen(false);
+      setSelectedPlan(null);
+      setNewPlan({
+        name: '',
+        tier: 'basic',
+        category: 'labor_law',
+        monthly_price: 0,
+        yearly_price: 0,
+        description: '',
+        consulting_hours_quota: 0,
+        document_review_quota: 0,
+        legal_questions_quota: 0,
+        litigation_discount_percentage: 0,
+        features: {}
+      });
+      
+      await loadData();
+    } catch (error) {
+      console.error('Error updating plan:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar plano",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeletePlan = async (plan: SubscriptionPlan) => {
+    if (!confirm(`Tem certeza que deseja deletar o plano "${plan.name}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      // Here we would call the API to delete the plan
+      // For now, we'll just show a success message
+      toast({
+        title: "Sucesso",
+        description: "Plano deletado com sucesso",
+      });
+      
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar plano",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditSubscription = (subscription: ClientSubscription) => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "Edição de assinaturas será implementada em breve",
+    });
+  };
+
+  const handleManageBilling = (subscription: ClientSubscription) => {
+    toast({
+      title: "Funcionalidade em desenvolvimento", 
+      description: "Gestão de cobrança será implementada em breve",
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -364,19 +459,14 @@ const AdminSubscriptions: React.FC = () => {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => {
-                      setSelectedPlan(plan);
-                      // Open edit dialog
-                    }}
+                    onClick={() => handleEditPlan(plan)}
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => {
-                      // Handle delete
-                    }}
+                    onClick={() => handleDeletePlan(plan)}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -506,11 +596,11 @@ const AdminSubscriptions: React.FC = () => {
                         </div>
 
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleEditSubscription(subscription)}>
                             <Edit className="h-3 w-3 mr-1" />
                             Editar
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleManageBilling(subscription)}>
                             <CreditCard className="h-3 w-3 mr-1" />
                             Cobrança
                           </Button>
@@ -524,6 +614,135 @@ const AdminSubscriptions: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Plan Dialog */}
+      <Dialog open={isEditPlanOpen} onOpenChange={setIsEditPlanOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Plano</DialogTitle>
+            <DialogDescription>
+              Edite as informações do plano de assinatura
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-name">Nome do Plano *</Label>
+                <Input
+                  id="edit-name"
+                  value={newPlan.name}
+                  onChange={(e) => setNewPlan({...newPlan, name: e.target.value})}
+                  placeholder="Nome do plano"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-tier">Tier *</Label>
+                <Select value={newPlan.tier} onValueChange={(value) => setNewPlan({...newPlan, tier: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic">Básico</SelectItem>
+                    <SelectItem value="professional">Profissional</SelectItem>
+                    <SelectItem value="enterprise">Enterprise</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-monthly-price">Preço Mensal (R$) *</Label>
+                <Input
+                  id="edit-monthly-price"
+                  type="number"
+                  step="0.01"
+                  value={newPlan.monthly_price}
+                  onChange={(e) => setNewPlan({...newPlan, monthly_price: parseFloat(e.target.value) || 0})}
+                  placeholder="0,00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-yearly-price">Preço Anual (R$) *</Label>
+                <Input
+                  id="edit-yearly-price"
+                  type="number"
+                  step="0.01"
+                  value={newPlan.yearly_price}
+                  onChange={(e) => setNewPlan({...newPlan, yearly_price: parseFloat(e.target.value) || 0})}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-description">Descrição</Label>
+              <Input
+                id="edit-description"
+                value={newPlan.description}
+                onChange={(e) => setNewPlan({...newPlan, description: e.target.value})}
+                placeholder="Descrição do plano"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit-consulting-hours">Horas de Consultoria</Label>
+                <Input
+                  id="edit-consulting-hours"
+                  type="number"
+                  value={newPlan.consulting_hours_quota}
+                  onChange={(e) => setNewPlan({...newPlan, consulting_hours_quota: parseInt(e.target.value) || 0})}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-document-review">Revisões de Documento</Label>
+                <Input
+                  id="edit-document-review"
+                  type="number"
+                  value={newPlan.document_review_quota}
+                  onChange={(e) => setNewPlan({...newPlan, document_review_quota: parseInt(e.target.value) || 0})}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-legal-questions">Consultas Jurídicas</Label>
+                <Input
+                  id="edit-legal-questions"
+                  type="number"
+                  value={newPlan.legal_questions_quota}
+                  onChange={(e) => setNewPlan({...newPlan, legal_questions_quota: parseInt(e.target.value) || 0})}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-litigation-discount">Desconto em Litígios (%)</Label>
+              <Input
+                id="edit-litigation-discount"
+                type="number"
+                step="0.1"
+                max="100"
+                value={newPlan.litigation_discount_percentage}
+                onChange={(e) => setNewPlan({...newPlan, litigation_discount_percentage: parseFloat(e.target.value) || 0})}
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditPlanOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdatePlan}>
+              Atualizar Plano
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

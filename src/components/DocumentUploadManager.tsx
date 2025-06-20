@@ -7,7 +7,7 @@ import { Upload, FileText, FolderOpen } from 'lucide-react';
 import DocumentUpload from './DocumentUpload';
 import GeneralDocumentUpload from './GeneralDocumentUpload';
 import { useQuery } from '@tanstack/react-query';
-import { casesService } from '@/services/database';
+import { caseService } from '@/services/caseService';
 
 interface DocumentUploadManagerProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ const DocumentUploadManager: React.FC<DocumentUploadManagerProps> = ({
   // Fetch available cases
   const { data: cases = [] } = useQuery({
     queryKey: ['cases'],
-    queryFn: casesService.getCases,
+    queryFn: caseService.getCases,
     enabled: isOpen,
   });
 
